@@ -1,0 +1,141 @@
+{
+    "meal": {
+      "wake_up_food": {
+        "status": "take",
+        "note": "Warm lemon water and supplements",
+        "image": "https://example.com/images/lemon_water.jpg",
+        "items": {
+          "lemon_water": { "qty": "1 glass" },
+          "multivitamin": { "qty": "1 tablet" }
+        }
+      },
+      "breakfast": {
+        "status": "take",
+        "note": "Oatmeal with fruits",
+        "image": "https://example.com/images/oatmeal.jpg",
+        "items": {
+          "oats": { "qty": "1 cup" },
+          "blueberries": { "qty": "handful" },
+          "almond_milk": { "qty": "1/2 cup" }
+        }
+      },
+      "lunch": {
+        "status": "take",
+        "note": "Grilled chicken with quinoa salad",
+        "image": "https://example.com/images/chicken_salad.jpg",
+        "items": {
+          "grilled_chicken": { "qty": "150g" },
+          "quinoa": { "qty": "1 cup" },
+          "mixed_veggies": { "qty": "1 bowl" }
+        }
+      },
+      "dinner": {
+        "status": "take",
+        "note": "Vegetable stir-fry",
+        "image": "https://example.com/images/veggie_stirfry.jpg",
+        "items": {
+          "broccoli": { "qty": "1 cup" },
+          "carrots": { "qty": "1/2 cup" },
+          "tofu": { "qty": "100g" }
+        }
+      }
+    },
+    "water": {
+      "target": "3L",
+      "qty": "1.8L"
+    },
+    "steps": {
+      "walking": {
+        "calories": "120",
+        "time": "25 minutes",
+        "km": 1.5
+      },
+      "jogging": {
+        "calories": "200",
+        "time": "15 minutes",
+        "km": 2.5
+      },
+      "running": {
+        "calories": "250",
+        "time": "20 minutes",
+        "km": 3
+      }
+    },
+    "workout": {
+      "status": true,
+      "performance": "Felt strong during a 45-minute HIIT session"
+    },
+    "join_session": {
+      "attend": true,
+      "note": "Pilates class was relaxing"
+    },
+    "nutrition": {
+      "dose1": "take",
+      "dose2": "skip",
+      "dose3": "take",
+      "dose4": "take"
+    },
+    "sleep": {
+      "wake_up": "6:30 AM",
+      "bed_at": "10:30 PM"
+    },
+    "body_data": {
+      "health_log_parameters": {
+        "body_fat": "17%",
+        "muscle": "45%",
+        "bmi": "22",
+        "bmr": "1600 kcal",
+        "bone_mass": "2.4 kg",
+        "body_hydration": "55%",
+        "metabolic_age": "25",
+        "protein": "18%",
+        "skeletal_muscle": "30%",
+        "subcutaneous_fat": "12%",
+        "visceral_fat": "9%",
+        "muscle_mass": "40 kg"
+      },
+      "body_measurement_parameters": {
+        "hip": "36 inches",
+        "waist": "28 inches",
+        "right_arm_flexed": "12 inches",
+        "left_arm_flexed": "12 inches",
+        "right_arm_unflexed": "11 inches",
+        "left_arm_unflexed": "11 inches",
+        "chest": "38 inches",
+        "thigh": "20 inches",
+        "calf": "15 inches"
+      },
+      "health_habits": {
+        "cut_blue_screen_time": true,
+        "meditation": true,
+        "go_to_nature": true,
+        "read_book": false,
+        "spend_time_family": true,
+        "loop_with_friends": false,
+        "spend_time_hobby": true
+      },
+      "hygiene": {
+        "bathing": true,
+        "hand_wash": true,
+        "teeth_clean": true,
+        "nail_cut": true
+      },
+      "holistic_wellness": {
+        "hot_water_wash": true,
+        "cold_water_wash": false,
+        "abhyanga": true,
+        "neti": false,
+        "palm_rubbing": true,
+        "foot_massage": false,
+        "head_massage": true,
+        "oil_pulling": true
+      },
+      "what_new_today": {
+        "learn_new_language": false,
+        "learn_sports_skill": true,
+        "play_music_today": false,
+        "travel_fun_today": true
+      }
+    }
+  }
+  
