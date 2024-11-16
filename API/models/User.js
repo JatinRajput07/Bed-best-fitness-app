@@ -8,22 +8,36 @@ const userSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     password: { type: String },
     googleId: { type: String },
-    role: {
-        type: String,
-        enum: ['admin', 'host', 'user'],
-        default: 'user'
-    },
+    Occupation: { type: String, required: false, },
+    BusinessAddress: { type: String, required: false, },
+    City: { type: String, required: false, },
+    State: { type: String, required: false, },
+    Country: { type: String, required: false, },
+    Nationality: { type: String, required: false, },
+    ABHA_No: { type: String, unique: true, sparse: true, },
+    AadharNo: { type: String, unique: true, sparse: true, minlength: 12, maxlength: 12, },
+    SOS_Contact_No: { type: String, required: false, },
+    RelationWithSOS: { type: String, required: false, },
+    AlternativeContactNo: { type: String, required: false, },
+    HealthInsuranceNo: { type: String, required: false, },
+    HealthInsuranceCompany: { type: String, required: false, },
+    OfficeAddress: { type: String, required: false, },
+    Gender: { type: String, enum: ['Male', 'Female', 'Other'], required: false, },
+    DOB: { type: Date, required: false, },
+    Goal: { type: String, enum: ['Weight Loss', 'Maintain Weight', 'Gain Weight'], required: false, },
+    ReferBy: { type: String, required: false, },
+    OritationDate: { type: Date, required: false, },
+    FirstReportDate: { type: Date, required: false, },
+    JourneyStartDate: { type: Date, required: false, },
+    FavouriteAuthor: { type: String, required: false, },
+    role: { type: String, enum: ['admin', 'host', 'user'], default: 'user' },
     additionalInfo: {
         ADS_id: { type: String },
         address: { type: String },
         batchNo: { type: String },
         joiningDate: { type: Date },
     },
-    active: {
-        type: Boolean,
-        default: true,
-        select: false
-    },
+    active: { type: Boolean, default: true, select: false },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -34,6 +48,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
+    console.log(this.password,'==-dd=d=d=d==d=d')
     this.password = await bcrypt.hash(this.password, 12);
     this.passwordConfirm = undefined;
     next();
@@ -50,9 +65,11 @@ userSchema.pre(/^find/, function (next) {
 
 
 userSchema.methods.createPasswordResetToken = function () {
-    const resetToken = crypto.lib.WordArray.random(32).toString();
-    console.log(resetToken)
-    this.passwordResetToken = crypto.SHA256(resetToken).toString(crypto.enc.Hex);   
+    // const resetToken = crypto.lib.WordArray.random(32).toString();
+    // console.log(resetToken)
+    // this.passwordResetToken = crypto.SHA256(resetToken).toString(crypto.enc.Hex); 
+    const resetToken = Math.floor((100000 + Math.random() * 900000));
+    this.passwordResetToken = resetToken
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
     return resetToken;
 };

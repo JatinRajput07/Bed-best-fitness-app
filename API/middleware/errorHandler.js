@@ -13,7 +13,7 @@ const handleJWTExpiredError = () => new AppError('Your token has expired! Please
 
 
 const errorHandler = (err, req, res, next) => {
-    console.log(err)
+    console.log(err,'====error====')
     if (err.code === 11000) err = handleDuplicateFieldsDB(err);
     if (err.name === 'JsonWebTokenError') err = handleJWTError();
     if (err.name === 'TokenExpiredError') err = handleJWTExpiredError();
@@ -25,7 +25,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    console.error(err);
     return res.status(500).json({
         status: 'error',
         message: 'Something went wrong!',

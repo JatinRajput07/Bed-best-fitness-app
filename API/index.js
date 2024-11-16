@@ -1,10 +1,12 @@
 require('dotenv').config()
 const express = require('express');
 const path = require('path')
+const cors = require('cors')
 const connectDB = require('./config/db');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const errorHandler = require('./middleware/errorHandler');
 const routes = require('./routes');
+const AppError = require('./utils/AppError');
 
 const PORT = process.env.PORT || 3000
 
@@ -18,8 +20,8 @@ const app = express();
 // MIDDLEWARES
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors())
 
 // Swagger UI route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -28,9 +30,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ROUTERS 
 app.use('/', routes);
 
-// app.all('*', (req, res, next) => {
-//     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-//   });
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
 
 
 // GLOBLE ERROR HANDLER
