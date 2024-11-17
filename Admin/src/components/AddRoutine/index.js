@@ -1,9 +1,9 @@
 
 
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-import { socket } from '../../socket';
+
 import TextInput from '../Others/TextInput';
 import TextArea from '../Others/TextArea';
 import FileUpload from '../Others/FileUpload';
@@ -33,24 +33,7 @@ const AddRoutine = () => {
         videoTrailerProgress: 0,
     });
 
-    useEffect(() => {
-        const handleConnect = () => console.log('Connected to Socket.IO server');
-        const handleDisconnect = (reason) => console.log(`Disconnected: ${reason}`);
-        const handleTranscodingProgress = (data) => {
-            const { progress } = data;
-            setState((prevState) => ({ ...prevState, videoProgress: progress }));
-        };
 
-        socket.on('connect', handleConnect);
-        socket.on('disconnect', handleDisconnect);
-        socket.on('transcoding-progress', handleTranscodingProgress);
-
-        return () => {
-            socket.off('connect', handleConnect);
-            socket.off('disconnect', handleDisconnect);
-            socket.off('transcoding-progress', handleTranscodingProgress);
-        };
-    }, []);
 
     const uploadFile = async (file, type) => {
         const formData = new FormData();

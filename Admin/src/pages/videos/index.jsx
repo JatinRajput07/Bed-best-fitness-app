@@ -7,7 +7,7 @@ import { fetchVideos } from "../../redux/videoSlice";
 const Videos = () => {
     const dispatch = useDispatch()
     const [isListing, setIsListing] = useState(false);
-    const { videos, loading, error } = useSelector(state => state.videos)
+    const { videos } = useSelector(state => state.videos)
 
     useEffect(() => {
         dispatch(fetchVideos())

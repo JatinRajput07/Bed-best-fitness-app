@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const mongoURI = 'mongodb://localhost:27017/bed_best';
+const mongoURI = process.env.MONGO_DB;
+console.log(mongoURI)
 
 const connectDB = async () => {
     try {

@@ -1,86 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import axios from 'axios';
 import debounce from 'lodash.debounce';
+import { deleteUser, fetchUsers } from '../../redux/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
-// Helper function to format the date
 const formatDate = (date) => {
   const newDate = new Date(date);
   return newDate.toLocaleDateString();
 };
 
 const UserList = () => {
-  const [users, setUsers] = useState([]); // Store users
-  const [totalUsers, setTotalUsers] = useState(0); // Total number of users for pagination
-  const [page, setPage] = useState(1); // Current page
-  const [searchQuery, setSearchQuery] = useState(''); // Search query
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
-  const [selectedUser, setSelectedUser] = useState(null); // Selected user for view details
-  const [isConfirmDelete, setIsConfirmDelete] = useState(null); // Delete confirmation state
+  const dispatch = useDispatch();
+  const { users, totalUsers, loading, error } = useSelector((state) => state.users);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isConfirmDelete, setIsConfirmDelete] = useState(null);
 
-  const pageSize = 10; // Number of users per page
+  const pageSize = 10;
 
-  // Fetch users from API with pagination and search query
-  const fetchUsers = async (page, searchQuery = '') => {
-    try {
-      const response = await axios.get('https://api.example.com/users', {
-        params: {
-          page,
-          pageSize,
-          search: searchQuery,
-        },
-      });
-
-      setUsers(response.data.users); // Set the users
-      setTotalUsers(response.data.totalUsers); // Set the total number of users for pagination
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
-  // Fetch users when the page or search query changes
   useEffect(() => {
-    fetchUsers(page, searchQuery);
-  }, [page, searchQuery]);
+    dispatch(fetchUsers({ page, searchQuery }));
+  }, [page, searchQuery, dispatch]);
+  
 
-  // Debounced search handler
   const handleSearch = debounce((query) => {
     setSearchQuery(query);
-    setPage(1); // Reset to first page on search
-  }, 500); // Delay 500ms after typing stops
+    setPage(1);
+  }, 500);
 
-  // Handle pagination click
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
 
-  // Handle user details view
   const handleViewDetails = (user) => {
     setSelectedUser(user);
-    setIsModalOpen(true); // Open modal
+    setIsModalOpen(true);
   };
 
-  // Close the modal
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
 
-  // Handle delete confirmation
   const handleDelete = (userId) => {
-    setUsers(users.filter((user) => user.id !== userId));
-    setIsConfirmDelete(null); // Close confirmation modal
+    dispatch(deleteUser(userId));
+    setIsConfirmDelete(null);
   };
 
-  // Cancel delete action
   const cancelDelete = () => {
     setIsConfirmDelete(null);
   };
 
-  const totalPages = Math.ceil(totalUsers / pageSize); // Calculate total pages
-
-  // Check if the Next button should be disabled
+  const totalPages = Math.ceil(totalUsers / pageSize);
   const isNextDisabled = users.length < pageSize || page === totalPages;
+  const isPrevDisabled = page === 1;
 
   return (
     <AdminLayout title="Users">
@@ -97,9 +72,14 @@ const UserList = () => {
               />
             </div>
           </div>
+
           <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
             <div className="inline-block min-w-full shadow-md rounded-lg overflow-hidden">
-              {users.length === 0 ? (
+              {loading ? (
+                <div className="py-4 px-6 text-center text-gray-500">Loading...</div>
+              ) : error ? (
+                <div className="py-4 px-6 text-center text-red-500">Error: {error}</div>
+              ) : users.length === 0 ? (
                 <div className="py-4 px-6 text-center text-gray-500">No Data Found</div>
               ) : (
                 <table className="min-w-full leading-normal">
@@ -124,22 +104,30 @@ const UserList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id}>
+                    {users.map((user,i) => (
+                      <tr key={i + 1}>
                         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                           <p className="text-gray-900 whitespace-no-wrap">{user.name}</p>
                         </td>
                         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                           <p className="text-gray-900 whitespace-no-wrap">{user.email}</p>
                         </td>
-                        <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                          <p className="text-gray-900 whitespace-no-wrap">{user.role}</p>
+                            <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                          <span
+                            className={`relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight ${user.status === 'Active' ? 'bg-green-200' : 'bg-red-200'
+                              }`}
+                          >
+                            <span
+                              aria-hidden
+                              className="absolute inset-0 opacity-50 rounded-full"
+                            ></span>
+                            <span className="relative">{user.role}</span>
+                          </span>
                         </td>
                         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                           <span
-                            className={`relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight ${
-                              user.status === 'Active' ? 'bg-green-200' : 'bg-red-200'
-                            }`}
+                            className={`relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight ${user.status === 'Active' ? 'bg-green-200' : 'bg-red-200'
+                              }`}
                           >
                             <span
                               aria-hidden
@@ -187,7 +175,7 @@ const UserList = () => {
           <div className="flex justify-between mt-4">
             <button
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={isPrevDisabled}
               className="px-4 py-2 text-white bg-blue-500 rounded-md disabled:bg-gray-400"
             >
               Previous
@@ -206,7 +194,6 @@ const UserList = () => {
         </div>
       </div>
 
-      {/* User Details Modal */}
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg w-96">
@@ -238,7 +225,6 @@ const UserList = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isConfirmDelete !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg w-96">

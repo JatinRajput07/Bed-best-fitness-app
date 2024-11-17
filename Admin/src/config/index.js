@@ -2,7 +2,7 @@ import axios from 'axios';
 // import Cookies from 'js-cookie';
 // import Router from 'next/router'; // Use Router directly for navigation instead of useRouter
 
-const URL = 'http://localhost:5000/api/'; // Correct base URL
+const URL = 'http://localhost:7200/'; // Correct base URL
 
 const Axios = axios.create({
     baseURL: `${URL}`,

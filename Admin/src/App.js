@@ -15,7 +15,6 @@ function App() {
         <Route path='/login' element={<SignIn />} />
         <Route path='/users' element={<UserList />} />
         <Route path='/settings' element={<SettingsPage />} />
-
       </Routes>
     </BrowserRouter>
 

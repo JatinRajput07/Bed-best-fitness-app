@@ -6,7 +6,7 @@
     "test": "jest --runInBand",
     "start": "nodemon index.js"
   },
-  "author": "",
+  "author": "", 
   "license": "ISC",
   "description": "",
   "dependencies": {
