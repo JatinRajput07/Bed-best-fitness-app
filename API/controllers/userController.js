@@ -15,11 +15,11 @@ const signToken = id => {
 
 
 exports.register = catchAsync(async (req, res, next) => {
-    
+
     const { role, email, name, phone, password, ADS_id, address, batchNo, joiningDate } = req.body;
 
-    if(role === 'admin'){
-        return next(new AppError('Resistration Not Allowed for Role',400))
+    if (role === 'admin') {
+        return next(new AppError('Resistration Not Allowed for Role', 400))
     }
     let newUserData = { email, name, phone, password };
     if (role === 'host') {
@@ -104,13 +104,61 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 
-exports.resetPassword = catchAsync(async (req, res, next) => {
-    // const hashedToken = crypto.SHA256(req.params.token).toString(crypto.enc.Hex);
-    const hashedToken = req.params.otp
-    const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } });
+exports.verifyOTP = catchAsync(async (req, res, next) => {
+    const { otp, email } = req.body;
+    const user = await User.findOne({
+        email: email,
+        passwordResetToken: otp,
+        passwordResetExpires: { $gt: Date.now() }
+    });
+
     if (!user) {
-        return next(new AppError('Token is invalid or has expired', 400));
+        return next(new AppError('OTP is invalid or has expired', 400));
     }
+    res.status(200).json({
+        status: 'success',
+        message: 'OTP verified successfully',
+    });
+});
+
+
+// exports.resendOTP = catchAsync(async (req, res, next) => {
+//     const { email } = req.body;
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//         return next(new AppError('There is no user with this email address.', 404));
+//     }
+//     const resetToken = user.createPasswordResetToken();
+//     await user.save({ validateBeforeSave: false });
+
+//     try {
+//         res.status(200).json({
+//             status: 'success',
+//             message: 'OTP resent to email!',
+//             OTP: resetToken
+//         });
+//     } catch (err) {
+//         user.passwordResetToken = undefined;
+//         user.passwordResetExpires = undefined;
+//         await user.save({ validateBeforeSave: false });
+
+//         return next(new AppError('There was an error resending the OTP. Try again later!', 500));
+//     }
+// });
+
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+    const { otp, email } = req.body;
+    // const hashedToken = crypto.SHA256(req.params.token).toString(crypto.enc.Hex);
+    // const hashedToken = req.params.otp
+    const user = await User.findOne({
+        email: email,
+        passwordResetToken: otp,
+    });
+
+    // if (!user) {
+    //     return next(new AppError('Token is invalid or has expired', 400));
+    // }
 
     user.password = req.body.password;
     user.passwordResetToken = undefined;
@@ -120,7 +168,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
         status: 'success',
         message: 'Password has been reset successfully'
     });
-
 });
 
 
@@ -411,3 +458,13 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
     });
 });
 
+
+exports.contact_us = catchAsync(async (req, res, next) => {
+    const { name, email, message, phone } = req.body;
+    const newContact = new Contact({ name, email, message, phone, });
+    await newContact.save();
+    return res.status(200).json({
+        status: 'success',
+        newContact
+    });
+});
