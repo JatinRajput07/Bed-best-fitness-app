@@ -51,9 +51,7 @@ module.exports = class Email {
       to: this.to,
       subject,
       html,
-      text: convert(html, {
-        wordwrap: 130, // Optionally wrap text
-      }), // Use `convert` instead of `fromString`
+      text: convert(html), // Use `convert` instead of `fromString`
     };
 
     // 3) Create a transport and send email
