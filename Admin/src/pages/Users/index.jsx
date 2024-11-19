@@ -62,7 +62,7 @@ const UserList = () => {
       <div className="container mx-auto px-4 sm:px-8">
         <div className="py-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold leading-tight">User List</h2>
+            <h2 className="text-2xl font-semibold leading-tight"></h2>
             <div className="relative">
               <input
                 type="text"

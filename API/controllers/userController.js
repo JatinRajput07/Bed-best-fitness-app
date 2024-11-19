@@ -6,6 +6,7 @@ const crypto = require('crypto-js');
 const Routine = require("../models/Routine");
 const { upload } = require("../utils/UploadFiles");
 const multer = require("multer");
+const Email = require("../utils/email");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -81,21 +82,20 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-
     try {
         // const resetURL = `${req.protocol}://${req.get('host')}/api/resetPassword/${resetToken}`;
-        //   await new Email(user, resetURL).sendPasswordReset();
+        await new Email(user, resetToken).sendPasswordReset();
 
         res.status(200).json({
             status: 'success',
-            message: 'Token sent to email!',
-            OTP: resetToken
+            message: 'OTP sent to email!',
+            // OTP: resetToken
         });
     } catch (err) {
+        console.log(err,'===d=d=d==')
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });
-
         return next(
             new AppError('There was an error sending the email. Try again later!'),
             500
