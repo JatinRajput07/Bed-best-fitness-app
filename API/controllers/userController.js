@@ -7,6 +7,7 @@ const Routine = require("../models/Routine");
 const { upload } = require("../utils/UploadFiles");
 const multer = require("multer");
 const Email = require("../utils/email");
+const Recommendation = require("../models/recommendation");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -92,7 +93,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
             // OTP: resetToken
         });
     } catch (err) {
-        console.log(err,'===d=d=d==')
+        console.log(err, '===d=d=d==')
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });
@@ -222,10 +223,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
         }
     });
 })
-
-
-
-
 
 
 
@@ -468,3 +465,80 @@ exports.contact_us = catchAsync(async (req, res, next) => {
         newContact
     });
 });
+
+
+exports.createRecommendation = catchAsync(async (req, res, next) => {
+    const hostId = req.user.id;
+    const userRole = req.user.role;
+    const { videoId, userId } = req.body;
+
+    if (userRole !== "host") {
+        return next(new AppError("Only hosts can recommend videos.", 403));
+    }
+
+    const recommendation = await Recommendation.findOneAndUpdate(
+        { host_id: hostId, user_id: userId, video_id: { $ne: videoId } },
+        { $push: { video_id: videoId }, $setOnInsert: { host_id: hostId, user_id: userId } },
+        { new: true, upsert: true }
+    );
+
+
+    if (!recommendation.video_id.includes(videoId)) {
+        return next(new AppError("This video has already been recommended to the user.", 400));
+    }
+    return res.status(200).json({
+        status: "success",
+        recommendation,
+    });
+});
+
+
+exports.getUserRecommendations = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const recommendations = await Recommendation.find({ user_id: userId })
+        .populate("host_id", "name email")
+        .populate("video_id")
+        .exec();
+
+    return res.status(200).json({
+        status: "success",
+        recommendations,
+    });
+});
+
+
+exports.deleteRecommendation = catchAsync(async (req, res, next) => {
+    const hostId = req.user.id;
+    const { videoId, userId } = req.body
+
+    if (userRole !== "host") {
+        return next(new AppError("Only hosts can remove this videos.", 403));
+    }
+
+    console.log( hostId, userId )
+    const recommendation = await Recommendation.findOne({ host_id: hostId, user_id: userId });
+    recommendation.video_id = recommendation.video_id.filter(
+        (id) => id.toString() !== videoId.toString()
+    );
+
+    if (recommendation.video_id.length === 0) {
+        await recommendation.remove();
+        return res.status(200).json({
+            status: "success",
+            message: "Recommendation removed as no videos remain.",
+        });
+    }
+
+    await recommendation.save();
+    return res.status(200).json({
+        status: "success",
+        message: "Video removed from recommendation.",
+        recommendation,
+    });
+});
+
+
+
+
+
+

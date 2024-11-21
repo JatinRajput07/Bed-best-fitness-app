@@ -22,7 +22,18 @@ const storage = multer.diskStorage({
             default:
                 return cb(new Error('Error: Invalid file field.'));
         }
+
+        // Create folder if it doesn't exist
         fs.mkdirSync(folder, { recursive: true });
+
+        // Check if a file with the same name already exists
+        const filePath = path.join(folder, `${Date.now()}-${file.originalname}`);
+        if (fs.existsSync(filePath)) {
+            // If file exists, delete it before uploading new one
+            fs.unlinkSync(filePath);
+            console.log(`Old file deleted: ${filePath}`);
+        }
+
         cb(null, folder);
     },
     filename: (req, file, cb) => {

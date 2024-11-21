@@ -9,9 +9,9 @@ const MenuList = memo(() => {
     setHovered(name);
   };
 
-  const handleMouseLeave = () => {
-    setHovered(null);
-  };
+  // const handleMouseLeave = () => {
+  //   setHovered(null);
+  // };
 
   return (
     <div className="flex items-center">

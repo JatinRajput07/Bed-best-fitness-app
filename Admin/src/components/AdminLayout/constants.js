@@ -9,18 +9,23 @@ export const user = {
 };
 
 export const navigation = [
-  { 
-    name: 'Dashboard', href: '/', current: true 
+  {
+    name: 'Dashboard', href: '/', current: true
   },
-  { 
-    name: 'Videos', href: '/upload-video-files', current: false 
+  {
+    name: 'Videos',
+    href: '/video',
+    current: false,
+    submenu: [
+      { name: 'Upload Video', href: '/video/upload-video-files' },
+    ]
   },
-  { 
-    name: 'Users', href: '/users', current: false 
+  {
+    name: 'Users', href: '/users', current: false
   },
-  { 
-    name: 'CMS', 
-    href: '#', 
+  {
+    name: 'CMS',
+    href: '#',
     current: false,
     submenu: [
       { name: 'Privacy Policy', href: '/cms/privacy-policy' },
@@ -28,8 +33,8 @@ export const navigation = [
       { name: 'Contact Us', href: '/cms/contact-us' }
     ]
   },
-  { 
-    name: 'Settings', href: '/settings', current: false 
+  {
+    name: 'Settings', href: '/settings', current: false
   }
 ];
 

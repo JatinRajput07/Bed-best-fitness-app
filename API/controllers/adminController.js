@@ -3,6 +3,7 @@ const User = require("../models/User");
 const catchAsync = require("../utils/catchAsync");
 const Cms = require("../models/Cms");
 const Contact = require("../models/Contact");
+const Video = require("../models/videos");
 
 exports.getUserList = catchAsync(async (req, res, next) => {
     const { page = 1, limit = 10, search = '' } = req.query;
@@ -39,7 +40,6 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         }
     });
 });
-
 
 
 exports.getCms = catchAsync(async (req, res, next) => {
@@ -95,5 +95,40 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
         status: 'success',
         contacts,
         totalRecords: totalContacts
+    });
+});
+
+
+exports.uploadVideos = catchAsync(async (req, res, next) => {
+    const video = await Video.create(req.body)
+    if (video) {
+        return res.status(200).json({
+            status: 'success',
+            video
+        });
+    }
+})
+
+
+exports.getVideos = catchAsync(async (req, res, next) => {
+    const { category } = req.params;
+    const videos = await Video.aggregate([
+        {
+            $match: {
+                category: category
+            }
+        }
+    ]);
+
+    if (videos.length === 0) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No videos found for this category'
+        });
+    }
+
+    return res.status(200).json({
+        status: 'success',
+        videos
     });
 });

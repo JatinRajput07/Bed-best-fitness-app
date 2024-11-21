@@ -20,12 +20,9 @@ const Videos = () => {
         return `${minutes}.${(remainingSeconds).toFixed()} Minuts`;
     }
 
-
     return (
         <AdminLayout title="Videos" buttonLabel={isListing ? "Add Video" : "Go to List"} onButtonClick={() => setIsListing(!isListing)} >
             {isListing && <AddRoutine />}
-
-
             {!isListing && (
                 <div className="container mx-auto px-4 sm:px-8">
                     <div className="py-8">
