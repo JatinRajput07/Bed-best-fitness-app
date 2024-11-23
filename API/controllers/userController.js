@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Video = require("../models/videos");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require('jsonwebtoken');
@@ -43,7 +44,7 @@ exports.register = catchAsync(async (req, res, next) => {
     }
     const user = await User.create(newUserData);
     const token = signToken(user._id);
-    return res.status(201).json({
+    return res.status(200).json({
         status: 'success',
         message: 'Registration successful!',
         data: {
@@ -223,8 +224,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
         }
     });
 })
-
-
 
 
 exports.addRoutine = catchAsync(async (req, res, next) => {
@@ -499,7 +498,6 @@ exports.getUserRecommendations = catchAsync(async (req, res, next) => {
         .populate("host_id", "name email")
         .populate("video_id")
         .exec();
-
     return res.status(200).json({
         status: "success",
         recommendations,
@@ -509,13 +507,14 @@ exports.getUserRecommendations = catchAsync(async (req, res, next) => {
 
 exports.deleteRecommendation = catchAsync(async (req, res, next) => {
     const hostId = req.user.id;
+    const userRole = req.user.role;
     const { videoId, userId } = req.body
 
     if (userRole !== "host") {
         return next(new AppError("Only hosts can remove this videos.", 403));
     }
 
-    console.log( hostId, userId )
+    console.log(hostId, userId)
     const recommendation = await Recommendation.findOne({ host_id: hostId, user_id: userId });
     recommendation.video_id = recommendation.video_id.filter(
         (id) => id.toString() !== videoId.toString()
@@ -537,6 +536,45 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
     });
 });
 
+
+exports.Home = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const [videos, recommendationVideos] = await Promise.all([
+        Video.aggregate([
+            {
+                $group: {
+                    _id: "$category",
+                    videos: {
+                        $push: {
+                            _id: "$_id",
+                            title: "$title",
+                            path: "$path",
+                            createdAt: "$createdAt",
+                            updatedAt: "$updatedAt",
+                            category: "$category",
+                        }
+                    },
+                    count: { $sum: 1 }
+                },
+            }, {
+                $project: {
+                    _id: 1,
+                    category: "$_id",
+                    videos: 1,
+                    count: 1
+                }
+            }
+        ]),
+        Recommendation.find({ user_id: userId })
+            .populate("host_id", "name email")
+            .populate("video_id", "-__v")
+            .exec(),
+    ]);
+    return res.status(200).json({
+        status: "success",
+        data: { videos, recommendationVideos },
+    });
+});
 
 
 

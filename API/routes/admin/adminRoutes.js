@@ -1,8 +1,12 @@
 const express = require('express');
 const { uploadFiles } = require('../../controllers/userController');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard } = require('../../controllers/adminController');
 const router = express.Router();
 
+
+
+
+router.get('/dashboard', dashboard)
 
 router.post('/upload-file', uploadFiles)
 router.get('/user-list', getUserList)

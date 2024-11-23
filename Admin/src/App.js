@@ -11,23 +11,31 @@ import ContactUs from './pages/CMS/ContactUs';
 import UploadFile from './pages/Uploadfiles';
 import VideoList from './pages/VideoList';
 
+
+
+const routes = [
+  { path: '/', component: Dashboard },
+  { path: '/login', component: SignIn },
+  { path: '/routine', component: Routine },
+  { path: '/users', component: UserList },
+  { path: '/video', component: VideoList },
+  { path: '/video/upload-video-files', component: UploadFile },
+  { path: '/settings', component: SettingsPage },
+  { path: '/cms/privacy-policy', component: PrivacyPolicy },
+  { path: '/cms/terms-conditions', component: TermsAndConditions },
+  { path: '/cms/contact-us', component: ContactUs },
+];
+
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<Dashboard />} />
-        <Route path='/routine' element={<Routine />} />
-        <Route path='/login' element={<SignIn />} />
-        <Route path='/users' element={<UserList />} />
-        <Route path='/video' element={<VideoList />} />
-        <Route path='/video/upload-video-files' element={<UploadFile />} />
-        <Route path='/settings' element={<SettingsPage />} />
-        <Route path='/cms/privacy-policy' element={<PrivacyPolicy />} />
-        <Route path='/cms/terms-conditions' element={<TermsAndConditions />} />
-        <Route path='/cms/contact-us' element={<ContactUs/>} />
+        {routes.map(({ path, component: Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
       </Routes>
     </BrowserRouter>
-
   );
 }
 

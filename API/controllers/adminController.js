@@ -132,3 +132,19 @@ exports.getVideos = catchAsync(async (req, res, next) => {
         videos
     });
 });
+
+
+exports.dashboard = catchAsync(async (req, res, next) => {
+    const [videoCount, userCount] = await Promise.all([
+        Video.countDocuments().exec(),
+        User.countDocuments().exec(),
+    ]);
+
+    return res.status(200).json({
+        status: 'success',
+        data: {
+            videos: videoCount,
+            users: userCount,
+        },
+    });
+});
