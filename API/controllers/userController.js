@@ -587,5 +587,26 @@ exports.Home = catchAsync(async (req, res, next) => {
 
 
 
+exports.getVideosByCategory = catchAsync(async (req, res, next) => {
+    const { category } = req.params; 
 
+    const videos = await Video.find({ category })
+        .select("_id title path createdAt updatedAt category")
+        .exec();
+    
+    if (videos.length === 0) {
+        return res.status(404).json({
+            status: "fail",
+            message: `No videos found for category: ${category}`,
+        });
+    }
 
+    videos.forEach(video => {
+        video.title = video.category;
+    });
+
+    return res.status(200).json({
+        status: "success",
+        data: { videos },
+    });
+});

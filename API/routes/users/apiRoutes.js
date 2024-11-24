@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Auth = require('../../middleware/Auth')
 const { registrationValidation } = require('../../middleware/Validation/userValidation');
-const { register, login, forgotPassword, resetPassword, updatePassword, updateProfile, addRoutine, updateMeal, updateWater, updateSteps, updateWorkout, updateJoinSession, updateNutrition, updateSleep, updateBodyData, getRoutine, getProfile, contact_us, verifyOTP, createRecommendation, deleteRecommendation, getUserRecommendations, Home } = require('../../controllers/userController');
+const { register, login, forgotPassword, resetPassword, updatePassword, updateProfile, addRoutine, updateMeal, updateWater, updateSteps, updateWorkout, updateJoinSession, updateNutrition, updateSleep, updateBodyData, getRoutine, getProfile, contact_us, verifyOTP, createRecommendation, deleteRecommendation, getUserRecommendations, Home, getVideosByCategory } = require('../../controllers/userController');
 
 
 router.post('/register', registrationValidation, register)
@@ -23,9 +23,10 @@ router.post('/routine', addRoutine)
 router.get('/routine', getRoutine)
 
 router.get('/home', Home)
+router.get('/video/:category', getVideosByCategory)
 router.patch('/update/meal', updateMeal);
 router.patch('/update/water', updateWater);
-router.patch('/update/steps', updateSteps);
+router.patch('/update/steps', updateSteps); 
 router.patch('/update/workout', updateWorkout);
 router.patch('/update/join-session', updateJoinSession);
 router.patch('/update/nutrition', updateNutrition);
