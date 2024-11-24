@@ -570,11 +570,20 @@ exports.Home = catchAsync(async (req, res, next) => {
             .populate("video_id", "-__v")
             .exec(),
     ]);
+    const groupedVideos = {};
+    videos.forEach(category => {
+        category.videos.forEach(video => {
+            video.title = category.category;
+        });
+        groupedVideos[category.category] = category.videos;
+    });
+
     return res.status(200).json({
         status: "success",
-        data: { videos, recommendationVideos },
+        data: { videos: groupedVideos, recommendationVideos },
     });
 });
+
 
 
 

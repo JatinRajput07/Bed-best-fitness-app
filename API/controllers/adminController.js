@@ -3,7 +3,44 @@ const User = require("../models/User");
 const catchAsync = require("../utils/catchAsync");
 const Cms = require("../models/Cms");
 const Contact = require("../models/Contact");
+const jwt = require('jsonwebtoken')
 const Video = require("../models/videos");
+
+const signToken = id => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN
+    });
+};
+
+exports.adminLogin = catchAsync(async (req, res, next) => {
+    const { email, password } = req.body;
+
+
+    console.log(req.body)
+
+    if (!email || !password) {
+        return next(new AppError('Please provide email and password', 400));
+    }
+    const user = await User.findOne({ email, role: 'admin' });
+
+    if (!user) {
+        return next(new AppError('Invalid email or password', 401));
+    }
+
+    if (!user || !(await user.correctPassword(password))) {
+        return next(new AppError('Incorrect email or password', 401));
+    }
+
+    const token = signToken(user._id);
+    if (user) {
+        return res.json({
+            status: 'success',
+            message: 'Login Successfull!',
+            data: { ...user.toObject(), token }
+        })
+    }
+});
+
 
 exports.getUserList = catchAsync(async (req, res, next) => {
     const { page = 1, limit = 10, search = '' } = req.query;
