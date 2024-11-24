@@ -572,9 +572,9 @@ exports.Home = catchAsync(async (req, res, next) => {
     ]);
     const groupedVideos = {};
     videos.forEach(category => {
-        category.videos.forEach(video => {
-            video.title = category.category;
-        });
+        // category.videos.forEach(video => {
+        //     video.title = category.category;
+        // });
         groupedVideos[category.category] = category.videos;
     });
 
