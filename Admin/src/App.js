@@ -10,6 +10,7 @@ import TermsAndConditions from './pages/CMS/TermsAndConditions';
 import ContactUs from './pages/CMS/ContactUs';
 import UploadFile from './pages/Uploadfiles';
 import VideoList from './pages/VideoList';
+import AssignHost from './pages/AssignHost';
 
 
 
@@ -18,6 +19,7 @@ const routes = [
   { path: '/login', component: SignIn },
   { path: '/routine', component: Routine },
   { path: '/users', component: UserList },
+  { path: '/user/assign_host', component: AssignHost },
   { path: '/video', component: VideoList },
   { path: '/video/upload-video-files', component: UploadFile },
   { path: '/settings', component: SettingsPage },

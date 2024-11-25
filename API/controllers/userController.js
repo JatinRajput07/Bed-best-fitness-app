@@ -529,6 +529,8 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
     }
 
     await recommendation.save();
+
+
     return res.status(200).json({
         status: "success",
         message: "Video removed from recommendation.",
@@ -539,7 +541,8 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 
 exports.Home = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-    const [videos, recommendationVideos] = await Promise.all([
+
+    const [videos, recommendationVideosList] = await Promise.all([
         Video.aggregate([
             {
                 $group: {
@@ -553,30 +556,33 @@ exports.Home = catchAsync(async (req, res, next) => {
                             updatedAt: "$updatedAt",
                             category: "$category",
                         }
-                    },
-                    count: { $sum: 1 }
-                },
-            }, {
-                $project: {
-                    _id: 1,
-                    category: "$_id",
-                    videos: 1,
-                    count: 1
+                    }
                 }
-            }
+            },
+            {
+                $project: {
+                    category: "$_id",
+                    videos: { $slice: ["$videos", 10] }
+                }
+            },
+
         ]),
+
         Recommendation.find({ user_id: userId })
-            .populate("host_id", "name email")
             .populate("video_id", "-__v")
             .exec(),
     ]);
+
     const groupedVideos = {};
+
     videos.forEach(category => {
-        // category.videos.forEach(video => {
-        //     video.title = category.category;
-        // });
         groupedVideos[category.category] = category.videos;
     });
+
+
+    const recommendationVideos = recommendationVideosList
+        .map(item => item.video_id)
+        .flat();
 
     return res.status(200).json({
         status: "success",
@@ -584,29 +590,74 @@ exports.Home = catchAsync(async (req, res, next) => {
     });
 });
 
-
-
-
 exports.getVideosByCategory = catchAsync(async (req, res, next) => {
-    const { category } = req.params; 
+    const { category } = req.params;
+    const { subcategory } = req.query;
 
-    const videos = await Video.find({ category })
-        .select("_id title path createdAt updatedAt category")
+    let query = { category };
+
+    const videos = await Video.find(query)
+        .select("_id title path createdAt updatedAt category subcategories")
         .exec();
-    
-    if (videos.length === 0) {
-        return res.status(404).json({
-            status: "fail",
-            message: `No videos found for category: ${category}`,
-        });
-    }
+
+    const videosBySubcategory = {};
 
     videos.forEach(video => {
-        video.title = video.category;
+        const subcategoryValue = video.subcategories;
+        if (!videosBySubcategory[subcategoryValue]) {
+            videosBySubcategory[subcategoryValue] = []; 
+        }
+        videosBySubcategory[subcategoryValue].push(video);
     });
 
     return res.status(200).json({
         status: "success",
-        data: { videos },
+        data: { videos: videosBySubcategory },
     });
 });
+
+
+// Like a video
+exports.likeVideo = catchAsync(async (req, res, next) => {
+    const { videoId } = req.params;
+    const userId = req.user.id;  // Assuming the user is authenticated and user id is in the request
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+        return res.status(404).json({ status: 'error', message: 'Video not found' });
+    }
+
+    // Add the userId to the likes array if not already present
+    if (!video.likes.includes(userId)) {
+        video.likes.push(userId);
+        video.likesCount = video.likes.length; // Update the like count
+        await video.save();
+    }
+
+    return res.status(200).json({
+        status: 'success',
+        data: { video },
+    });
+});
+
+
+exports.getPopularVideos = catchAsync(async (req, res, next) => {
+    const { category } = req.params;
+
+    const popularVideos = await Video.find({ category })
+    .sort({ views: -1, likes: -1}) 
+        .limit(5)
+        .select("_id title path views category")
+        .exec();
+
+    return res.status(200).json({
+        status: "success",
+        data: { popularVideos },
+    });
+});
+
+
+
+
+

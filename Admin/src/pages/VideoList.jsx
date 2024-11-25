@@ -27,7 +27,6 @@ const VideoList = () => {
       <div className="p-6 mx-auto bg-white shadow-md rounded-md">
         <h1 className="text-2xl font-bold mb-4">Manage Videos</h1>
 
-        {/* Category Tabs */}
         <div className="mb-4">
           {categories.map((category) => (
             <button

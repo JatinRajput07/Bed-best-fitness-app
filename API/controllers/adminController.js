@@ -137,14 +137,33 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
 
 exports.uploadVideos = catchAsync(async (req, res, next) => {
-    const video = await Video.create(req.body)
+    const { title, path, category, subcategories } = req.body;
+
+
+    console.log(req.body,'====')
+
+    if (!category || !subcategories > 0) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'Category and subcategory are required',
+        });
+    }
+
+    const video = await Video.create({
+        title,
+        path,
+        category,
+        subcategories,
+    });
+
     if (video) {
         return res.status(200).json({
             status: 'success',
             video
         });
     }
-})
+});
+
 
 
 exports.getVideos = catchAsync(async (req, res, next) => {
