@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import Axios from '../config/index'; // Axios instance for API requests
+import Axios from '@/configs/Axios';// Axios instance for API requests
 import { utilService } from '../utilService';
 
 // Async thunk for fetching videos by category

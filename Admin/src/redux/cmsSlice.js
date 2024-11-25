@@ -1,5 +1,5 @@
+import Axios from '@/configs/Axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import Axios from '../config/index';
 
 export const fetchCms = createAsyncThunk(
   '/cms/fetch',

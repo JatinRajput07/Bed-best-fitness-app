@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import Axios from '../config/index';
+import Axios from '@/configs/Axios';
 
 export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ page, searchQuery }, { rejectWithValue }) => {
     try {

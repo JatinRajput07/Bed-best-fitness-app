@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import Axios from '../config/index';
+import Axios from '@/configs/Axios';
 
 export const uploadFile = createAsyncThunk('files/upload', async (file, { dispatch }) => {
   const formData = new FormData();

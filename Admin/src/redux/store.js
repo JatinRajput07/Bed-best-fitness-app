@@ -3,6 +3,7 @@ import uploadFileReducer from './uploadFileSlice';
 import videoReducer from './videoSlice'; 
 import userReducer from './userSlice'; 
 import cmsSlice from './cmsSlice'; 
+import authReducer from './authSlice'; 
 
 
 const store = configureStore({
@@ -11,6 +12,8 @@ const store = configureStore({
     users: userReducer,
     cms: cmsSlice,
     uploadFiles: uploadFileReducer,
+    auth: authReducer,
+
   },
 });
 
