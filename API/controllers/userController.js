@@ -9,6 +9,7 @@ const { upload } = require("../utils/UploadFiles");
 const multer = require("multer");
 const Email = require("../utils/email");
 const Recommendation = require("../models/recommendation");
+const Asign_User = require("../models/Asign_user");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -246,9 +247,19 @@ exports.addRoutine = catchAsync(async (req, res, next) => {
 
 
 exports.getRoutine = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
+    let userId = req.user.id;
+
+    if (req.user.role !== 'user') {
+        userId = req.query.userid
+    }
     const today = new Date().toISOString().split('T')[0];
-    const routine = await Routine.findOne({ userId, date: today });
+    const query = {
+        userId, date: req.query.date ? req.query.date : today
+    }
+
+    console.log(query)
+
+    const routine = await Routine.findOne(query);
     res.status(200).json({
         status: "success",
         message: "Routine get Successfull!",
@@ -605,7 +616,7 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
     videos.forEach(video => {
         const subcategoryValue = video.subcategories;
         if (!videosBySubcategory[subcategoryValue]) {
-            videosBySubcategory[subcategoryValue] = []; 
+            videosBySubcategory[subcategoryValue] = [];
         }
         videosBySubcategory[subcategoryValue].push(video);
     });
@@ -646,7 +657,7 @@ exports.getPopularVideos = catchAsync(async (req, res, next) => {
     const { category } = req.params;
 
     const popularVideos = await Video.find({ category })
-    .sort({ views: -1, likes: -1}) 
+        .sort({ views: -1, likes: -1 })
         .limit(5)
         .select("_id title path views category")
         .exec();
@@ -657,6 +668,26 @@ exports.getPopularVideos = catchAsync(async (req, res, next) => {
     });
 });
 
+
+
+exports.get_asign_users = catchAsync(async (req, res, next) => {
+    const hostId = req.user.id;
+    const userRole = req.user.role;
+
+    if (userRole !== "host") {
+        return next(new AppError("Only hosts can get details.", 403));
+    }
+
+    const users = await Asign_User.find({ host: hostId }).populate('asign_user')
+    if (!users) {
+        return next(new AppError("No assigned users found for this host.", 404));
+    }
+    return res.status(200).json({
+        status: "success",
+        message: "Assigned users retrieved successfully.",
+        data: users,
+    });
+});
 
 
 

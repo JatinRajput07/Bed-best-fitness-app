@@ -58,8 +58,18 @@ const routineSchema = new mongoose.Schema({
         bed_at: { type: String }
     },
     body_data: bodyDataSchema
+},{
+    virtuals: true 
 });
 
 routineSchema.index({ userId: 1, createdAt: 1 }, { unique: true });
+
+// routineSchema.virtual('routines', {
+//     ref: 'User',
+//     localField: 'userId',
+//     foreignField: '_id',
+//   });
+
+
 
 module.exports = mongoose.model('Routine', routineSchema);

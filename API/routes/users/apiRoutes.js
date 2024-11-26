@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Auth = require('../../middleware/Auth')
 const { registrationValidation } = require('../../middleware/Validation/userValidation');
-const { register, login, forgotPassword, resetPassword, updatePassword, updateProfile, addRoutine, updateMeal, updateWater, updateSteps, updateWorkout, updateJoinSession, updateNutrition, updateSleep, updateBodyData, getRoutine, getProfile, contact_us, verifyOTP, createRecommendation, deleteRecommendation, getUserRecommendations, Home, getVideosByCategory } = require('../../controllers/userController');
+const { register, login, forgotPassword, resetPassword, updatePassword, updateProfile, addRoutine, updateMeal, updateWater, updateSteps, updateWorkout, updateJoinSession, updateNutrition, updateSleep, updateBodyData, getRoutine, getProfile, contact_us, verifyOTP, createRecommendation, deleteRecommendation, getUserRecommendations, Home, getVideosByCategory, get_asign_users } = require('../../controllers/userController');
 
 
 router.post('/register', registrationValidation, register)
@@ -43,6 +43,11 @@ router.get("/recommendation", getUserRecommendations);
 // Host-only routes
 router.post("/recommendation", createRecommendation);
 router.delete("/recommendation", deleteRecommendation);
+
+
+router.get("/asign_users", get_asign_users);
+
+
 
 
 
