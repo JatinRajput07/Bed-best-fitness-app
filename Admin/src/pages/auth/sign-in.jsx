@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { login } from "@/redux/authSlice";
 import { useDispatch } from "react-redux";
+import { utilService } from "@/utilService";
 
 export function SignIn() {
   const dispatch = useDispatch();
@@ -30,14 +31,13 @@ export function SignIn() {
       });
 
       const data = await response.json();
-
-      console.log(response,'[===d=d=')
-    
       if (response.ok) {
         dispatch(login(data.token));
+        utilService.showSuccessToast("Login successfully!");
         navigate("/dashboard/home");
       } else {
-        setError(data.message || "Login failed. Please try again.");
+        utilService.showErrorToast(data.message || "Login failed. Please try again.");
+        // setError(data.message || "Login failed. Please try again.");
       }
     } catch (err) {
       console.log(err,'====')

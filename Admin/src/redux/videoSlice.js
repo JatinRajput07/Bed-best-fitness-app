@@ -22,7 +22,7 @@ export const createVideo = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const response = await Axios.post('/admin/upload-videos', data);
-      utilService.showSuccessToast('Video created successfully!');
+      // utilService.showSuccessToast('Video created successfully!');
       return response.data.video; // Assuming 'video' is the key in the response
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';

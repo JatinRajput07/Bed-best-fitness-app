@@ -32,7 +32,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
             variant="h6"
             color={sidenavType === "dark" ? "white" : "blue-gray"}
           >
-            {brandName}
+            {/* {brandName} */}
+            <img className="m-auto" width={"100px"} src="/free-logo.png" alt="" />
           </Typography>
         </Link>
         <IconButton
@@ -96,8 +97,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
 }
 
 Sidenav.defaultProps = {
-  brandImg: "/img/logo-ct.png",
-  brandName: "Material Tailwind React",
+  brandImg: "/free-logo.png",
+  brandName: "FITNESS-APP",
 };
 
 Sidenav.propTypes = {

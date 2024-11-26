@@ -5,6 +5,7 @@ import Videos from "./pages/dashboard/videos";
 import PrivacyPolicy from "./pages/dashboard/PrivacyPolicy";
 import VideoUpload from "./pages/dashboard/VideoUpload";
 import TermsAndConditions from "./pages/dashboard/TermsAndConditions";
+import AssignUsersToHost from "./pages/dashboard/AssignUsersToHost";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -38,6 +39,12 @@ export const routes = [
         path: "/users",
         element: <UserList />,
       },
+      // {
+      //   icon: <UserIcon {...icon} />,
+      //   name: "Assign Users to Host",
+      //   path: "/assignUsersToHost",
+      //   element: <AssignUsersToHost />,
+      // },
       {
         icon: <HomeIcon {...icon} />,
         name: "Privacy Policy",

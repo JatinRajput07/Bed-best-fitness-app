@@ -20,7 +20,7 @@ const UploadVideo = () => {
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(null);
-  const [subcategories, setSubcategories] = useState([]);
+  const [subcategories, setSubcategories] = useState();
   const [file, setFile] = useState(null);
   const [errors, setErrors] = useState({});
 
@@ -56,6 +56,7 @@ const UploadVideo = () => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
+
     if (selectedFile) {
       setFile(selectedFile);
       dispatch(resetProgress());
@@ -82,16 +83,25 @@ const UploadVideo = () => {
           title,
           path: filePath,
           category: category.value,
-          subcategories: subcategories.map((sub) => sub.value),
+          subcategories: subcategories
         })
-      );
-      utilService.showSuccessToast("Video uploaded successfully!");
+      ).then(res => {
+        if (res.meta.requestStatus === "fulfilled") {
+          utilService.showSuccessToast("Video uploaded successfully!");
+          setTitle("");
+          setCategory(null);
+          setSubcategories();
+          setFile(null);
+          dispatch(resetProgress());
+        }
+      })
       setTitle("");
       setCategory(null);
-      setSubcategories([]);
+      setSubcategories();
       setFile(null);
       dispatch(resetProgress());
     } catch (err) {
+      console.log(err, '===d')
       utilService.showErrorToast("Failed to upload video.");
     }
   };
@@ -160,7 +170,7 @@ const UploadVideo = () => {
                 value={subcategories}
                 onChange={(selected) => setSubcategories(selected || [])}
                 options={subcategoryOptions[category.value]}
-                isMulti
+                // isMulti
                 placeholder="Select subcategories"
               />
             </div>

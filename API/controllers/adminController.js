@@ -5,6 +5,8 @@ const Cms = require("../models/Cms");
 const Contact = require("../models/Contact");
 const jwt = require('jsonwebtoken')
 const Video = require("../models/videos");
+const getVideoDuration = require('get-video-duration');
+const AppError = require("../utils/AppError");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -14,8 +16,6 @@ const signToken = id => {
 
 exports.adminLogin = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-
-
     console.log(req.body)
 
     if (!email || !password) {
@@ -138,10 +138,8 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
 exports.uploadVideos = catchAsync(async (req, res, next) => {
     const { title, path, category, subcategories } = req.body;
-
-
-    console.log(req.body,'====')
-
+    console.log(title, path, category, subcategories)
+    const duration = await getVideoDuration.getVideoDurationInSeconds(path)
     if (!category || !subcategories > 0) {
         return res.status(400).json({
             status: 'fail',
@@ -153,7 +151,8 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
         title,
         path,
         category,
-        subcategories,
+        subcategories: subcategories.value,
+        duration
     });
 
     if (video) {

@@ -3,6 +3,7 @@ import axios from 'axios';
 // import Router from 'next/router'; // Use Router directly for navigation instead of useRouter
 
 const URL = 'http://43.204.2.84:7200/'; // Correct base URL
+// const URL = 'http://localhost:7200/'; // dev base URL
 
 const Axios = axios.create({
     baseURL: `${URL}`,
