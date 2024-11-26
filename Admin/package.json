@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 3200",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve -s dist -l 3200"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^43.3.1",
