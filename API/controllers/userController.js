@@ -17,6 +17,12 @@ const signToken = id => {
     });
 };
 
+const getLocalDate = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().split('T')[0];
+};
+
 
 exports.register = catchAsync(async (req, res, next) => {
 
@@ -230,7 +236,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 exports.addRoutine = catchAsync(async (req, res, next) => {
     const { ...routineData } = req.body;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     const routine = await Routine.findOneAndUpdate(
         { userId, date: today },
@@ -252,7 +258,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     if (req.user.role !== 'user') {
         userId = req.query.userid
     }
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
     const query = {
         userId, date: req.query.date ? req.query.date : today
     }
@@ -271,7 +277,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
 exports.updateMeal = catchAsync(async (req, res, next) => {
     const mealData = req.body.meal;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today });
 
@@ -290,11 +296,15 @@ exports.updateMeal = catchAsync(async (req, res, next) => {
 
 
 exports.updateWater = catchAsync(async (req, res, next) => {
+    console.log("water...")
     const waterData = req.body.water;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today }, ('water'));
+    
+    console.log(routine,"=======routine=====")
+
     if (!routine) {
         routine = await Routine.create({ userId, date: today, water: waterData });
     }
@@ -312,12 +322,11 @@ exports.updateWater = catchAsync(async (req, res, next) => {
 exports.updateSteps = catchAsync(async (req, res, next) => {
     const stepsData = req.body.steps;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
-
+    const today = getLocalDate()
     let routine = await Routine.findOne({ userId, date: today }, ('steps'));
 
     if (!routine) {
-        routine = await Routine.create({ userId, date: today, steps: stepsData });
+        routine = await Routine.create({ userId, date: today, today: stepsData });
     }
 
     routine.steps = stepsData
@@ -333,7 +342,7 @@ exports.updateSteps = catchAsync(async (req, res, next) => {
 exports.updateWorkout = catchAsync(async (req, res, next) => {
     const workoutData = req.body.workout;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today }, ('workout'));
 
@@ -354,7 +363,7 @@ exports.updateWorkout = catchAsync(async (req, res, next) => {
 exports.updateJoinSession = catchAsync(async (req, res, next) => {
     const joinSessionData = req.body.join_session;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
     let routine = await Routine.findOne({ userId, date: today }, ('join_session'));
     if (!routine) {
         routine = await Routine.create({ userId, date: today, join_session: joinSessionData });
@@ -373,7 +382,7 @@ exports.updateJoinSession = catchAsync(async (req, res, next) => {
 exports.updateNutrition = catchAsync(async (req, res, next) => {
     const nutritionData = req.body.nutrition;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today }, ('nutrition'));
 
@@ -395,7 +404,7 @@ exports.updateSleep = catchAsync(async (req, res, next) => {
     const sleepData = req.body.sleep;
     const userId = req.user.id;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
     let routine = await Routine.findOne({ userId, date: today }, ('sleep'));
 
     if (!routine) {
@@ -415,7 +424,7 @@ exports.updateSleep = catchAsync(async (req, res, next) => {
 exports.updateBodyData = catchAsync(async (req, res, next) => {
     const bodyData = req.body.body_data;
     const userId = req.user.id;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today }, ('body_data'));
 
@@ -628,10 +637,9 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
 });
 
 
-// Like a video
 exports.likeVideo = catchAsync(async (req, res, next) => {
     const { videoId } = req.params;
-    const userId = req.user.id;  // Assuming the user is authenticated and user id is in the request
+    const userId = req.user.id; 
 
     const video = await Video.findById(videoId);
 
@@ -639,10 +647,9 @@ exports.likeVideo = catchAsync(async (req, res, next) => {
         return res.status(404).json({ status: 'error', message: 'Video not found' });
     }
 
-    // Add the userId to the likes array if not already present
     if (!video.likes.includes(userId)) {
         video.likes.push(userId);
-        video.likesCount = video.likes.length; // Update the like count
+        video.likesCount = video.likes.length;
         await video.save();
     }
 
@@ -667,7 +674,6 @@ exports.getPopularVideos = catchAsync(async (req, res, next) => {
         data: { popularVideos },
     });
 });
-
 
 
 exports.get_asign_users = catchAsync(async (req, res, next) => {

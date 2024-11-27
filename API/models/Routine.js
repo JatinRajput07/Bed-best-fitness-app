@@ -35,9 +35,9 @@ const routineSchema = new mongoose.Schema({
         qty: { type: String }
     },
     steps: {
-        walking: { type: mongoose.Schema.Types.Mixed },
-        jogging: { type: mongoose.Schema.Types.Mixed },
-        running: { type: mongoose.Schema.Types.Mixed }
+        calories: String,
+        time: String,
+        km: String
     },
     workout: {
         status: { type: Boolean },
@@ -58,18 +58,10 @@ const routineSchema = new mongoose.Schema({
         bed_at: { type: String }
     },
     body_data: bodyDataSchema
-},{
-    virtuals: true 
+}, {
+    virtuals: true
 });
 
-routineSchema.index({ userId: 1, createdAt: 1 }, { unique: true });
-
-// routineSchema.virtual('routines', {
-//     ref: 'User',
-//     localField: 'userId',
-//     foreignField: '_id',
-//   });
-
-
+routineSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Routine', routineSchema);
