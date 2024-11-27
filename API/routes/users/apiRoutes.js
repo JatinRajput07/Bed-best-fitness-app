@@ -63,8 +63,8 @@ router.get('/video/:category', getVideosByCategory); // Get videos by category
 // router.patch('/update/:nutrition', updateNutrition); // Update nutrition details
 // router.patch('/update/:sleep', updateSleep); // Update sleep data
 // router.patch('/update/:body-data', updateBodyData); // Update body data
-
 router.patch('/update/:section', updateRoutineSection);
+
 
 // Contact Us
 router.post('/contact_us', contact_us); // Contact us form submission
