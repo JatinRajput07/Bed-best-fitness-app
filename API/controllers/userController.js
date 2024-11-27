@@ -273,6 +273,48 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     });
 });
 
+exports.updateRoutineSection = catchAsync(async (req, res, next) => {
+    const section = req.params.section; // Get section type from the route
+    const data = req.body[section];    // Get data for the specified section
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    if (!data) {
+        return next(new AppError(`No data provided for section: ${section}`, 400));
+    }
+
+    // Validate section name
+    const validSections = [
+        'water',
+        'meal',
+        'steps',
+        'workout',
+        'join_session',
+        'nutrition',
+        'sleep',
+        'body_data'
+    ];
+    if (!validSections.includes(section)) {
+        return next(new AppError(`Invalid section: ${section}`, 400));
+    }
+
+    // Find or create a routine document
+    let routine = await Routine.findOne({ userId, date: today });
+    if (!routine) {
+        routine = await Routine.create({ userId, date: today, [section]: data });
+    } else {
+        routine[section] = data; // Update the relevant section
+        await routine.save();
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: `${section} updated successfully`,
+        routine
+    });
+});
+
+
 
 exports.updateMeal = catchAsync(async (req, res, next) => {
     console.log("Meal API...!")

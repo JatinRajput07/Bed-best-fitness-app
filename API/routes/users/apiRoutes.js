@@ -27,7 +27,8 @@ const {
     getUserRecommendations, 
     Home, 
     getVideosByCategory, 
-    get_asign_users 
+    get_asign_users, 
+    updateRoutineSection
 } = require('../../controllers/userController');
 
 // Authentication Routes
@@ -54,14 +55,16 @@ router.get('/home', Home); // Home data
 router.get('/video/:category', getVideosByCategory); // Get videos by category
 
 // Update Routes for Specific Sections
-router.patch('/update/water', updateWater); // Update water intake
-router.patch('/update/meal', updateMeal); // Update meal details
-router.patch('/update/steps', updateSteps); // Update steps data
-router.patch('/update/workout', updateWorkout); // Update workout details
-router.patch('/update/join-session', updateJoinSession); // Update join session status
-router.patch('/update/nutrition', updateNutrition); // Update nutrition details
-router.patch('/update/sleep', updateSleep); // Update sleep data
-router.patch('/update/body-data', updateBodyData); // Update body data
+// router.patch('/update/:water', updateWater); // Update water intake
+// router.patch('/update/:meal', updateMeal); // Update meal details
+// router.patch('/update/:steps', updateSteps); // Update steps data
+// router.patch('/update/:workout', updateWorkout); // Update workout details
+// router.patch('/update/:join-session', updateJoinSession); // Update join session status
+// router.patch('/update/:nutrition', updateNutrition); // Update nutrition details
+// router.patch('/update/:sleep', updateSleep); // Update sleep data
+// router.patch('/update/:body-data', updateBodyData); // Update body data
+
+router.patch('/update/:section', updateRoutineSection);
 
 // Contact Us
 router.post('/contact_us', contact_us); // Contact us form submission
