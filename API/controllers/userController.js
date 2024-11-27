@@ -275,6 +275,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
 
 
 exports.updateMeal = catchAsync(async (req, res, next) => {
+    console.log("Meal API...!")
     const mealData = req.body.meal;
     const userId = req.user.id;
     const today = getLocalDate()
