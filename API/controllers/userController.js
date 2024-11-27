@@ -297,6 +297,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     if (!validSections.includes(section)) {
         return next(new AppError(`Invalid section: ${section}`, 400));
     }
+    
 
     // Find or create a routine document
     let routine = await Routine.findOne({ userId, date: today },(section));
