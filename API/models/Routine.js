@@ -1,3 +1,4 @@
+const { date } = require('joi');
 const mongoose = require('mongoose');
 const dynamicSchema = new mongoose.Schema({
     data: { type: mongoose.Schema.Types.Mixed }
@@ -58,8 +59,6 @@ const routineSchema = new mongoose.Schema({
         bed_at: { type: String }
     },
     body_data: bodyDataSchema
-}, {
-    virtuals: true
 });
 
 routineSchema.index({ userId: 1, date: 1 }, { unique: true });
