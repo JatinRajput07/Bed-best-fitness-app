@@ -38,7 +38,8 @@ const routineSchema = new mongoose.Schema({
     steps: {
         calories: String,
         time: String,
-        km: String
+        km: String,
+        steps:String
     },
     workout: {
         status: { type: Boolean },

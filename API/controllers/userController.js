@@ -273,6 +273,8 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     });
 });
 
+const _ = require('lodash');
+
 exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     const section = req.params.section; // Get section type from the route
     const data = req.body[section];    // Get data for the specified section
@@ -297,14 +299,19 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     if (!validSections.includes(section)) {
         return next(new AppError(`Invalid section: ${section}`, 400));
     }
-    
 
     // Find or create a routine document
-    let routine = await Routine.findOne({ userId, date: today },(section));
+    let routine = await Routine.findOne({ userId, date: today });
     if (!routine) {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
-        routine[section] = data; // Update the relevant section
+        if (section === 'meal') {
+            // Merge existing `meal` data with incoming `meal` data
+            routine.meal = _.merge(routine.meal || {}, data);
+        } else {
+            // For other sections, replace the section entirely
+            routine[section] = data;
+        }
         await routine.save();
     }
 
@@ -314,6 +321,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         routine
     });
 });
+
 
 
 
