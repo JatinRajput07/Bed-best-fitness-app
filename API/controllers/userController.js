@@ -301,7 +301,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     }
 
     // Find or create a routine document
-    let routine = await Routine.findOne({ userId, date: today });
+    let routine = await Routine.findOne({ userId, date: today },(section));
     if (!routine) {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
