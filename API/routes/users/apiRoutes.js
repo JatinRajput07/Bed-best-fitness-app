@@ -2,33 +2,27 @@ const express = require('express');
 const router = express.Router();
 const Auth = require('../../middleware/Auth');
 const { registrationValidation } = require('../../middleware/Validation/userValidation');
-const { 
-    register, 
-    login, 
-    forgotPassword, 
-    resetPassword, 
-    updatePassword, 
-    updateProfile, 
-    addRoutine, 
-    updateMeal, 
-    updateWater, 
-    updateSteps, 
-    updateWorkout, 
-    updateJoinSession, 
-    updateNutrition, 
-    updateSleep, 
-    updateBodyData, 
-    getRoutine, 
-    getProfile, 
-    contact_us, 
-    verifyOTP, 
-    createRecommendation, 
-    deleteRecommendation, 
-    getUserRecommendations, 
-    Home, 
-    getVideosByCategory, 
-    get_asign_users, 
-    updateRoutineSection
+const {
+    register,
+    login,
+    forgotPassword,
+    resetPassword,
+    updatePassword,
+    updateProfile,
+    addRoutine,
+    getRoutine,
+    getProfile,
+    contact_us,
+    verifyOTP,
+    createRecommendation,
+    deleteRecommendation,
+    getUserRecommendations,
+    Home,
+    getVideosByCategory,
+    get_asign_users,
+    updateRoutineSection,
+    addReminder,
+    getUserReminders
 } = require('../../controllers/userController');
 
 // Authentication Routes
@@ -76,5 +70,9 @@ router.delete('/recommendation', deleteRecommendation); // Delete a recommendati
 
 // Host-only Routes
 router.get("/asign_users", get_asign_users); // Get assigned users
+
+
+router.post("/reminders", addReminder);
+router.get("/reminders", getUserReminders);
 
 module.exports = router;

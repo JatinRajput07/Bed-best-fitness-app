@@ -7,9 +7,11 @@ const crypto = require('crypto-js');
 const Routine = require("../models/Routine");
 const { upload } = require("../utils/UploadFiles");
 const multer = require("multer");
+const _ = require('lodash');
 const Email = require("../utils/email");
 const Recommendation = require("../models/recommendation");
 const Asign_User = require("../models/Asign_user");
+const Reminder = require("../models/Reminder");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -131,30 +133,6 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
 });
 
 
-// exports.resendOTP = catchAsync(async (req, res, next) => {
-//     const { email } = req.body;
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//         return next(new AppError('There is no user with this email address.', 404));
-//     }
-//     const resetToken = user.createPasswordResetToken();
-//     await user.save({ validateBeforeSave: false });
-
-//     try {
-//         res.status(200).json({
-//             status: 'success',
-//             message: 'OTP resent to email!',
-//             OTP: resetToken
-//         });
-//     } catch (err) {
-//         user.passwordResetToken = undefined;
-//         user.passwordResetExpires = undefined;
-//         await user.save({ validateBeforeSave: false });
-
-//         return next(new AppError('There was an error resending the OTP. Try again later!', 500));
-//     }
-// });
-
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
     const { otp, email } = req.body;
@@ -273,7 +251,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     });
 });
 
-const _ = require('lodash');
+
 
 exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     const section = req.params.section; // Get section type from the route
@@ -301,7 +279,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     }
 
     // Find or create a routine document
-    let routine = await Routine.findOne({ userId, date: today },(section));
+    let routine = await Routine.findOne({ userId, date: today }, (section));
     if (!routine) {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
@@ -354,8 +332,8 @@ exports.updateWater = catchAsync(async (req, res, next) => {
     const today = getLocalDate()
 
     let routine = await Routine.findOne({ userId, date: today }, ('water'));
-    
-    console.log(routine,"=======routine=====")
+
+    console.log(routine, "=======routine=====")
 
     if (!routine) {
         routine = await Routine.create({ userId, date: today, water: waterData });
@@ -691,7 +669,7 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
 
 exports.likeVideo = catchAsync(async (req, res, next) => {
     const { videoId } = req.params;
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     const video = await Video.findById(videoId);
 
@@ -748,5 +726,73 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
 });
 
 
+exports.addReminder = catchAsync(async (req, res, next) => {
+    const { category, isActive, repeatType, timeSettings, Days } = req.body;
+    // Valid categories check
+    if (!["meal", "water", "steps", "workout", "knowledge", "nutrition"].includes(category)) {
+        return next(new AppError("Invalid category.", 400));
+    }
+
+    // Days of the week
+    const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    let selectedDays = [];
+
+    // Handle repeatType logic
+    if (repeatType === "daily") {
+        selectedDays = allDays; // All days for daily
+    } else if (repeatType === "custom" && Days && Days.length > 0) {
+        selectedDays = Days.filter(day => allDays.includes(day)); // Validate custom days
+    }
+
+    // Check for existing reminder
+    const existingReminder = await Reminder.findOne({
+        userId: req.user.id,
+        category,
+    });
+
+    if (existingReminder) {
+        existingReminder.isActive = isActive;
+        existingReminder.timeSettings = timeSettings;
+        existingReminder.repeatType = repeatType;
+        existingReminder.Days = selectedDays;
+
+        await existingReminder.save();
+
+        return res.status(200).json({
+            status: "success",
+            message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder updated successfully.`,
+            data: existingReminder,
+        });
+    } else {
+        // Create new reminder
+        const reminder = await Reminder.create({
+            userId: req.user.id,
+            category,
+            isActive,
+            repeatType,
+            timeSettings,
+            Days: selectedDays,
+        });
+
+        return res.status(201).json({
+            status: "success",
+            message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder created successfully.`,
+            data: reminder,
+        });
+    }
+});
+
+
+exports.getUserReminders = catchAsync(async (req, res, next) => {
+    const reminders = await Reminder.find({ userId: req.user.id });
+    if (!reminders || reminders.length === 0) {
+        return next(new AppError("No reminders found.", 404));
+    }
+    return res.status(200).json({
+        status: "success",
+        message: "Reminders retrieved successfully.",
+        data: reminders,
+    });
+});
 
 
