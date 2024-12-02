@@ -1,6 +1,6 @@
-import { HomeIcon, UserIcon } from "@heroicons/react/24/solid";
-import { Home, Profile, Notifications ,UserList } from "@/pages/dashboard";
-import { Logout, SignIn, SignUp } from "@/pages/auth";
+import { HomeIcon, UserIcon, VideoCameraIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
+import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
+import { Logout } from "@/pages/auth";
 import Videos from "./pages/dashboard/videos";
 import PrivacyPolicy from "./pages/dashboard/PrivacyPolicy";
 import VideoUpload from "./pages/dashboard/VideoUpload";
@@ -22,52 +22,54 @@ export const routes = [
         element: <Home />,
       },
       {
-        icon: <HomeIcon {...icon} />,
-        name: "Videos",
-        path: "/videos",
-        element: <Videos />,
-      },
-      {
-        icon: <HomeIcon {...icon} />,
-        name: "Upload",
-        path: "/video-upload",
-        element: <VideoUpload />,
-      },
-      {
         icon: <UserIcon {...icon} />,
         name: "Users",
         path: "/users",
         element: <UserList />,
       },
-      // {
-      //   icon: <UserIcon {...icon} />,
-      //   name: "Assign Users to Host",
-      //   path: "/assignUsersToHost",
-      //   element: <AssignUsersToHost />,
-      // },
       {
-        icon: <HomeIcon {...icon} />,
-        name: "Privacy Policy",
-        path: "/privacy-policy",
-        element: <PrivacyPolicy />,
+        icon: <UserIcon {...icon} />,
+        name: "Assign UsersTo Host",
+        path: "/asignusers",
+        element: <AssignUsersToHost />,
       },
       {
-        icon: <HomeIcon {...icon} />,
-        name: "TermsAndConditions",
-        path: "/termsAndConditions",
-        element: <TermsAndConditions />,
+        icon: <VideoCameraIcon {...icon} />,
+        name: "Videos",
+        dropdown: [
+          {
+            name: "Video List",
+            path: "/videos",
+            element: <Videos />,
+          },
+          {
+            name: "Upload Video",
+            path: "/video-upload",
+            element: <VideoUpload />,
+          },
+        ],
       },
-      // {
-      //   icon: <HomeIcon {...icon} />,
-      //   name: "Settings",
-      //   path: "/setting",
-      //   element: <Home />,
-      // },
+      {
+        icon: <DocumentTextIcon {...icon} />,
+        name: "CMS",
+        dropdown: [
+          {
+            name: "Privacy Policy",
+            path: "/privacy-policy",
+            element: <PrivacyPolicy />,
+          },
+          {
+            name: "Terms & Conditions",
+            path: "/terms-and-conditions",
+            element: <TermsAndConditions />,
+          },
+        ],
+      },
       {
         icon: <HomeIcon {...icon} />,
         name: "Logout",
-        path: "/logout", // This will use the Logout component
-        element: <Logout />, // Render the Logout component when accessing /logout
+        path: "/logout",
+        element: <Logout />,
       },
     ],
   },
