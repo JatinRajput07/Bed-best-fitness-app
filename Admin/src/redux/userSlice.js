@@ -1,13 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import Axios from '@/configs/Axios';
 
-export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ page, searchQuery }, { rejectWithValue }) => {
+// Fetch Users
+export const fetchUsers = createAsyncThunk('/admin/user-list', async ({}, { rejectWithValue }) => {
     try {
         const response = await Axios.get('/admin/user-list', {
             params: {
-                page,
-                pageSize: 10,
-                search: searchQuery,
+                // page,
+                // pageSize: 10,
+                // search: searchQuery,
             },
         });
         return response.data;
@@ -16,18 +17,37 @@ export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ page, se
     }
 });
 
-export const deleteUser = createAsyncThunk('admin/user-delete', async (userId, { rejectWithValue }) => {
+// Delete User
+export const deleteUser = createAsyncThunk('/admin/user-delete', async (userId, { rejectWithValue }) => {
     try {
-        await Axios.delete(`admin/user-delete/${userId}`);
+        await Axios.delete(`/admin/user-delete/${userId}`);
         return userId;
     } catch (error) {
         return rejectWithValue(error.message);
     }
-}
-);
+});
 
+// Create User
+export const createUser = createAsyncThunk('/admin/user-create', async (userData, { rejectWithValue }) => {
+    try {
+        const response = await Axios.post('/admin/users', userData, { validateStatus: false });
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
 
+// Update User
+export const updateUser = createAsyncThunk('/admin/user-update', async ({ id, data }, { rejectWithValue }) => {
+    try {
+        const response = await Axios.put(`/admin/users/${id}`, data);
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
 
+// Slice
 const userSlice = createSlice({
     name: 'users',
     initialState: {
@@ -39,6 +59,7 @@ const userSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            // Fetch Users
             .addCase(fetchUsers.pending, (state) => {
                 state.loading = true;
             })
@@ -51,6 +72,7 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            // Delete User
             .addCase(deleteUser.pending, (state) => {
                 state.loading = true;
             })
@@ -62,6 +84,32 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            // Create User
+            .addCase(createUser.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(createUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.users = [action.payload.user, ...state.users]; // Add the new user to the list
+            })
+            .addCase(createUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Update User
+            .addCase(updateUser.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updateUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.users = state.users.map((user) =>
+                    user.id === action.payload.user.id ? action.payload.user : user
+                ); // Update the user in the list
+            })
+            .addCase(updateUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            });
     },
 });
 

@@ -19,12 +19,12 @@ import { deleteUser, fetchUsers } from "@/redux/userSlice";
 
 export function UserList() {
   const dispatch = useDispatch();
-  const [selectedUser, setSelectedUser] = useState(null); // State to track selected user for modal
+  const [selectedUser, setSelectedUser] = useState(null); 
   const { users, totalUsers, loading, error } = useSelector((state) => state.users);
 
   useEffect(() => {
-    // Fetch users when the component mounts
-    dispatch(fetchUsers({ page: 1, searchQuery: "" }));
+
+    dispatch(fetchUsers({}));
   }, [dispatch]);
 
   const handleDelete = (userId) => {
@@ -34,11 +34,11 @@ export function UserList() {
   };
 
   const handleViewDetails = (user) => {
-    setSelectedUser(user); // Open modal with user details
+    setSelectedUser(user); 
   };
 
   const closeModal = () => {
-    setSelectedUser(null); // Close modal
+    setSelectedUser(null); 
   };
 
   const excludedKeys = [

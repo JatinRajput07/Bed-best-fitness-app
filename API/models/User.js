@@ -42,7 +42,11 @@ const userSchema = new mongoose.Schema({
     passwordResetToken: String,
     passwordResetExpires: Date,
     socketId:String,
-    isOnline:String
+    isOnline:String,
+    permissions: {
+        type: Object,
+        default: {}, // Structure: { sectionName: { permission: true/false } }
+      },
 }, {
     timestamps: true
 });

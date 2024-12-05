@@ -21,7 +21,7 @@ connectDB();
 const app = express();
 
 // MIDDLEWARES
-app.use(express.json());
+app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -29,9 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
 
 app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  })
+  cors('*')
 );
 
 // Performance: Gzip Compression

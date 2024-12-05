@@ -6,6 +6,10 @@ import PrivacyPolicy from "./pages/dashboard/PrivacyPolicy";
 import VideoUpload from "./pages/dashboard/VideoUpload";
 import TermsAndConditions from "./pages/dashboard/TermsAndConditions";
 import AssignUsersToHost from "./pages/dashboard/AssignUsersToHost";
+import AdminAssignments from "./pages/dashboard/asignuser/list";
+import EditAssignment from "./pages/dashboard/asignuser/update";
+import CreateOrUpdateUser from "./pages/dashboard/user/CreateOrUpdateUser";
+import MealAndNutrition from "./pages/dashboard/MealAndNutrition";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -24,14 +28,47 @@ export const routes = [
       {
         icon: <UserIcon {...icon} />,
         name: "Users",
-        path: "/users",
-        element: <UserList />,
+        dropdown: [
+          {
+            name: "Users List",
+            path: "/users",
+            element: <UserList />,
+          },
+          {
+            name: "Create & Update",
+            path: "/createupdate",
+            element: <CreateOrUpdateUser />,
+          },
+        ]
       },
       {
         icon: <UserIcon {...icon} />,
         name: "Assign UsersTo Host",
         path: "/asignusers",
-        element: <AssignUsersToHost />,
+        dropdown: [
+          {
+            name: "Create",
+            path: "/asignusers",
+            element: <AssignUsersToHost />,
+          },
+          {
+            name: "List",
+            path: "/asignusers-list",
+            element: <AdminAssignments />,
+          },
+          // {
+          //   name: "Edit",
+          //   path: "/edit-asignusers",
+          //   element: <EditAssignment />,
+          // },
+        ],
+        // element: <AssignUsersToHost />,
+      },
+      {
+        icon: <HomeIcon {...icon} />,
+        name: "Meal And Nutrition",
+        path: "/meal_nutrition",
+        element: <MealAndNutrition />,
       },
       {
         icon: <VideoCameraIcon {...icon} />,

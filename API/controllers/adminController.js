@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const Video = require("../models/videos");
 const getVideoDuration = require('get-video-duration');
 const AppError = require("../utils/AppError");
+const Asign_User = require("../models/Asign_user");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -60,7 +61,8 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         ];
     }
 
-    const users = await User.find(query).skip(skipValue).limit(limitValue);
+    const users = await User.find(query)
+    // .skip(skipValue).limit(limitValue);
 
     const totalRecords = await User.countDocuments(query);
 
@@ -164,7 +166,6 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
 });
 
 
-
 exports.getVideos = catchAsync(async (req, res, next) => {
     const { category } = req.params;
     const videos = await Video.aggregate([
@@ -203,3 +204,90 @@ exports.dashboard = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+
+exports.assign = catchAsync(async (req, res, next) => {
+    const { asign_user, host } = req.body;
+    if (!asign_user || !host) {
+        return res.status(400).json({ message: "Host and users are required." });
+    }
+
+    const newAssignment = new Asign_User({ asign_user, host });
+    await newAssignment.save();
+
+    res.status(201).json({
+        status: 'success',
+        data: newAssignment,
+    });
+});
+
+
+exports.getassign = catchAsync(async (req, res, next) => {
+    const assignments = await Asign_User.find()
+        .populate('asign_user', 'name email')
+        .populate('host', 'name email');
+
+    res.status(200).json({
+        status: 'success',
+        data: assignments,
+    });
+});
+
+
+exports.editassign = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const { asign_user, host } = req.body;
+
+    const updatedAssignment = await Asign_User.findByIdAndUpdate(
+        id,
+        { asign_user, host },
+        { new: true }
+    );
+
+    if (!updatedAssignment) {
+        return res.status(404).json({ message: "Assignment not found." });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: updatedAssignment,
+    });
+});
+
+
+exports.deleteassign = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    const deletedAssignment = await Asign_User.findByIdAndDelete(id);
+
+    if (!deletedAssignment) {
+        return res.status(404).json({ message: "Assignment not found." });
+    }
+
+    res.status(204).json({
+        status: 'success',
+        message: "Assignment deleted successfully.",
+    });
+});
+
+
+exports.createUser = catchAsync(async (req, res, next) => {
+    const { name, email, role, permissions, password } = req.body;
+    const newUser = new User({ name, email, role, permissions, password });
+    await newUser.save();
+    res.status(201).json({ message: "User created successfully", user: newUser });
+});
+
+
+
+exports.updateUser = catchAsync(async (req, res, next) => {
+    const { name, email, role, permissions } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        { name, email, role, permissions },
+        { new: true }
+    );
+    res.status(200).json({ message: "User updated successfully", user: updatedUser });
+});
+
+
