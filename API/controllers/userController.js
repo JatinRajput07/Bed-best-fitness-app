@@ -727,60 +727,65 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
 
 
 exports.addReminder = catchAsync(async (req, res, next) => {
-    const { category, isActive, repeatType, timeSettings, Days } = req.body;
-    // Valid categories check
-    if (!["meal", "water", "steps", "workout", "knowledge", "nutrition"].includes(category)) {
+    const { category, isActive, repeatType, time, meal, water, steps, workout, knowledge, nutrition } = req.body;
+
+    const validCategories = ["meal", "water", "steps", "workout", "knowledge", "nutrition"];
+    if (!validCategories.includes(category)) {
         return next(new AppError("Invalid category.", 400));
     }
 
-    // Days of the week
-    const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    let selectedDays = [];
+    const dataMap = {
+        meal,
+        water,
+        steps,
+        workout,
+        knowledge,
+        nutrition,
+    };
 
-    // Handle repeatType logic
-    if (repeatType === "daily") {
-        selectedDays = allDays; // All days for daily
-    } else if (repeatType === "custom" && Days && Days.length > 0) {
-        selectedDays = Days.filter(day => allDays.includes(day)); // Validate custom days
-    }
 
-    // Check for existing reminder
-    const existingReminder = await Reminder.findOne({
-        userId: req.user.id,
-        category,
-    });
+    const categoryData = dataMap[category];
+    // if (!categoryData) {
+    //     return next(new AppError(`Data for category ${category} is required.`, 400));
+    // }
 
-    if (existingReminder) {
-        existingReminder.isActive = isActive;
-        existingReminder.timeSettings = timeSettings;
-        existingReminder.repeatType = repeatType;
-        existingReminder.Days = selectedDays;
 
-        await existingReminder.save();
+    const filter = { userId: req.user.id, category };
+    let reminder = await Reminder.findOne(filter);
 
-        return res.status(200).json({
-            status: "success",
-            message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder updated successfully.`,
-            data: existingReminder,
-        });
-    } else {
-        // Create new reminder
-        const reminder = await Reminder.create({
+    if (!reminder) {
+        reminder = await Reminder.create({
             userId: req.user.id,
             category,
             isActive,
+            time,
             repeatType,
-            timeSettings,
-            Days: selectedDays,
+            [category]: categoryData,
         });
 
-        return res.status(201).json({
-            status: "success",
-            message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder created successfully.`,
-            data: reminder,
-        });
+        reminder = {
+            _id: reminder._id,
+            userId: reminder.userId,
+            category: reminder.category,
+            isActive: reminder.isActive,
+            time: reminder.time,
+            [category]: reminder[category],
+        };
+    } else {
+        reminder = await Reminder.findOneAndUpdate(
+            filter,
+            { isActive, repeatType, time, [category]: categoryData },
+            { new: true, fields: `_id userId category repeatType time isActive ${[category]}`  }
+        );
     }
+
+    return res.status(201).json({
+        status: "success",
+        message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder created/updated successfully.`,
+        data: reminder,
+    });
 });
+
 
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {

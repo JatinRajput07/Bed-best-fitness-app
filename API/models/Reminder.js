@@ -9,52 +9,48 @@ const reminderSchema = new mongoose.Schema({
     category: {
         type: String,
         enum: ["meal", "water", "steps", "workout", "knowledge", "nutrition"],
-        required: [true, "Reminder must have a category."],
     },
+    time: String,
     isActive: {
         type: Boolean,
-        default: true, // Toggle reminder on/off
+        default: true,
     },
     repeatType: {
         type: String,
         enum: ["daily", "custom"],
-        default: "daily", // Can be daily or custom days (e.g., Monday, Wednesday)
+        default: "daily",
     },
-    timeSettings: {
-        mealTimes: {
-            wake_up_food: String, // Time in HH:mm format
-            breakfast: String,
-            morning_snacks: String,
-            lunch: String,
-            evening_snacks: String,
-            dinner: String,
-        },
-        waterReminder: {
-            startTime: String, // Start time in HH:mm
-            endTime: String, // End time in HH:mm
-            reminderInterval: Number, // e.g., 15 minutes
-            reminderCount: Number, // e.g., 7 times
-        },
-        workoutReminder: {
-            startTime: String,
-            duration: String, // E.g., 1 hour
-        },
-        steptReminder: {
-            startTime: String,
-            duration: String, // E.g., 1 hour
-        },
-        knowledgeSessionReminder: {
-            sessionStartTime: String,
-            duration: String, // E.g., 30 minutes
-        },
-        nutritionReminder: {
-            startTime: String,
-            duration: String, // E.g., 1 hour
-        },
+    meal: {
+        wake_up_food: String,
+        breakfast: String,
+        morning_snacks: String,
+        lunch: String,
+        evening_snacks: String,
+        dinner: String,
     },
-    Days: {
-        type: [String], // For custom days like ["Monday", "Wednesday"]
+    water: {
+        oncetime: String,
+        startTime: String,
+        endTime: String,
+        reminderInterval: Number,
+        reminderCount: Number,
     },
+    workout: [{
+        time: String,
+        day: String
+    }],
+    stept: [{
+        time: String,
+        day: String
+    }],
+    knowledgeSession: [{
+        time: String,
+        day: String
+    }],
+    nutrition: [{
+        time: String,
+        day: String
+    }],
 });
 
 const Reminder = mongoose.model("Reminder", reminderSchema);
