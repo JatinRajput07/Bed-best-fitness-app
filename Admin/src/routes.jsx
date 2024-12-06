@@ -10,6 +10,7 @@ import AdminAssignments from "./pages/dashboard/asignuser/list";
 import EditAssignment from "./pages/dashboard/asignuser/update";
 import CreateOrUpdateUser from "./pages/dashboard/user/CreateOrUpdateUser";
 import MealAndNutrition from "./pages/dashboard/MealAndNutrition";
+import Community_guidelines from "./pages/dashboard/Community_guidelines";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -99,6 +100,11 @@ export const routes = [
             name: "Terms & Conditions",
             path: "/terms-and-conditions",
             element: <TermsAndConditions />,
+          },
+          {
+            name: "Community Guidelines",
+            path: "/community_guidelines",
+            element: <Community_guidelines />,
           },
         ],
       },

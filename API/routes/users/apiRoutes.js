@@ -22,12 +22,14 @@ const {
     get_asign_users,
     updateRoutineSection,
     addReminder,
-    getUserReminders
+    getUserReminders,
+    socialLogin
 } = require('../../controllers/userController');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
 router.post('/login', login); // User login
+router.post('/social_login',socialLogin)
 router.post('/forgotPassword', forgotPassword); // Forgot password
 router.post('/verif_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password

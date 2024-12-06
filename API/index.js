@@ -20,6 +20,9 @@ connectDB();
 
 const app = express();
 
+// Set EJS as templating engine
+app.set('view engine', 'ejs');
+
 // MIDDLEWARES
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));

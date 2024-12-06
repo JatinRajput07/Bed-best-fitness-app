@@ -85,6 +85,44 @@ exports.login = catchAsync(async (req, res, next) => {
 })
 
 
+exports.socialLogin = catchAsync(async (req, res, next) => {
+    const { socialId, socialType, email, name, phone,role } = req.body;
+    if (!socialId || !socialType) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'Social ID and socialType are required',
+        });
+    }
+
+    let user = await User.findOne({ socialId, socialType });
+    if (!user) {
+        if (!email || !name) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Email and name are required for new user creation',
+            });
+        }
+        user = await User.create({
+            socialId,
+            socialType,
+            email,
+            name,
+            phone,
+            role: role || 'user', 
+        });
+    }
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+
+    res.status(200).json({
+        status: 'success',
+        message: `${socialType} login successful`,
+        data: { user, token },
+    });
+});
+
+
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
@@ -187,6 +225,8 @@ exports.getProfile = catchAsync(async (req, res, next) => {
 })
 
 
+
+
 const filterObj = (obj, ...allowedFields) => {
     const newObj = {};
     Object.keys(obj).forEach(el => {
@@ -228,6 +268,33 @@ exports.addRoutine = catchAsync(async (req, res, next) => {
         routine
     });
 });
+
+exports.deleteAccount = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+        return next(new AppError("User not found.", 404));
+    }
+    const collections = [
+        { model: Reminder, field: "userId" },
+        { model: Routine, field: "userId" },
+        { model: ActivityLog, field: "userId" },
+    ];
+
+    await Promise.all(
+        collections.map(async ({ model, field }) => {
+            await model.deleteMany({ [field]: userId });
+        })
+    );
+
+    // Step 4: Respond with success
+    res.status(200).json({
+        status: "success",
+        message: "Account and all related data deleted successfully.",
+    });
+});
+
 
 
 exports.getRoutine = catchAsync(async (req, res, next) => {
@@ -728,7 +795,6 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
 
 exports.addReminder = catchAsync(async (req, res, next) => {
     const { category, isActive, repeatType, time, meal, water, steps, workout, knowledge, nutrition } = req.body;
-
     const validCategories = ["meal", "water", "steps", "workout", "knowledge", "nutrition"];
     if (!validCategories.includes(category)) {
         return next(new AppError("Invalid category.", 400));
@@ -775,7 +841,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         reminder = await Reminder.findOneAndUpdate(
             filter,
             { isActive, repeatType, time, [category]: categoryData },
-            { new: true, fields: `_id userId category repeatType time isActive ${[category]}`  }
+            { new: true, fields: `_id userId category repeatType time isActive ${[category]}` }
         );
     }
 
@@ -785,7 +851,6 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         data: reminder,
     });
 });
-
 
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {
@@ -799,5 +864,6 @@ exports.getUserReminders = catchAsync(async (req, res, next) => {
         data: reminders,
     });
 });
+
 
 
