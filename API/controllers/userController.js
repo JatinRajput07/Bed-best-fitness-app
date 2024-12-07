@@ -12,6 +12,7 @@ const Email = require("../utils/email");
 const Recommendation = require("../models/recommendation");
 const Asign_User = require("../models/Asign_user");
 const Reminder = require("../models/Reminder");
+const Goal = require("../models/userGoal");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -86,7 +87,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
-    const { socialId, socialType, email, name, phone,role } = req.body;
+    const { socialId, socialType, email, name, phone, role } = req.body;
     if (!socialId || !socialType) {
         return res.status(400).json({
             status: 'fail',
@@ -108,7 +109,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             email,
             name,
             phone,
-            role: role || 'user', 
+            role: role || 'user',
         });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -288,12 +289,12 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
         })
     );
 
-    // Step 4: Respond with success
     res.status(200).json({
         status: "success",
         message: "Account and all related data deleted successfully.",
     });
 });
+
 
 
 

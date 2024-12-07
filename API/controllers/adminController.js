@@ -22,7 +22,7 @@ exports.adminLogin = catchAsync(async (req, res, next) => {
     if (!email || !password) {
         return next(new AppError('Please provide email and password', 400));
     }
-    const user = await User.findOne({ email, role: 'admin' });
+    const user = await User.findOne({ email });
 
     if (!user) {
         return next(new AppError('Invalid email or password', 401));

@@ -11,9 +11,6 @@ router.use('/api', apiRoutes);
 router.use('/:title', async (req, res) => {
     try {
         let page = await Cms.findOne({ title: req.params.title })
-
-        console.log(page)
-
         if (page.title === "privacy-policy") page.title = "Privacy Policy"
         if (page.title === "terms-condition") page.title = "Terms & Conditions"
         if(page.title === "community_guidelines") page.title = "Community Guidelines"

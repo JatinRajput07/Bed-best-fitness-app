@@ -25,6 +25,7 @@ const {
     getUserReminders,
     socialLogin
 } = require('../../controllers/userController');
+const { createGoal } = require('../../controllers/goalController');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
@@ -37,10 +38,16 @@ router.patch('/resetPassword', resetPassword); // Reset password
 // Protected Routes (Requires Auth Middleware)
 router.use(Auth);
 
+
 // Profile Management
 router.patch('/updateMyPassword', updatePassword); // Update user password
 router.patch('/updateProfile', updateProfile); // Update user profile
 router.get('/getProfile', getProfile); // Get user profile
+
+
+// User Goal Management
+router.post('/set_goal', createGoal); // Add user Goal
+
 
 // Routine Management
 router.post('/routine', addRoutine); // Add a routine
