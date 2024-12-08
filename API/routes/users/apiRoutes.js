@@ -24,14 +24,15 @@ const {
     addReminder,
     getUserReminders,
     socialLogin,
-    userUploadFiles
+    userUploadFiles,
+    getUploadFiles
 } = require('../../controllers/userController');
 const { createGoal, getUserGoal, getUserHealthData, getMetricData } = require('../../controllers/goalController');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
 router.post('/login', login); // User login
-router.post('/social_login',socialLogin)
+router.post('/social_login', socialLogin)
 router.post('/forgotPassword', forgotPassword); // Forgot password
 router.post('/verif_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
@@ -52,7 +53,8 @@ router.get('/get_goal', getUserGoal); // Get user Goal
 
 
 // User Upload File ( FEED and BLOOD REPORT )
-router.post('/user-upload-file', userUploadFiles); // Add user Goal
+router.post('/user-upload-file', userUploadFiles); // Add user Files
+router.get('/get-upload-file', getUploadFiles); //get  User Files                    
 
 
 // Routine Management
@@ -93,6 +95,6 @@ router.get("/reminders", getUserReminders);
 
 
 
-router.get("/userHealthData",getMetricData)
+router.get("/userHealthData", getMetricData)
 
 module.exports = router;

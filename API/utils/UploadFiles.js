@@ -93,7 +93,7 @@ exports.upload = multer({
 
 
 
-exports.generateThumbnail = (videoPath) => {    
+exports.generateThumbnail = (videoPath) => {
     return new Promise((resolve, reject) => {
         const thumbnailDir = './public/uploads/thumbnails';
         fs.mkdirSync(thumbnailDir, { recursive: true });
@@ -106,6 +106,22 @@ exports.generateThumbnail = (videoPath) => {
                 return reject(error);
             }
             resolve(outputThumbnail);
+        });
+    });
+};
+
+
+exports.generateAudioWaveform = (audioPath) => {
+    return new Promise((resolve, reject) => {
+        const waveformDir = './public/uploads/waveforms';
+        fs.mkdirSync(waveformDir, { recursive: true });
+        const outputWaveform = path.join(waveformDir, `waveform-${Date.now()}.png`);
+        const waveformCommand = `audiowaveform -i "${audioPath}" -o "${outputWaveform}" --pixels-per-second 20 --width 800 --height 150`;
+        exec(waveformCommand, (error) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(outputWaveform);
         });
     });
 };

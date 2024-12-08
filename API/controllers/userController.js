@@ -15,6 +15,7 @@ const Asign_User = require("../models/Asign_user");
 const Reminder = require("../models/Reminder");
 const Goal = require("../models/userGoal");
 const UserFiles = require("../models/UserFiles");
+const { default: mongoose } = require("mongoose");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -406,13 +407,13 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
                 };
 
                 if (field.includes(key)) {
-                    filepath = `http://localhost:7200/uploads/${key}s/${files[0].filename}`;
+                    filepath = `http://43.204.2.84:7200/uploads/${key}s/${files[0].filename}`;
                     fileData.path = filepath;
 
                     // Generate a thumbnail if it's a video
                     if (key === 'video') {
                         const thumbnailPath = await generateThumbnail(files[0].path);
-                        fileData.thumbnail = `http://localhost:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
+                        fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
                     }
                 }
 
@@ -770,3 +771,34 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
     });
 });
 
+
+exports.getUploadFiles = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    console.log(userId, '=====d====');
+
+    const uploadfile = await UserFiles.aggregate([
+        {
+            $match: { userId: new mongoose.Types.ObjectId(userId) }, 
+        },
+        {
+            $group: {
+                _id: "$type", 
+                paths: { $push: "$path" }, 
+            },
+        },
+        {
+            $project: {
+                _id: 0, 
+                type: "$_id", 
+                paths: 1, 
+            },
+        },
+    ]);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Files retrieved successfully.',
+        data: uploadfile,
+    });
+});

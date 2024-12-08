@@ -29,6 +29,14 @@ const UploadVideo = () => {
     { value: "recipe-video", label: "Recipe Video" },
     { value: "knowledge-video", label: "Knowledge Video" },
     { value: "story-podcast-recognition-video", label: "Story/Podcast/Recognition Video" },
+
+    { value: "wallpepar", label: "Wallpepar" },
+    { value: "quotes", label: "Quotes" },
+    { value: "audio-clips", label: "Audio Clips" },
+    { value: "music", label: "Music" },
+    { value: "Podcast", label: "Podcast" },
+    { value: "audio-book", label: "Audio Book" }
+
   ];
 
   const subcategoryOptions = {
@@ -52,6 +60,42 @@ const UploadVideo = () => {
       { value: "story", label: "Story" },
       { value: "podcast", label: "Podcast" },
     ],
+
+
+    "wallpepar": [
+      { value: "nature", label: "Nature" },
+      { value: "motivation", label: "Motivation" },
+      { value: "god", label: "God" },
+    ],
+
+    "quotes": [
+      { value: "friendship", label: "FriendShip" },
+      { value: "motivation", label: "Motivation" },
+      { value: "success", label: "Success" },
+    ],
+
+    "audio-clips": [
+      { value: "new", label: "New" },
+      { value: "tophits", label: "Top Hits" },
+      { value: "trending", label: "Trending" },
+    ],
+    "music": [
+      { value: "new", label: "New" },
+      { value: "tophits", label: "Top Hits" },
+      { value: "trending", label: "Trending" },
+    ],
+    "Podcast": [
+      { value: "new", label: "New" },
+      { value: "motivation", label: "Motivation" },
+      { value: "educational", label: "Educational" },
+    ],
+    "audio-book": [
+      { value: "new", label: "New" },
+      { value: "popular", label: "Most Popular" },
+      { value: "health_wellness", label: "Helth & Wellness" },
+    ],
+
+
   };
 
   const handleFileChange = (e) => {
