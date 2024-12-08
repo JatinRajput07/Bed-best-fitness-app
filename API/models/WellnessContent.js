@@ -5,7 +5,7 @@ const wellnessContentSchema = new mongoose.Schema({
         required: true,
     },
     title: { type: String, required: true },
-    url: { type: String, required: true }, // URL for the content
+    url: { type: String, required: true },
     description: { type: String }
 });
 

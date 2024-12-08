@@ -749,7 +749,7 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
                 };
 
                 if (field.includes(key)) {
-                    filepath = `http://localhost:7200/uploads/${key}s/${files[0].filename}`;
+                    filepath = `http://43.204.2.84:7200/uploads/${key}s/${files[0].filename}`;
                     fileData.path = filepath;
                 }
                 return fileData;
