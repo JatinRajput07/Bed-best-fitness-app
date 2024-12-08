@@ -17,7 +17,7 @@ export function SignIn() {
     e.preventDefault();
     setLoading(true);
     setError(""); 
-
+    
     try {
       const response = await fetch("http://43.204.2.84:7200/admin/login", {
         method: "POST",
@@ -32,12 +32,11 @@ export function SignIn() {
 
       const data = await response.json();
       if (response.ok) {
-        dispatch(login(data.token));
+        dispatch(login(data));
         utilService.showSuccessToast("Login successfully!");
         navigate("/dashboard/home");
       } else {
         utilService.showErrorToast(data.message || "Login failed. Please try again.");
-        // setError(data.message || "Login failed. Please try again.");
       }
     } catch (err) {
       console.log(err,'====')

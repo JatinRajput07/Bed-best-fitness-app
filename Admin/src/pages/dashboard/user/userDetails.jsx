@@ -3,8 +3,29 @@ import { HomeIcon, ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon, ArrowL
 import { Link } from "react-router-dom";
 import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
 import { platformSettingsData, conversationsData, projectsData } from "@/data";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserDetails } from "@/redux/userSlice";
 
-export function Profile({ data, closeModal }) {
+export function Profile({ id, closeModal }) {
+
+
+  const dispatch = useDispatch();
+
+  const { userProfile, profileLoading, error } = useSelector((state) => state.users);
+
+  useEffect(() => {
+    dispatch(fetchUserDetails({ id }));
+  }, [dispatch, id]);
+
+  if (profileLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <>
       <div className="relative h-20 w-full overflow-hidden rounded-xl bg-[url('/img/background-image.png')] bg-cover bg-center">
@@ -24,74 +45,95 @@ export function Profile({ data, closeModal }) {
               />
               <div>
                 <Typography variant="h5" color="blue-gray" className="mb-1">
-                  Richard Davis
+                {userProfile?.user?.name}
                 </Typography>
                 <Typography
                   variant="small"
                   className="font-normal text-blue-gray-600"
                 >
-                  CEO / Co-Founder
+                  {userProfile?.user?.City}, {userProfile?.user?.Country}
+                  {/* CEO / Co-Founder */}
                 </Typography>
               </div>
             </div>
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-0 xl:grid-cols-0">
             <div>
-
-
               {/* Goals Section */}
               <Typography variant="h6" color="blue-gray" className="mb-4">
                 Your Fitness Goals
               </Typography>
               <div className="grid grid-cols-2 gap-6">
-                <Card shadow={false} className="p-4 border border-gray-200">
+                <Card shadow={false} className="p-4 border  border-gray-200">
                   <Typography variant="small" color="blue-gray" className="mb-2">
                     Current Weight
                   </Typography>
                   <Typography variant="h5" color="green">
-                    {data.currentWeight || "N/A"} kg
+                    {userProfile?.userGoal?.weightGoal?.currentWeight || "N/A"} kg
                   </Typography>
                 </Card>
-                <Card shadow={false} className="p-4 border border-gray-200">
+                <Card shadow={false} className="p-4 border  border-gray-200">
                   <Typography variant="small" color="blue-gray" className="mb-2">
                     Target Weight
                   </Typography>
                   <Typography variant="h5" color="cyan">
-                    {data.targetWeight || "N/A"} kg
+                    {userProfile?.userGoal?.weightGoal?.goalWeight || "N/A"} kg
                   </Typography>
                 </Card>
-                <Card shadow={false} className="p-4 border border-gray-200">
+                <Card shadow={false} className="p-4 border  border-gray-200">
                   <Typography variant="small" color="blue-gray" className="mb-2">
                     Daily Steps Goal
                   </Typography>
                   <Typography variant="h5" color="blue">
-                    {data.stepsGoal || "N/A"} steps
+                    {userProfile?.userGoal?.dailyStepsGoal || "N/A"} steps
                   </Typography>
                 </Card>
-                <Card shadow={false} className="p-4 border border-gray-200">
+                <Card shadow={false} className="p-4 border  border-gray-200">
                   <Typography variant="small" color="blue-gray" className="mb-2">
                     Water Intake Goal
                   </Typography>
                   <Typography variant="h5" color="blue-gray">
-                    {data.waterGoal || "N/A"} L
+                    {userProfile?.userGoal?.dailyWaterGoal || "N/A"} L
                   </Typography>
+                </Card>
+                <Card shadow={false} className="p-6 border border-gray-200 col-span-2  rounded-xl">
+                  <Typography variant="small" color="blue-gray" className="mb-4 font-semibold">
+                    Nutrition Goal
+                  </Typography>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Typography variant="h5" color="green" className="font-medium">Protein</Typography>
+                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.protein || "N/A"} g</Typography>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Typography variant="h5" color="yellow-500" className="font-medium">Fats</Typography>
+                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.fats || "N/A"} g</Typography>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Typography variant="h5" color="blue-500" className="font-medium">Carbs</Typography>
+                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.carbs || "N/A"} g</Typography>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Typography variant="h5" color="purple-500" className="font-medium">Fiber</Typography>
+                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.fiber || "N/A"} g</Typography>
+                    </div>
+                    <div className="flex justify-between items-center border-gray-300 pt-4">
+                      <Typography variant="h5" color="red-500" className="font-medium">Daily Calorie Budget</Typography>
+                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.dailyCalorieBudget || "N/A"} kcal</Typography>
+                    </div>
+                  </div>
                 </Card>
               </div>
             </div>
-
-
-
-
             {/* User Info Section */}
-            <ProfileInfoCard user={data} />
+            <ProfileInfoCard user={userProfile?.user} />
           </div>
-
 
           {/* Daily Progress Section */}
           <Typography variant="h6" color="blue-gray" className="mt-8 mb-4">
             Today's Progress
           </Typography>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {/* Weight Progress */}
             <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
               <Typography variant="h6" color="blue-gray" className="mb-4">

@@ -4,7 +4,7 @@ const dynamicSchema = new mongoose.Schema({
     data: { type: mongoose.Schema.Types.Mixed }
 }, { strict: false });
 
-const bodyDataSchema = new mongoose.Schema({
+const bodyDataSchema =  mongoose.Schema({
     health_log_parameters: { type: mongoose.Schema.Types.Mixed },
     body_measurement_parameters: { type: mongoose.Schema.Types.Mixed },
     health_habits: dynamicSchema,

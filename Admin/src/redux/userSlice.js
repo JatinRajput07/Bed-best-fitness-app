@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import Axios from '@/configs/Axios';
 
 // Fetch Users
-export const fetchUsers = createAsyncThunk('/admin/user-list', async ({}, { rejectWithValue }) => {
+export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ }, { rejectWithValue }) => {
     try {
         const response = await Axios.get('/admin/user-list', {
             params: {
@@ -12,6 +12,17 @@ export const fetchUsers = createAsyncThunk('/admin/user-list', async ({}, { reje
             },
         });
         return response.data;
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+
+// Fetch User Details
+export const fetchUserDetails = createAsyncThunk('/admin/get-user-profile', async ({ id }, { rejectWithValue }) => {
+    try {
+        const response = await Axios.get(`/admin/get-user-profile/${id}`);
+        return response.data.data;
     } catch (error) {
         return rejectWithValue(error.message);
     }
@@ -53,6 +64,8 @@ const userSlice = createSlice({
     initialState: {
         users: [],
         totalUsers: 0,
+        userProfile: null,
+        profileLoading: false,
         loading: false,
         error: null,
     },
@@ -72,6 +85,20 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+
+            // Fetch User Details
+            .addCase(fetchUserDetails.pending, (state) => {
+                state.profileLoading = true;
+            })
+            .addCase(fetchUserDetails.fulfilled, (state, action) => {
+                state.profileLoading = false;
+                state.userProfile = action.payload;
+            })
+            .addCase(fetchUserDetails.rejected, (state, action) => {
+                state.profileLoading = false;
+                state.error = action.payload;
+            })
+
             // Delete User
             .addCase(deleteUser.pending, (state) => {
                 state.loading = true;

@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -23,13 +24,9 @@ const storage = multer.diskStorage({
                 return cb(new Error('Error: Invalid file field.'));
         }
 
-        // Create folder if it doesn't exist
         fs.mkdirSync(folder, { recursive: true });
-
-        // Check if a file with the same name already exists
         const filePath = path.join(folder, `${Date.now()}-${file.originalname}`);
         if (fs.existsSync(filePath)) {
-            // If file exists, delete it before uploading new one
             fs.unlinkSync(filePath);
             console.log(`Old file deleted: ${filePath}`);
         }
@@ -93,3 +90,22 @@ exports.upload = multer({
     { name: 'audiobook', maxCount: 1 },
     { name: 'pdf', maxCount: 1 }
 ]);
+
+
+
+exports.generateThumbnail = (videoPath) => {    
+    return new Promise((resolve, reject) => {
+        const thumbnailDir = './public/uploads/thumbnails';
+        fs.mkdirSync(thumbnailDir, { recursive: true });
+
+        const outputThumbnail = path.join(thumbnailDir, `thumbnail-${Date.now()}.png`);
+        const ffmpegCommand = `ffmpeg -i ${videoPath} -ss 00:00:01 -vframes 1 ${outputThumbnail}`;
+
+        exec(ffmpegCommand, (error) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(outputThumbnail);
+        });
+    });
+};

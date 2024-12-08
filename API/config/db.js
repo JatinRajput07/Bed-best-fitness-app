@@ -6,6 +6,8 @@ const connectDB = async () => {
     try {
         const chalk = (await import('chalk')).default;
         await mongoose.connect(mongoURI, {});
+
+        // mongoose.set('strictPopulate', false);
         console.log(chalk.yellow.bold.underline('Database connected...!'));
     } catch (error) {
         console.error('Database connection error:', error);

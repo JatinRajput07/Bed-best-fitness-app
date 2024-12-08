@@ -8,6 +8,8 @@ const Video = require("../models/videos");
 const getVideoDuration = require('get-video-duration');
 const AppError = require("../utils/AppError");
 const Asign_User = require("../models/Asign_user");
+const UserFiles = require("../models/UserFiles");
+const Goal = require("../models/userGoal");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -18,12 +20,11 @@ const signToken = id => {
 exports.adminLogin = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
     console.log(req.body)
-
     if (!email || !password) {
         return next(new AppError('Please provide email and password', 400));
     }
-    const user = await User.findOne({ email });
-
+    
+    const user = await User.findOne({ email, role: { $ne: "user" } });
     if (!user) {
         return next(new AppError('Invalid email or password', 401));
     }
@@ -79,6 +80,26 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+
+
+exports.getUserProfile = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const [user, userfiles, userGoal] = await Promise.all([
+        User.findById(id),
+        UserFiles.find({ userId: id }),
+        Goal.findOne({ userId: id })
+    ]);
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user,
+            userfiles,
+            userGoal
+        }
+    });
+});
+
 
 
 exports.getCms = catchAsync(async (req, res, next) => {

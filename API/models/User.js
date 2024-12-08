@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     phone: { type: String, required: true },
-    socialId:String,
-    socialType:String,   // google , facebook
+    socialId: String,
+    socialType: String,   // google , facebook
     password: { type: String },
     googleId: { type: String },
     Occupation: { type: String, required: false, },
@@ -43,20 +43,20 @@ const userSchema = new mongoose.Schema({
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
-    socketId:String,
-    isOnline:String,
+    socketId: String,
+    isOnline: String,
     permissions: {
         type: Object,
         default: {}, // Structure: { sectionName: { permission: true/false } }
-      },
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
-    console.log(this.password,'==-dd=d=d=d==d=d')
+    console.log(this.password, '==-dd=d=d=d==d=d')
     this.password = await bcrypt.hash(this.password, 12);
     this.passwordConfirm = undefined;
     next();

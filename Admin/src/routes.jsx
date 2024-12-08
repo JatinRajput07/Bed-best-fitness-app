@@ -11,66 +11,63 @@ import EditAssignment from "./pages/dashboard/asignuser/update";
 import CreateOrUpdateUser from "./pages/dashboard/user/CreateOrUpdateUser";
 import MealAndNutrition from "./pages/dashboard/MealAndNutrition";
 import Community_guidelines from "./pages/dashboard/Community_guidelines";
+import { useSelector } from "react-redux";
+
 
 const icon = {
   className: "w-5 h-5 text-inherit",
 };
 
-export const routes = [
-  {
-    layout: "dashboard",
-    pages: [
-      {
-        icon: <HomeIcon {...icon} />,
-        name: "dashboard",
-        path: "/home",
-        element: <Home />,
-      },
-      {
-        icon: <UserIcon {...icon} />,
-        name: "Users",
-        dropdown: [
-          {
-            name: "Users List",
-            path: "/users",
-            element: <UserList />,
-          },
-          {
-            name: "Create & Update",
-            path: "/createupdate",
-            element: <CreateOrUpdateUser />,
-          },
-        ]
-      },
-      {
-        icon: <UserIcon {...icon} />,
-        name: "Assign UsersTo Host",
-        path: "/asignusers",
-        dropdown: [
-          {
-            name: "Create",
-            path: "/asignusers",
-            element: <AssignUsersToHost />,
-          },
-          {
-            name: "List",
-            path: "/asignusers-list",
-            element: <AdminAssignments />,
-          },
-          // {
-          //   name: "Edit",
-          //   path: "/edit-asignusers",
-          //   element: <EditAssignment />,
-          // },
-        ],
-        // element: <AssignUsersToHost />,
-      },
-      {
-        icon: <HomeIcon {...icon} />,
-        name: "Meal And Nutrition",
-        path: "/meal_nutrition",
-        element: <MealAndNutrition />,
-      },
+export const routes = () => {
+  const { role } = useSelector((state) => state.auth);
+
+  const pages = [
+    {
+      icon: <HomeIcon {...icon} />,
+      name: "Dashboard",
+      path: "/home",
+      element: <Home />,
+    },
+    {
+      icon: <UserIcon {...icon} />,
+      name: "Users",
+      dropdown: [
+        {
+          name: "Users List",
+          path: "/users",
+          element: <UserList />,
+        },
+        {
+          name: "Create & Update",
+          path: "/createupdate",
+          element: <CreateOrUpdateUser />,
+        },
+      ],
+    },
+    {
+      icon: <UserIcon {...icon} />,
+      name: "Assign UsersTo Host",
+      dropdown: [
+        {
+          name: "Create",
+          path: "/asignusers",
+          element: <AssignUsersToHost />,
+        },
+        {
+          name: "List",
+          path: "/asignusers-list",
+          element: <AdminAssignments />,
+        },
+      ],
+    },
+    {
+      icon: <HomeIcon {...icon} />,
+      name: "Meal And Nutrition",
+      path: "/meal_nutrition",
+      element: <MealAndNutrition />,
+    },
+    // Conditionally include the Videos section if role is not 'host'
+    ...(role !== "host" ? [
       {
         icon: <VideoCameraIcon {...icon} />,
         name: "Videos",
@@ -86,8 +83,7 @@ export const routes = [
             element: <VideoUpload />,
           },
         ],
-      },
-      {
+      }, {
         icon: <DocumentTextIcon {...icon} />,
         name: "CMS",
         dropdown: [
@@ -107,15 +103,22 @@ export const routes = [
             element: <Community_guidelines />,
           },
         ],
-      },
-      {
-        icon: <HomeIcon {...icon} />,
-        name: "Logout",
-        path: "/logout",
-        element: <Logout />,
-      },
-    ],
-  },
-];
+      }
+    ] : []),
+    {
+      icon: <HomeIcon {...icon} />,
+      name: "Logout",
+      path: "/logout",
+      element: <Logout />,
+    },
+  ];
+
+  return [
+    {
+      layout: "dashboard",
+      pages: pages,
+    },
+  ];
+};
 
 export default routes;

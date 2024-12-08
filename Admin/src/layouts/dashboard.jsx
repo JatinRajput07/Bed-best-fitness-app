@@ -7,18 +7,22 @@ import {
   Configurator,
   Footer,
 } from "@/widgets/layout";
-import routes from "@/routes";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
+import { routes } from "@/routes";  // Ensure this is imported correctly
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavType } = controller;
 
+  const routeConfig = routes(); // Call the function to get the routes array
+
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
-      <Sidenav routes={routes} brandImg={
-        sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
-      }
+      <Sidenav 
+        routes={routeConfig} 
+        brandImg={
+          sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
+        }
       />
       <div className="p-4 xl:ml-80">
         <DashboardNavbar />
@@ -33,7 +37,7 @@ export function Dashboard() {
           <Cog6ToothIcon className="h-5 w-5" />
         </IconButton>
         <Routes>
-          {routes.map(({ layout, pages }) =>
+          {routeConfig.map(({ layout, pages }) =>
             layout === "dashboard" &&
             pages.map(({ path, element, dropdown }) =>
               dropdown ? (

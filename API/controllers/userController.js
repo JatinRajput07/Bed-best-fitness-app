@@ -4,8 +4,9 @@ const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto-js');
+const path = require('path');
 const Routine = require("../models/Routine");
-const { upload } = require("../utils/UploadFiles");
+const { upload, generateThumbnail } = require("../utils/UploadFiles");
 const multer = require("multer");
 const _ = require('lodash');
 const Email = require("../utils/email");
@@ -13,12 +14,14 @@ const Recommendation = require("../models/recommendation");
 const Asign_User = require("../models/Asign_user");
 const Reminder = require("../models/Reminder");
 const Goal = require("../models/userGoal");
+const UserFiles = require("../models/UserFiles");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN
     });
 };
+
 
 const getLocalDate = () => {
     const now = new Date();
@@ -172,7 +175,6 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
 });
 
 
-
 exports.resetPassword = catchAsync(async (req, res, next) => {
     const { otp, email } = req.body;
     // const hashedToken = crypto.SHA256(req.params.token).toString(crypto.enc.Hex);
@@ -226,8 +228,6 @@ exports.getProfile = catchAsync(async (req, res, next) => {
 })
 
 
-
-
 const filterObj = (obj, ...allowedFields) => {
     const newObj = {};
     Object.keys(obj).forEach(el => {
@@ -252,6 +252,46 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 })
 
 
+exports.deleteAccount = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+        return next(new AppError("User not found.", 404));
+    }
+
+    const collections = [
+        { model: Reminder, field: "userId" },
+        { model: Routine, field: "userId" },
+    ];
+
+    await Promise.all(
+        collections.map(async ({ model, field }) => {
+            await model.deleteMany({ [field]: userId });
+        })
+    );
+
+    res.status(200).json({
+        status: "success",
+        message: "Account and all related data deleted successfully.",
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 exports.addRoutine = catchAsync(async (req, res, next) => {
     const { ...routineData } = req.body;
     const userId = req.user.id;
@@ -267,31 +307,6 @@ exports.addRoutine = catchAsync(async (req, res, next) => {
         status: "success",
         message: routine ? "Routine updated" : "Routine created",
         routine
-    });
-});
-
-exports.deleteAccount = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-
-    const user = await User.findByIdAndDelete(userId);
-    if (!user) {
-        return next(new AppError("User not found.", 404));
-    }
-    const collections = [
-        { model: Reminder, field: "userId" },
-        { model: Routine, field: "userId" },
-        { model: ActivityLog, field: "userId" },
-    ];
-
-    await Promise.all(
-        collections.map(async ({ model, field }) => {
-            await model.deleteMany({ [field]: userId });
-        })
-    );
-
-    res.status(200).json({
-        status: "success",
-        message: "Account and all related data deleted successfully.",
     });
 });
 
@@ -318,7 +333,6 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
         routine: routine ? routine : {}
     });
 });
-
 
 
 exports.updateRoutineSection = catchAsync(async (req, res, next) => {
@@ -352,7 +366,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
         if (section === 'meal') {
-            // Merge existing `meal` data with incoming `meal` data
             routine.meal = _.merge(routine.meal || {}, data);
         } else {
             // For other sections, replace the section entirely
@@ -369,205 +382,48 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
 });
 
 
-
-
-exports.updateMeal = catchAsync(async (req, res, next) => {
-    console.log("Meal API...!")
-    const mealData = req.body.meal;
-    const userId = req.user.id;
-    const today = getLocalDate()
-
-    let routine = await Routine.findOne({ userId, date: today });
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, meal: mealData });
-    } else {
-        routine.meal = mealData;
-        await routine.save();
-    }
-    res.status(200).json({
-        status: "success",
-        message: "Meal updated successfully",
-        routine
-    });
-});
-
-
-exports.updateWater = catchAsync(async (req, res, next) => {
-    console.log("water...")
-    const waterData = req.body.water;
-    const userId = req.user.id;
-    const today = getLocalDate()
-
-    let routine = await Routine.findOne({ userId, date: today }, ('water'));
-
-    console.log(routine, "=======routine=====")
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, water: waterData });
-    }
-    routine.water = waterData
-    await routine.save();
-
-    res.status(200).json({
-        status: "success",
-        message: "Water section updated successfully",
-        routine
-    });
-});
-
-
-exports.updateSteps = catchAsync(async (req, res, next) => {
-    const stepsData = req.body.steps;
-    const userId = req.user.id;
-    const today = getLocalDate()
-    let routine = await Routine.findOne({ userId, date: today }, ('steps'));
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, today: stepsData });
-    }
-
-    routine.steps = stepsData
-    await routine.save();
-    res.status(200).json({
-        status: "success",
-        message: "Steps section updated successfully",
-        routine
-    });
-});
-
-
-exports.updateWorkout = catchAsync(async (req, res, next) => {
-    const workoutData = req.body.workout;
-    const userId = req.user.id;
-    const today = getLocalDate()
-
-    let routine = await Routine.findOne({ userId, date: today }, ('workout'));
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, workout: workoutData });
-    }
-
-    routine.workout = workoutData
-    await routine.save();
-    res.status(200).json({
-        status: "success",
-        message: "Workout section updated successfully",
-        routine
-    });
-});
-
-
-exports.updateJoinSession = catchAsync(async (req, res, next) => {
-    const joinSessionData = req.body.join_session;
-    const userId = req.user.id;
-    const today = getLocalDate()
-    let routine = await Routine.findOne({ userId, date: today }, ('join_session'));
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, join_session: joinSessionData });
-    }
-    routine.join_session = joinSessionData
-    await routine.save();
-
-    res.status(200).json({
-        status: "success",
-        message: "Join session updated successfully",
-        routine
-    });
-});
-
-
-exports.updateNutrition = catchAsync(async (req, res, next) => {
-    const nutritionData = req.body.nutrition;
-    const userId = req.user.id;
-    const today = getLocalDate()
-
-    let routine = await Routine.findOne({ userId, date: today }, ('nutrition'));
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, nutrition: nutritionData });
-    }
-
-    routine.nutrition = nutritionData;
-    await routine.save();
-    res.status(200).json({
-        status: "success",
-        message: "Nutrition section updated successfully",
-        routine
-    });
-});
-
-
-exports.updateSleep = catchAsync(async (req, res, next) => {
-    const sleepData = req.body.sleep;
-    const userId = req.user.id;
-
-    const today = getLocalDate()
-    let routine = await Routine.findOne({ userId, date: today }, ('sleep'));
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, sleep: sleepData });
-    }
-
-    routine.sleep = sleepData;
-    await routine.save();
-    res.status(200).json({
-        status: "success",
-        message: "Sleep section updated successfully",
-        routine
-    });
-});
-
-
-exports.updateBodyData = catchAsync(async (req, res, next) => {
-    const bodyData = req.body.body_data;
-    const userId = req.user.id;
-    const today = getLocalDate()
-
-    let routine = await Routine.findOne({ userId, date: today }, ('body_data'));
-
-    if (!routine) {
-        routine = await Routine.create({ userId, date: today, body_data: bodyData });
-    }
-    routine.body_data = bodyData
-    await routine.save();
-    res.status(200).json({
-        status: "success",
-        message: "Body data section updated successfully",
-        routine
-    });
-});
-
-
 exports.uploadFiles = catchAsync(async (req, res, next) => {
-    upload(req, res, (err) => {
+    upload(req, res, async (err) => {
         if (err instanceof multer.MulterError) {
             return next(new AppError(err.message, 400));
         } else if (err) {
-            return next(new AppError(err.message, 400))
-        }
-        if (!req.files || Object.keys(req.files).length === 0) {
-            return next(new AppError('No files uploaded.', 400))
+            return next(new AppError(err.message, 400));
         }
 
-        const uploadedFiles = Object.entries(req.files).map(([key, files]) => {
-            let filepath
-            const field = ['image', 'video', 'audiobook', 'pdf']
-            if (field.includes(key)) {
-                filepath = `http://localhost:7200/uploads/${key}s/${files[0].filename}`
-            }
-            return {
-                field: key,
-                fileName: files[0].filename,
-                path: filepath,
-                mimeType: files[0].mimetype,
-            }
-        });
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const uploadedFiles = await Promise.all(
+            Object.entries(req.files).map(async ([key, files]) => {
+                let filepath;
+                const field = ['image', 'video', 'audiobook', 'pdf'];
+                const fileData = {
+                    field: key,
+                    fileName: files[0].filename,
+                    path: '',
+                    mimeType: files[0].mimetype,
+                };
+
+                if (field.includes(key)) {
+                    filepath = `http://localhost:7200/uploads/${key}s/${files[0].filename}`;
+                    fileData.path = filepath;
+
+                    // Generate a thumbnail if it's a video
+                    if (key === 'video') {
+                        const thumbnailPath = await generateThumbnail(files[0].path);
+                        fileData.thumbnail = `http://localhost:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
+                    }
+                }
+
+                return fileData;
+            })
+        );
 
         res.status(200).json({
             status: 'success',
             message: 'Files uploaded successfully.',
-            data: uploadedFiles
+            data: uploadedFiles,
         });
     });
 });
@@ -707,6 +563,7 @@ exports.Home = catchAsync(async (req, res, next) => {
         data: { videos: groupedVideos, recommendationVideos },
     });
 });
+
 
 exports.getVideosByCategory = catchAsync(async (req, res, next) => {
     const { category } = req.params;
@@ -867,4 +724,49 @@ exports.getUserReminders = catchAsync(async (req, res, next) => {
 });
 
 
+
+exports.userUploadFiles = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const uploadedFiles = await Promise.all(
+            Object.entries(req.files).map(async ([key, files]) => {
+                let filepath;
+                const field = ['image', 'pdf'];
+                const fileData = {
+                    field: key,
+                    fileName: files[0].filename,
+                    path: '',
+                    mimeType: files[0].mimetype,
+                };
+
+                if (field.includes(key)) {
+                    filepath = `http://localhost:7200/uploads/${key}s/${files[0].filename}`;
+                    fileData.path = filepath;
+                }
+                return fileData;
+            })
+        );
+
+        const data = {
+            userId: req.user.id,
+            path: uploadedFiles[0].path,
+            type: uploadedFiles[0].field
+        }
+        const uploadfile = await UserFiles.create(data)
+        res.status(200).json({
+            status: 'success',
+            message: 'Files uploaded successfully.',
+            data: uploadfile,
+        });
+    });
+});
 

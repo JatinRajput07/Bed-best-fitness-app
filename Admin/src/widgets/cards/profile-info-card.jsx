@@ -21,17 +21,7 @@ export function ProfileInfoCard({ user }) {
             <div>
               <Input
                 label="First Name"
-                value={user["first name"]}
-                onChange={(e) => console.log("First Name:", e.target.value)}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-            <div>
-              <Input
-                label="Last Name"
-                value={user["last name"]}
-                onChange={(e) => console.log("Last Name:", e.target.value)}
+                value={user["name"]}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -39,8 +29,7 @@ export function ProfileInfoCard({ user }) {
             <div>
               <Input
                 label="Email"
-                value={user.email}
-                onChange={(e) => console.log("Email:", e.target.value)}
+                value={user?.email}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -49,9 +38,8 @@ export function ProfileInfoCard({ user }) {
             {/* Second Row */}
             <div>
               <Input
-                label="Mobile"
-                value={user.mobile}
-                onChange={(e) => console.log("Mobile:", e.target.value)}
+                label="Phone"
+                value={user?.phone}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -59,8 +47,7 @@ export function ProfileInfoCard({ user }) {
             <div>
               <Input
                 label="Location"
-                value={user.location}
-                onChange={(e) => console.log("Location:", e.target.value)}
+                value={`${user?.city}, ${user?.Country}`}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -69,7 +56,6 @@ export function ProfileInfoCard({ user }) {
               <Input
                 label="Membership Level"
                 value={user["membership level"]}
-                onChange={(e) => console.log("Membership Level:", e.target.value)}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -80,7 +66,6 @@ export function ProfileInfoCard({ user }) {
               <Input
                 label="Date of Birth"
                 value={user.dob}
-                onChange={(e) => console.log("Date of Birth:", e.target.value)}
                 variant="outlined"
                 color="blue-gray"
               />
@@ -89,7 +74,6 @@ export function ProfileInfoCard({ user }) {
               <Input
                 label="Gender"
                 value={user.gender}
-                onChange={(e) => console.log("Gender:", e.target.value)}
                 variant="outlined"
                 color="blue-gray"
               />

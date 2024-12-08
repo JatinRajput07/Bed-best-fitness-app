@@ -39,7 +39,7 @@ export function UserList() {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       {selectedUser ? (
-        <Profile data={selectedUser} closeModal={closeModal} />
+        <Profile id={selectedUser?._id} closeModal={closeModal} />
       ) : (
         <Card>
           <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
@@ -76,14 +76,8 @@ export function UserList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(
-                    (
-                      { id, img, name, email, role, active, createdAt, ...otherDetails },
-                      key
-                    ) => {
-                      const className = `py-3 px-5 ${key === users.length - 1 ? "" : "border-b border-blue-gray-50"
-                        }`;
-
+                  {users.map(({ id, img, name, email, role, active, createdAt, ...otherDetails },key) => {
+                      const className=`py-3 px-5 ${key === users.length - 1 ? "" : "border-b border-blue-gray-50"}`;
                       return (
                         <tr key={id}>
                           <td className={className}>
