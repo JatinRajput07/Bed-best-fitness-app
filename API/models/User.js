@@ -45,6 +45,7 @@ const userSchema = new mongoose.Schema({
     passwordResetExpires: Date,
     socketId: String,
     isOnline: String,
+    isVerified: { type: Boolean, default: false },
     permissions: {
         type: Object,
         default: {}, // Structure: { sectionName: { permission: true/false } }

@@ -32,9 +32,7 @@ const getLocalDate = () => {
 
 
 exports.register = catchAsync(async (req, res, next) => {
-
     const { role, email, name, phone, password, ADS_id, address, batchNo, joiningDate } = req.body;
-
     if (role === 'admin') {
         return next(new AppError('Resistration Not Allowed for Role', 400))
     }
@@ -58,9 +56,12 @@ exports.register = catchAsync(async (req, res, next) => {
     }
     const user = await User.create(newUserData);
     const token = signToken(user._id);
+    const resetToken = user.createPasswordResetToken();
+    await new Email(user, resetToken).welcome();
+
     return res.status(200).json({
         status: 'success',
-        message: 'Registration successful!',
+        message: 'Registration successful! , OTP sent your Email ',
         data: {
             user: { ...user.toObject(), token }
         }
@@ -78,6 +79,11 @@ exports.login = catchAsync(async (req, res, next) => {
     if (!user || !(await user.correctPassword(password))) {
         return next(new AppError('Incorrect email or password', 401));
     }
+
+    if (!user.isVerified) {
+        return next(new AppError('Account is not verified', 401));
+    }
+
     const token = signToken(user._id);
 
     if (user) {
@@ -169,6 +175,10 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     if (!user) {
         return next(new AppError('OTP is invalid or has expired', 400));
     }
+
+    user.isVerified = true;
+    user.save()
+
     res.status(200).json({
         status: 'success',
         message: 'OTP verified successfully',
@@ -779,19 +789,19 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 
     const uploadfile = await UserFiles.aggregate([
         {
-            $match: { userId: new mongoose.Types.ObjectId(userId) }, 
+            $match: { userId: new mongoose.Types.ObjectId(userId) },
         },
         {
             $group: {
-                _id: "$type", 
-                paths: { $push: "$path" }, 
+                _id: "$type",
+                paths: { $push: "$path" },
             },
         },
         {
             $project: {
-                _id: 0, 
-                type: "$_id", 
-                paths: 1, 
+                _id: 0,
+                type: "$_id",
+                paths: 1,
             },
         },
     ]);

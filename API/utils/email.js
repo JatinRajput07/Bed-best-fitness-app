@@ -64,4 +64,12 @@ module.exports = class Email {
       'Your password reset OTP (valid for only 10 minutes)'
     );
   }
+
+  async welcome() {
+    await this.send(
+      'welcome',
+      'Welcom to Fitness App .This is Account verification OTP'
+    );
+  }
+
 };
