@@ -398,7 +398,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
         const uploadedFiles = await Promise.all(
             Object.entries(req.files).map(async ([key, files]) => {
                 let filepath;
-                const field = ['image', 'video', 'audiobook', 'pdf'];
+                const field = ['image', 'video', 'audio', 'pdf'];
                 const fileData = {
                     field: key,
                     fileName: files[0].filename,

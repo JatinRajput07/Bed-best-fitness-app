@@ -23,7 +23,7 @@ exports.adminLogin = catchAsync(async (req, res, next) => {
     if (!email || !password) {
         return next(new AppError('Please provide email and password', 400));
     }
-    
+
     const user = await User.findOne({ email, role: { $ne: "user" } });
     if (!user) {
         return next(new AppError('Invalid email or password', 401));
@@ -162,7 +162,9 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 exports.uploadVideos = catchAsync(async (req, res, next) => {
     const { title, path, category, subcategories } = req.body;
     console.log(title, path, category, subcategories)
-    const duration = await getVideoDuration.getVideoDurationInSeconds(path)
+
+    // const duration = await getVideoDuration.getVideoDurationInSeconds(path)
+
     if (!category || !subcategories > 0) {
         return res.status(400).json({
             status: 'fail',
@@ -175,7 +177,7 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
         path,
         category,
         subcategories: subcategories.value,
-        duration
+        // duration
     });
 
     if (video) {
@@ -188,27 +190,109 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
 
 
 exports.getVideos = catchAsync(async (req, res, next) => {
-    const { category } = req.params;
-    const videos = await Video.aggregate([
+    const videosByCategory = await Video.aggregate([
         {
-            $match: {
-                category: category
+            $group: {
+                _id: "$category", 
+                videos: {
+                    $push: {
+                        path: "$path",
+                        title: "$title",
+                        subcategories: "$subcategories",
+                        views: "$views",
+                        likes: "$likes",
+                        createdAt: "$createdAt"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                category: "$_id",
+                videos: 1
+            }
+        },
+        {
+            $addFields: {
+                videos: {
+                    $slice: [
+                        { $reverseArray: "$videos" },
+                        8
+                    ]
+                }
             }
         }
     ]);
 
-    if (videos.length === 0) {
+    if (videosByCategory.length === 0) {
         return res.status(404).json({
             status: 'fail',
-            message: 'No videos found for this category'
+            message: 'No videos found'
         });
     }
+    const formattedResponse = {};
+    videosByCategory.forEach((categoryData) => {
+        formattedResponse[categoryData.category] = categoryData.videos;
+    });
 
     return res.status(200).json({
         status: 'success',
-        videos
+        data: formattedResponse
     });
 });
+
+
+exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) => {
+    const { category } = req.params;
+    
+    const videosByCategoryAndSubcategory = await Video.aggregate([
+        {
+            $match: { category: category }
+        },
+        {
+            $sort: { createdAt: -1 }
+        },
+        {
+            $group: {
+                _id: "$subcategories",
+                videos: {
+                    $push: {
+                        path: "$path",
+                        title: "$title",
+                        views: "$views",
+                        likes: "$likes",
+                        createdAt: "$createdAt"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                subcategory: "$_id",
+                videos: 1
+            }
+        }
+    ]);
+
+    if (videosByCategoryAndSubcategory.length === 0) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `No videos found for category ${category}`
+        });
+    }
+    const formattedResponse = {};
+    videosByCategoryAndSubcategory.forEach((subcatData) => {
+        formattedResponse[subcatData.subcategory] = subcatData.videos;
+    });
+
+    return res.status(200).json({
+        status: 'success',
+        data: formattedResponse
+    });
+});
+
 
 
 exports.dashboard = catchAsync(async (req, res, next) => {

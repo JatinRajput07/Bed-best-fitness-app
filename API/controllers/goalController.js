@@ -4,6 +4,7 @@ const _ = require('lodash');
 const Goal = require("../models/userGoal");
 const { default: mongoose } = require("mongoose");
 const Routine = require("../models/Routine");
+const videos = require("../models/videos");
 
 
 exports.createGoal = catchAsync(async (req, res, next) => {
@@ -139,6 +140,117 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
         next(err);
     }
 });
+
+
+exports.getMindnessfull = catchAsync(async (req, res, next) => {
+    const allowedCategories = ["wallpaper", "quotes", "audio-clips", "music", "podcast", "audio-book"];
+    const videosByCategory = await videos.aggregate([
+        {
+            $match: {
+                category: { $in: allowedCategories }
+            }
+        },
+        {
+            $group: {
+                _id: "$category",
+                videos: {
+                    $push: {
+                        path: "$path",
+                        title: "$title",
+                        subcategories: "$subcategories",
+                        views: "$views",
+                        likes: "$likes",
+                        createdAt: "$createdAt"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                category: "$_id",
+                videos: 1
+            }
+        },
+        {
+            $addFields: {
+                videos: {
+                    $slice: [
+                        { $reverseArray: "$videos" },
+                        8
+                    ]
+                }
+            }
+        }
+    ]);
+
+    if (videosByCategory.length === 0) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No data found'
+        });
+    }
+
+    const formattedResponse = {};
+    videosByCategory.forEach((categoryData) => {
+        formattedResponse[categoryData.category] = categoryData.videos;
+    });
+
+    return res.status(200).json({
+        status: 'success',
+        data: formattedResponse
+    });
+});
+
+
+exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
+    const { category } = req.params;
+    const videosByCategoryAndSubcategory = await videos.aggregate([
+        {
+            $match: { category: category }
+        },
+        {
+            $sort: { createdAt: -1 }
+        },
+        {
+            $group: {
+                _id: "$subcategories",
+                videos: {
+                    $push: {
+                        path: "$path",
+                        title: "$title",
+                        views: "$views",
+                        likes: "$likes",
+                        createdAt: "$createdAt"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                subcategory: "$_id",
+                videos: 1
+            }
+        }
+    ]);
+
+    if (videosByCategoryAndSubcategory.length === 0) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `No videos found for category ${category}`
+        });
+    }
+    const formattedResponse = {};
+    videosByCategoryAndSubcategory.forEach((subcatData) => {
+        formattedResponse[subcatData.subcategory] = subcatData.videos;
+    });
+
+    return res.status(200).json({
+        status: 'success',
+        data: formattedResponse
+    });
+})
 
 
 

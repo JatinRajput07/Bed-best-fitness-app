@@ -6,7 +6,7 @@ const videoSchema = new mongoose.Schema({
     category: String,
     subcategories: String,
     views: { type: Number, default: 0 },
-    duration: { type: Number, required: true },
+    duration: { type: Number },
     likes: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] },
 }, {
     timestamps: true

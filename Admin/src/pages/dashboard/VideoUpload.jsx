@@ -4,15 +4,18 @@ import { uploadFile, resetProgress } from "@/redux/uploadFileSlice";
 import { createVideo } from "@/redux/videoSlice";
 import { utilService } from "@/utilService";
 import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
   CardBody,
   Typography,
   Button,
+  Progress,
 } from "@material-tailwind/react";
 
 const UploadVideo = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { progress, filePath, error: uploadError } = useSelector(
     (state) => state.uploadFiles
@@ -29,14 +32,12 @@ const UploadVideo = () => {
     { value: "recipe-video", label: "Recipe Video" },
     { value: "knowledge-video", label: "Knowledge Video" },
     { value: "story-podcast-recognition-video", label: "Story/Podcast/Recognition Video" },
-
-    { value: "wallpepar", label: "Wallpepar" },
+    { value: "wallpaper", label: "Wallpaper" },
     { value: "quotes", label: "Quotes" },
     { value: "audio-clips", label: "Audio Clips" },
     { value: "music", label: "Music" },
-    { value: "Podcast", label: "Podcast" },
-    { value: "audio-book", label: "Audio Book" }
-
+    { value: "podcast", label: "Podcast" },
+    { value: "audio-book", label: "Audio Book" },
   ];
 
   const subcategoryOptions = {
@@ -94,13 +95,10 @@ const UploadVideo = () => {
       { value: "popular", label: "Most Popular" },
       { value: "health_wellness", label: "Helth & Wellness" },
     ],
-
-
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-
     if (selectedFile) {
       setFile(selectedFile);
       dispatch(resetProgress());
@@ -127,38 +125,38 @@ const UploadVideo = () => {
           title,
           path: filePath,
           category: category.value,
-          subcategories: subcategories
+          subcategories,
         })
-      ).then(res => {
+      ).then((res) => {
         if (res.meta.requestStatus === "fulfilled") {
-          utilService.showSuccessToast("Video uploaded successfully!");
+          utilService.showSuccessToast("File uploaded successfully!");
+          navigate("/videos");
           setTitle("");
           setCategory(null);
           setSubcategories();
           setFile(null);
           dispatch(resetProgress());
         }
-      })
-      setTitle("");
-      setCategory(null);
-      setSubcategories();
-      setFile(null);
-      dispatch(resetProgress());
+      });
     } catch (err) {
-      console.log(err, '===d')
+      console.error(err);
       utilService.showErrorToast("Failed to upload video.");
     }
   };
 
+  const isSubmitDisabled = !title || !category || !file || (progress > 0 && progress < 100);
+
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
-      <Card>
-        <CardHeader variant="gradient" color="gray" className="mb-4 p-6">
-          <Typography variant="h6" color="white">
-            Upload Video
+    <div className="mt-12 mb-8 flex justify-center">
+      <Card className="w-full max-w-4 shadow-lg">
+        <CardHeader
+          variant="gradient"
+          className="bg-gradient-to-r from-red-800  to-indigo-600 p-6 rounded-t-lg"
+        >
+          <Typography variant="h5" color="white" className="text-center">
+            Upload File
           </Typography>
         </CardHeader>
-
         <CardBody className="p-6 space-y-6">
           {uploadError && (
             <Typography color="red" className="text-sm">
@@ -166,7 +164,7 @@ const UploadVideo = () => {
             </Typography>
           )}
 
-          {/* Title Input */}
+          {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title
@@ -185,7 +183,7 @@ const UploadVideo = () => {
             )}
           </div>
 
-          {/* Category Selection */}
+          {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
@@ -196,6 +194,7 @@ const UploadVideo = () => {
               options={categoryOptions}
               placeholder="Select a category"
               isClearable
+              className="focus:ring focus:ring-indigo-500"
             />
             {errors.category && (
               <Typography color="red" className="text-sm mt-1">
@@ -204,7 +203,7 @@ const UploadVideo = () => {
             )}
           </div>
 
-          {/* Subcategories Selection */}
+          {/* Subcategories */}
           {category && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -214,13 +213,13 @@ const UploadVideo = () => {
                 value={subcategories}
                 onChange={(selected) => setSubcategories(selected || [])}
                 options={subcategoryOptions[category.value]}
-                // isMulti
                 placeholder="Select subcategories"
+                className="focus:ring focus:ring-indigo-500"
               />
             </div>
           )}
 
-          {/* File Input */}
+          {/* File */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Video File
@@ -238,18 +237,19 @@ const UploadVideo = () => {
           </div>
 
           {/* Progress Bar */}
-          {progress > 0 && progress < 100 && (
+          {progress > 0 && (
             <div className="mt-4">
               <Typography className="text-sm">Uploading: {progress}%</Typography>
-              <progress value={progress} max="100" className="w-full" />
+              <Progress value={progress} color="blue" className="mt-2" />
             </div>
           )}
 
           {/* Submit Button */}
           <Button
-            color="blue"
+            color={isSubmitDisabled ? "gray" : "blue"}
             onClick={handleSubmit}
-            disabled={progress > 0 && progress < 100}
+            disabled={isSubmitDisabled}
+            fullWidth
           >
             {progress > 0 && progress < 100 ? "Uploading..." : "Upload"}
           </Button>

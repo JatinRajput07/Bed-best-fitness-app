@@ -14,8 +14,8 @@ const storage = multer.diskStorage({
             case 'image':
                 folder += '/images';
                 break;
-            case 'audiobook':
-                folder += '/audiobooks';
+            case 'audio':
+                folder += '/audio';
                 break;
             case 'pdf':
                 folder += '/pdfs';
@@ -39,9 +39,13 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
+
+    console.log(file,'======file====')
+
+
     const imageFileTypes = /jpeg|png|jpg/;
     const videoFileTypes = /mp4|mkv|avi|mov|wmv|flv|webm|x-matroska/;
-    const audioFileTypes = /mp3|wav|m4a/;
+    const audioFileTypes = /mp3|wav|m4a|mpeg/;
     const pdfFileTypes = /pdf/;
 
     const extname = path.extname(file.originalname).toLowerCase();
@@ -62,11 +66,11 @@ const fileFilter = (req, file, cb) => {
                 cb(new Error('Error: Only video files (MP4, MKV, AVI, etc.) are allowed for video!'));
             }
             break;
-        case 'audiobook':
+        case 'audio':
             if (audioFileTypes.test(extname) && mimetype.startsWith('audio/')) {
                 cb(null, true);
             } else {
-                cb(new Error('Error: Only audio files (MP3, WAV, M4A) are allowed for audiobooks!'));
+                cb(new Error('Error: Only audio files (MP3, WAV, M4A) are allowed for audio!'));
             }
             break;
         case 'pdf':
@@ -87,7 +91,7 @@ exports.upload = multer({
 }).fields([
     { name: 'video', maxCount: 1 },
     { name: 'image', maxCount: 1 },
-    { name: 'audiobook', maxCount: 1 },
+    { name: 'audio', maxCount: 1 },
     { name: 'pdf', maxCount: 1 }
 ]);
 

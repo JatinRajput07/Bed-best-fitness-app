@@ -1,192 +1,126 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchVideos } from "@/redux/videoSlice";
 import {
     Card,
-    CardHeader,
     CardBody,
+    CardHeader,
     Typography,
+    Button,
 } from "@material-tailwind/react";
 import { useNavigate } from "react-router-dom";
+import CategoryVideos from "./CategoryVideos";
 
-const Videos = () => {
-    const navigate = useNavigate();
+export function Videos() {
     const dispatch = useDispatch();
-    const { videos, loading, error } = useSelector((state) => state.videos);
-    const [selectedCategory, setSelectedCategory] = useState("workout-video");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedVideo, setSelectedVideo] = useState(null);
+    const navigate = useNavigate();
 
-    const categories = [
-        "workout-video",
-        "recipe-video",
-        "knowledge-video",
-        "story-podcast-recognition-video",
-    ];
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const { videos, loading, error } = useSelector((state) => state.videos);
 
     useEffect(() => {
-        // Fetch videos when the component mounts or the selected category changes
-        dispatch(fetchVideos(selectedCategory));
-    }, [dispatch, selectedCategory]);
+        dispatch(fetchVideos());
+    }, [dispatch]);
 
-    // Filter videos based on selected category
-    const filteredVideos = videos.filter(
-        (video) => video.category === selectedCategory
-    );
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
-    const handleTabChange = (category) => {
-        // Update the selected category and fetch videos for that category
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
+
+    const renderMediaPreview = (path) => {
+        const fileExtension = path.split('.').pop().toLowerCase();
+
+        if (fileExtension === "mp4") {
+            return (
+                <video className="w-full h-48 object-cover rounded-t-lg" src={path} type="video/mp4" controls>
+                    Your browser does not support the video tag.
+                </video>
+            );
+        } else if (fileExtension === "mp3" || fileExtension === "wav") {
+            return (
+                <audio className="w-full h-48 object-cover rounded-t-lg" controls>
+                    <source src={path} type={`audio/${fileExtension}`} />
+                    Your browser does not support the audio element.
+                </audio>
+            );
+        } else if (fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "png" || fileExtension === "gif") {
+            return (
+                <img className="w-full h-48 object-cover rounded-t-lg" src={path} alt="media preview" />
+            );
+        } else {
+            return null;
+        }
+    };
+
+    const handleViewAll = (category) => {
         setSelectedCategory(category);
-    };
-
-    const handleVideoClick = (video) => {
-        // Open the modal and set the selected video
-        setSelectedVideo(video);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        // Close the modal
-        setIsModalOpen(false);
-        setSelectedVideo(null);
-    };
+      };
 
     return (
         <div className="mt-12 mb-8 flex flex-col gap-12">
-            <Card>
+            {selectedCategory ? (
+                <CategoryVideos category_name={selectedCategory} />
+            ) : (<Card>
                 <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
                     <Typography variant="h6" color="white">
-                        Videos by Category
+                        Videos And Other Files
                     </Typography>
                 </CardHeader>
+                <CardBody className="p-4">
+                    {Object.keys(videos).map((category) => {                        
+                        const categoryVideos = videos[category];
+                        return (
+                            <div key={category} className="px-4 mt-8 pb-4">
+                                <div className="flex justify-between items-center">
+                                    <Typography variant="h6" color="blue-gray" className="mb-2">
+                                        {category.replace(/-/g, " ").toUpperCase()}
+                                    </Typography>
+                                    <Button
+                                        size="sm"
+                                        variant="text"
+                                        color="blue"
+                                        onClick={() => handleViewAll(category)}
+                                    >
+                                        View All
+                                    </Button>
+                                </div>
 
-                <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-                    <div className="flex">
-                        <button
-                            onClick={() => navigate("/dashboard/video-upload")} // Use navigate function for redirection
-                            className="bg-blue-500 hover:bg-blue-600 font-medium ml-auto mr-12 px-4 py-2 rounded text-white"
-                        >
-                            Add Video
-                        </button>
-                    </div>
-
-                    {/* Tabs for category selection */}
-                    <div className="mb-4 flex gap-4 ml-5">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => handleTabChange(category)}
-                                className={`px-4 py-2 rounded-lg ${selectedCategory === category
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-200 text-gray-800"
-                                    }`}
-                            >
-                                {category.replace(/-/g, " ").toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-
-                    {loading ? (
-                        <Typography variant="h6" color="blue-gray">
-                            Loading videos...
-                        </Typography>
-                    ) : error ? (
-                        <div className="flex justify-center items-center mt-8 mb-8 w-full">
-                            <Typography variant="h6" color="red">
-                                {error}
-                            </Typography>
-                        </div>
-                    ) : filteredVideos.length > 0 ? (
-                        <div>
-                            <table className="w-full min-w-[640px] table-auto mb-6">
-                                <thead>
-                                    <tr>
-                                        {["Video", "Title", "Category", "Subcategories"].map((el) => (
-                                            <th
-                                                key={el}
-                                                className="border-b border-blue-gray-50 py-3 px-5 text-left"
+                                <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
+                                    {categoryVideos?.map((media) => (  // Display up to 4 items per category
+                                        <Card key={media._id || media.title} className="shadow-lg rounded-lg">
+                                            {/* CardHeader for each media item with its preview */}
+                                            <CardHeader
+                                                floated={false}
+                                                color="gray"
+                                                className="mx-0 mt-0 mb-4 h-48 xl:h-40"
                                             >
-                                                <Typography
-                                                    variant="small"
-                                                    className="text-[11px] font-bold uppercase text-blue-gray-400"
-                                                >
-                                                    {el}
-                                                </Typography>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredVideos.map((video, index) => (
-                                        <tr
-                                            key={video._id || index}
-                                            className="cursor-pointer"
-                                            onClick={() => handleVideoClick(video)}
-                                        >
+                                                {renderMediaPreview(media.path)} {/* Render media preview based on type */}
+                                            </CardHeader>
 
-                                            <td className="border-b border-blue-gray-50 w-1/3 py-3 px-5">
-                                                <video
-                                                    className="w-full h-auto"
-                                                    src={video.path}
-                                                    type="video/mp4"
-                                                >
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </td>
-                                            <td className="border-b border-blue-gray-50 py-3 px-5">
-                                                <Typography className="text-sm text-blue-gray-800">
-                                                    {video.title}
+                                            <CardBody className="p-4 bg-white">
+                                                <Typography variant="h6" className="text-sm mb-2 font-semibold">
+                                                    {media.title}
                                                 </Typography>
-                                            </td>
-                                            <td className="border-b border-blue-gray-50 py-3 px-5">
-                                                <Typography className="text-sm text-blue-gray-800">
-                                                    {video.category.replace(/-/g, " ").toUpperCase()}
-                                                </Typography>
-                                            </td>
-                                            <td className="border-b border-blue-gray-50 py-3 px-5">
-                                                <Typography className="text-sm text-blue-gray-800">
-                                                    {video.subcategories}
-                                                </Typography>
-                                            </td>
-                                        </tr>
+                                                {/* {media.subcategories && (
+                                                    <Typography variant="small" className="text-gray-600">
+                                                        {media.subcategories.join(", ")}
+                                                    </Typography>
+                                                )} */}
+                                            </CardBody>
+                                        </Card>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="flex justify-center items-center mt-8 mb-8 w-full">
-                            <Typography variant="h6" color="blue-gray">
-                                No videos found in this category.
-                            </Typography>
-                        </div>
-                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </CardBody>
             </Card>
-
-            {/* Modal to show the video */}
-            {isModalOpen && selectedVideo && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white p-4 rounded-lg max-w-3xl w-full">
-                        <button
-                            onClick={closeModal}
-                            className="absolute top-2 right-2 text-white text-xl"
-                        >
-                            &times;
-                        </button>
-                        <h2 className="text-2xl mb-4">{selectedVideo.title}</h2>
-                        <video
-                            controls
-                            className="w-full h-auto"
-                            src={selectedVideo.path}
-                            type="video/mp4"
-                        >
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                </div>
             )}
         </div>
     );
-};
+}
 
 export default Videos;

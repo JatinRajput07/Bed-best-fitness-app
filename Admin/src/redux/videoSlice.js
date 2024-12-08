@@ -3,12 +3,10 @@ import Axios from '@/configs/Axios';// Axios instance for API requests
 import { utilService } from '../utilService';
 
 // Async thunk for fetching videos by category
-export const fetchVideos = createAsyncThunk(
-  'admin/video-list',
-  async (category, { rejectWithValue }) => {
+export const fetchVideos = createAsyncThunk('admin/video-list',async (_, { rejectWithValue }) => {
     try {
-      const response = await Axios.get(`/admin/video-list/${category}`);
-      return response.data.videos; // Assuming 'videos' is the key in the response
+      const response = await Axios.get(`/admin/video-list`);
+      return response.data.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';
       return rejectWithValue(errorMessage);
@@ -16,14 +14,12 @@ export const fetchVideos = createAsyncThunk(
   }
 );
 
-// Async thunk for creating a new video
 export const createVideo = createAsyncThunk(
   'admin/upload-videos',
   async (data, { rejectWithValue }) => {
     try {
       const response = await Axios.post('/admin/upload-videos', data);
-      // utilService.showSuccessToast('Video created successfully!');
-      return response.data.video; // Assuming 'video' is the key in the response
+      return response.data.video;
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';
       utilService.showErrorToast(errorMessage);

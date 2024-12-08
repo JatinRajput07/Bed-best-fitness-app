@@ -8,8 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserDetails } from "@/redux/userSlice";
 
 export function Profile({ id, closeModal }) {
-
-
+  
   const dispatch = useDispatch();
 
   const { userProfile, profileLoading, error } = useSelector((state) => state.users);
