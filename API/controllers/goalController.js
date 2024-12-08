@@ -5,6 +5,8 @@ const Goal = require("../models/userGoal");
 const { default: mongoose } = require("mongoose");
 const Routine = require("../models/Routine");
 const videos = require("../models/videos");
+const Nutrition = require("../models/Nutrition");
+const Meal = require("../models/Meal");
 
 
 exports.createGoal = catchAsync(async (req, res, next) => {
@@ -251,6 +253,46 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
         data: formattedResponse
     });
 })
+
+
+
+exports.getNutritions = async (req, res, next) => {
+    try {
+        const nutritions = await Nutrition.find({ active: true},( "title description" ));
+        res.status(200).json({
+            status: 'success',
+            data: nutritions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getMeals = async (req, res, next) => {
+    try {
+        const mealsByCategory = await Meal.aggregate([
+            { $match: { active: true } },
+            {
+                $group: {
+                    _id: '$category',
+                    meals: { $push: { item: '$item'} },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+        const groupedMeals = mealsByCategory.reduce((acc, category) => {
+            acc[category._id] = category.meals;
+            return acc;
+        }, {});
+
+        res.status(200).json({
+            status: 'success',
+            data: groupedMeals,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
 

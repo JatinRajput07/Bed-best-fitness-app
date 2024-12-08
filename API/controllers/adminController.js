@@ -10,6 +10,8 @@ const AppError = require("../utils/AppError");
 const Asign_User = require("../models/Asign_user");
 const UserFiles = require("../models/UserFiles");
 const Goal = require("../models/userGoal");
+const Nutrition = require("../models/Nutrition");
+const Meal = require("../models/Meal");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -193,7 +195,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
     const videosByCategory = await Video.aggregate([
         {
             $group: {
-                _id: "$category", 
+                _id: "$category",
                 videos: {
                     $push: {
                         path: "$path",
@@ -245,7 +247,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
 
 exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) => {
     const { category } = req.params;
-    
+
     const videosByCategoryAndSubcategory = await Video.aggregate([
         {
             $match: { category: category }
@@ -395,4 +397,78 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     res.status(200).json({ message: "User updated successfully", user: updatedUser });
 });
 
+
+
+
+
+exports.createNutrition = async (req, res, next) => {
+    try {
+        const { title, description } = req.body;
+        const nutrition = await Nutrition.create({ title, description });
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Nutrition created successfully!',
+            data: nutrition,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getNutritions = async (req, res, next) => {
+    try {
+        const nutritions = await Nutrition.find({ active: true},( "title description" ));
+        res.status(200).json({
+            status: 'success',
+            data: nutritions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.createMeal = async (req, res, next) => {
+    try {
+        const { category, item } = req.body;
+
+        const meal = await Meal.create({ category, item });
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Meal created successfully!',
+            data: meal,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.getMeals = async (req, res, next) => {
+    try {
+        const mealsByCategory = await Meal.aggregate([
+            { $match: { active: true } },
+            {
+                $group: {
+                    _id: '$category',
+                    meals: { $push: { item: '$item'} },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+        const groupedMeals = mealsByCategory.reduce((acc, category) => {
+            acc[category._id] = category.meals;
+            return acc;
+        }, {});
+
+        res.status(200).json({
+            status: 'success',
+            data: groupedMeals,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
