@@ -51,6 +51,11 @@ export function Profile({ id, closeModal }) {
     return <div>Loading...</div>;
   }
 
+
+  // if (error) {
+  //   return <div>Error: {error}</div>;
+  // }
+
   return (
     <>
       <div className="relative h-20 w-full overflow-hidden rounded-xl bg-[url('/img/background-image.png')] bg-cover bg-center">
@@ -176,8 +181,9 @@ export function Profile({ id, closeModal }) {
               />
             </LocalizationProvider>
 
-            {/* Daily Progress Section */}
-            {data ? (
+            {loading ? (
+              <div>Loading...</div>
+            ) : data ? (
               <div>
                 <Typography variant="h6" color="blue-gray" className="mt-8 mb-4">
                   Progress for {new Date(data.routine.date).toDateString()}
@@ -211,11 +217,7 @@ export function Profile({ id, closeModal }) {
                       color="blue"
                       className="mt-4"
                     />
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="mt-2 text-center"
-                    >
+                    <Typography variant="small" color="blue-gray" className="mt-2 text-center">
                       Progress:{" "}
                       <span className="font-bold text-blue-600">
                         {data.goals.steps.percentage}%
@@ -241,11 +243,7 @@ export function Profile({ id, closeModal }) {
                       color="cyan"
                       className="mt-4"
                     />
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="mt-2 text-center"
-                    >
+                    <Typography variant="small" color="blue-gray" className="mt-2 text-center">
                       Progress:{" "}
                       <span className="font-bold text-cyan-600">
                         {data.goals.water.percentage}%
@@ -288,6 +286,10 @@ export function Profile({ id, closeModal }) {
             ) : (
               <div>No data available for the selected date.</div>
             )}
+
+
+
+
           </div><div className="px-4 mt-8 pb-4">
             <Typography variant="h6" color="blue-gray" className="mb-2">
               Feed ( Post's )

@@ -356,7 +356,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         return next(new AppError(`No data provided for section: ${section}`, 400));
     }
 
-    // Validate section name
     const validSections = [
         'water',
         'meal',
@@ -371,15 +370,15 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         return next(new AppError(`Invalid section: ${section}`, 400));
     }
 
-    // Find or create a routine document
     let routine = await Routine.findOne({ userId, date: today }, (section));
     if (!routine) {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
         if (section === 'meal') {
-            routine.meal = _.merge(routine.meal || {}, data);
+            routine.meal = { ...routine.meal, ...data };
+        } else if (section === 'body_data') {
+            routine.body_data = { ...routine.body_data, ...data };
         } else {
-            // For other sections, replace the section entirely
             routine[section] = data;
         }
         await routine.save();
@@ -812,3 +811,9 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
         data: uploadfile,
     });
 });
+
+
+
+
+
+
