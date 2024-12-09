@@ -25,12 +25,15 @@ const {
     getUserReminders,
     socialLogin,
     userUploadFiles,
-    getUploadFiles
+    getUploadFiles,
+    verifyAccount
 } = require('../../controllers/userController');
 const { createGoal, getUserGoal, getUserHealthData, getMetricData, getMindnessfull, getMindnessfullByCategory, getMeals, getNutritions, get_sleep_records } = require('../../controllers/goalController');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
+verifyAccount
+router.post('/verifyAccount', verifyAccount); // User Account Verify
 router.post('/login', login); // User login
 router.post('/social_login', socialLogin)
 router.post('/forgotPassword', forgotPassword); // Forgot password

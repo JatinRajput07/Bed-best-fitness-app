@@ -55,18 +55,42 @@ exports.register = catchAsync(async (req, res, next) => {
         };
     }
     const user = await User.create(newUserData);
-    const token = signToken(user._id);
+    // const token = signToken(user._id);
     const resetToken = user.createPasswordResetToken();
     await new Email(user, resetToken).welcome();
 
     return res.status(200).json({
         status: 'success',
         message: 'Registration successful! , OTP sent your Email ',
-        data: {
-            user: { ...user.toObject(), token }
-        }
+        data: user.email
     });
 });
+
+
+exports.verifyAccount = catchAsync(async (req, res, next) => {
+    const { otp, email } = req.body;
+    const user = await User.findOne({
+        email: email,
+        passwordResetToken: otp,
+        passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+        return next(new AppError('OTP is invalid or has expired', 400));
+    }
+
+    user.isVerified = true;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.save()
+    const token = signToken(user._id);
+    res.status(200).json({
+        status: 'success',
+        message: 'OTP verified successfully',
+        data: { ...user.toObject(), token }
+    });
+});
+
 
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -162,6 +186,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         );
     }
 });
+
 
 
 exports.verifyOTP = catchAsync(async (req, res, next) => {

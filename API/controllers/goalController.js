@@ -288,7 +288,7 @@ exports.getMeals = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: groupedMeals,
+            data: [groupedMeals],
         });
     } catch (error) {
         next(error);
