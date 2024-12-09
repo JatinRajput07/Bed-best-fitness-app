@@ -60,9 +60,9 @@ export function UserList() {
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
-                    {["User", "Role", "Status", "Joined", "Actions"].map((el) => (
+                    {["User", "Role", "Status", "Joined", "Actions"].map((el , i) => (
                       <th
-                        key={el}
+                        key={i + 1}
                         className="border-b border-blue-gray-50 py-3 px-5 text-left"
                       >
                         <Typography
@@ -79,7 +79,7 @@ export function UserList() {
                   {users.map(({ id, img, name, email, role, active, createdAt, ...otherDetails },key) => {
                       const className=`py-3 px-5 ${key === users.length - 1 ? "" : "border-b border-blue-gray-50"}`;
                       return (
-                        <tr key={id}>
+                        <tr key={key + 1}>
                           <td className={className}>
                             <div className="flex items-center gap-4">
                               {img ? (

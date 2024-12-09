@@ -6,23 +6,49 @@ import { platformSettingsData, conversationsData, projectsData } from "@/data";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserDetails } from "@/redux/userSlice";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import axios from "axios";
 
 export function Profile({ id, closeModal }) {
-  
+
   const dispatch = useDispatch();
 
-  const { userProfile, profileLoading, error } = useSelector((state) => state.users);
+  const { userProfile, profileLoading } = useSelector((state) => state.users);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     dispatch(fetchUserDetails({ id }));
   }, [dispatch, id]);
 
+  const fetchDailyReport = async (id, date) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const formattedDate = date.toISOString().split("T")[0];
+      const response = await axios.get(
+        `http://localhost:7200/admin/user-daily-report/${id}`,
+        {
+          params: { date: formattedDate },
+        }
+      );
+      setData(response.data.data);
+    } catch (err) {
+      setError("Failed to fetch the daily report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDailyReport(id, selectedDate);
+  }, [id, selectedDate]);
+
   if (profileLoading) {
     return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
   }
 
   return (
@@ -44,7 +70,7 @@ export function Profile({ id, closeModal }) {
               />
               <div>
                 <Typography variant="h5" color="blue-gray" className="mb-1">
-                {userProfile?.user?.name}
+                  {userProfile?.user?.name || ""}
                 </Typography>
                 <Typography
                   variant="small"
@@ -81,7 +107,7 @@ export function Profile({ id, closeModal }) {
                 </Card>
                 <Card shadow={false} className="p-4 border  border-gray-200">
                   <Typography variant="small" color="blue-gray" className="mb-2">
-                    Daily Steps Goal
+                    {`Daily Steps Goal` || ""}
                   </Typography>
                   <Typography variant="h5" color="blue">
                     {userProfile?.userGoal?.dailyStepsGoal || "N/A"} steps
@@ -128,144 +154,178 @@ export function Profile({ id, closeModal }) {
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
-          {/* Daily Progress Section */}
-          <Typography variant="h6" color="blue-gray" className="mt-8 mb-4">
-            Today's Progress
-          </Typography>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-            {/* Weight Progress */}
-            <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
+          <div>
+            {/* Calendar Filter */}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Typography variant="h6" color="blue-gray" className="mb-4">
-                Weight Goal
+                Select Date
               </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Current Weight: <span className="text-blue-gray-800">85 kg</span>
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Target Weight: <span className="text-blue-gray-800">75 kg</span>
-              </Typography>
-              <Progress value={50} color="green" className="mt-4" />
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="mt-2 text-center"
-              >
-                Progress: <span className="font-bold text-green-600">50%</span>
-              </Typography>
-            </Card>
+              <DatePicker
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                renderInput={({ inputRef, inputProps, InputProps }) => (
+                  <div className="flex items-center">
+                    <input
+                      ref={inputRef}
+                      {...inputProps}
+                      className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+                    />
+                    {InputProps?.endAdornment}
+                  </div>
+                )}
+              />
+            </LocalizationProvider>
 
-            {/* Steps Progress */}
-            <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-              <Typography variant="h6" color="blue-gray" className="mb-4">
-                Steps Goal
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Steps Taken Today: <span className="text-blue-gray-800">8,000</span>
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Daily Goal: <span className="text-blue-gray-800">10,000</span>
-              </Typography>
-              <Progress value={80} color="blue" className="mt-4" />
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="mt-2 text-center"
-              >
-                Progress: <span className="font-bold text-blue-600">80%</span>
-              </Typography>
-            </Card>
+            {/* Daily Progress Section */}
+            {data ? (
+              <div>
+                <Typography variant="h6" color="blue-gray" className="mt-8 mb-4">
+                  Progress for {new Date(data.routine.date).toDateString()}
+                </Typography>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                  {/* Weight Goal */}
+                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
+                    <Typography variant="h6" color="blue-gray" className="mb-4">
+                      Weight Goal
+                    </Typography>
+                    <Typography variant="small" className="text-gray-600">
+                      {data.goals.weightGoal}
+                    </Typography>
+                  </Card>
 
-            {/* Water Intake Progress */}
-            <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-              <Typography variant="h6" color="blue-gray" className="mb-4">
-                Water Intake Goal
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Water Drank Today: <span className="text-blue-gray-800">2.5 L</span>
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Daily Goal: <span className="text-blue-gray-800">3 L</span>
-              </Typography>
-              <Progress value={83} color="cyan" className="mt-4" />
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="mt-2 text-center"
-              >
-                Progress: <span className="font-bold text-cyan-600">83%</span>
-              </Typography>
-            </Card>
+                  {/* Steps Goal */}
+                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
+                    <Typography variant="h6" color="blue-gray" className="mb-4">
+                      Steps Goal
+                    </Typography>
+                    <Typography variant="small" className="text-gray-600">
+                      Steps Taken:{" "}
+                      <span className="text-blue-gray-800">{data.goals.steps.achieved}</span>
+                    </Typography>
+                    <Typography variant="small" className="text-gray-600">
+                      Daily Goal:{" "}
+                      <span className="text-blue-gray-800">{data.goals.steps.target}</span>
+                    </Typography>
+                    <Progress
+                      value={parseFloat(data.goals.steps.percentage)}
+                      color="blue"
+                      className="mt-4"
+                    />
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="mt-2 text-center"
+                    >
+                      Progress:{" "}
+                      <span className="font-bold text-blue-600">
+                        {data.goals.steps.percentage}%
+                      </span>
+                    </Typography>
+                  </Card>
 
-            {/* Calories Consumed Progress */}
-            <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-              <Typography variant="h6" color="blue-gray" className="mb-4">
-                Calories Goal
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Calories Consumed Today: <span className="text-blue-gray-800">1,800</span>
-              </Typography>
-              <Typography variant="small" className="text-gray-600">
-                Daily Goal: <span className="text-blue-gray-800">2,000</span>
-              </Typography>
-              <Progress value={90} color="orange" className="mt-4" />
-              <Typography
-                variant="small"
-                color="blue-gray"
-                className="mt-2 text-center"
-              >
-                Progress: <span className="font-bold text-orange-600">90%</span>
-              </Typography>
-            </Card>
-          </div>
+                  {/* Water Intake Goal */}
+                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
+                    <Typography variant="h6" color="blue-gray" className="mb-4">
+                      Water Intake Goal
+                    </Typography>
+                    <Typography variant="small" className="text-gray-600">
+                      Water Drank:{" "}
+                      <span className="text-blue-gray-800">{data.goals.water.achieved} L</span>
+                    </Typography>
+                    <Typography variant="small" className="text-gray-600">
+                      Daily Goal:{" "}
+                      <span className="text-blue-gray-800">{data.goals.water.target} L</span>
+                    </Typography>
+                    <Progress
+                      value={parseFloat(data.goals.water.percentage)}
+                      color="cyan"
+                      className="mt-4"
+                    />
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="mt-2 text-center"
+                    >
+                      Progress:{" "}
+                      <span className="font-bold text-cyan-600">
+                        {data.goals.water.percentage}%
+                      </span>
+                    </Typography>
+                  </Card>
+                </div>
 
-
-
-
-          <div className="px-4 mt-8 pb-4">
+                {/* Meals Section */}
+                <div className="mt-8">
+                  <Typography variant="h6" color="blue-gray" className="mb-4">
+                    Meals for the Day
+                  </Typography>
+                  {data.routine.meals.map((meal, index) => (
+                    <Card
+                      key={index}
+                      shadow={false}
+                      className="p-6 border border-gray-200 rounded-lg mb-4"
+                    >
+                      <Typography variant="h6" color="blue-gray" className="mb-2">
+                        {meal.category.replace("_", " ").toUpperCase()}
+                      </Typography>
+                      <Typography variant="small" className="text-gray-600">
+                        Status: <span className="text-blue-gray-800">{meal.status}</span>
+                      </Typography>
+                      <Typography variant="small" className="text-gray-600">
+                        Note: <span className="text-blue-gray-800">{meal.note}</span>
+                      </Typography>
+                      <ul className="list-disc pl-6 mt-2">
+                        {Object.entries(meal.items).map(([key, item]) => (
+                          <li key={item._id} className="text-gray-600">
+                            {key.replace("_", " ")}: {item.qty}
+                          </li>
+                        ))}
+                      </ul>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>No data available for the selected date.</div>
+            )}
+          </div><div className="px-4 mt-8 pb-4">
             <Typography variant="h6" color="blue-gray" className="mb-2">
               Feed ( Post's )
             </Typography>
-
             <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
-              {projectsData.map(
-                ({ img, title, description, tag, route, members }) => (
-                  <Card key={title} color="transparent" shadow={false}>
-                    <CardHeader
-                      floated={false}
-                      color="gray"
-                      className="mx-0 mt-0 mb-4 h-64 xl:h-40"
-                    >
+              {userProfile?.userfiles.map(({ path, type }, key) => (
+                type === "image" && (
+                  <Card key={key + 1} color="transparent" shadow={false}>
+                    <CardHeader floated={false} color="gray" className="mx-0 mt-0 mb-4 h-64 xl:h-40">
                       <img
-                        src={img}
-                        alt={title}
+                        src={path}
+                        alt=""
                         className="h-full w-full object-cover"
                       />
                     </CardHeader>
                   </Card>
                 )
-              )}
+              ))}
             </div>
           </div>
-
 
 
           <div className="px-4 mt-8 pb-4">
             <Typography variant="h6" color="blue-gray" className="mb-2">
               Recomended Videos
             </Typography>
-
             <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
-              {projectsData.map(
-                ({ img, title, description, tag, route, members }) => (
-                  <Card key={title} color="transparent" shadow={false}>
+              {userProfile?.userfiles.map(
+                ({ path }, key) => (
+                  <Card key={key + 1} color="transparent" shadow={false}>
                     <CardHeader
                       floated={false}
                       color="gray"
                       className="mx-0 mt-0 mb-4 h-64 xl:h-40"
                     >
                       <img
-                        src={img}
-                        alt={title}
+                        src={path}
+                        alt={""}
                         className="h-full w-full object-cover"
                       />
                     </CardHeader>

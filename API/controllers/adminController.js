@@ -12,6 +12,7 @@ const UserFiles = require("../models/UserFiles");
 const Goal = require("../models/userGoal");
 const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
+const Routine = require("../models/Routine");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -87,21 +88,105 @@ exports.getUserList = catchAsync(async (req, res, next) => {
 
 exports.getUserProfile = catchAsync(async (req, res, next) => {
     const { id } = req.params;
-    const [user, userfiles, userGoal] = await Promise.all([
+    const [user, userfiles, userGoal, routine] = await Promise.all([
         User.findById(id),
         UserFiles.find({ userId: id }),
-        Goal.findOne({ userId: id })
+        Goal.findOne({ userId: id }),
     ]);
     res.status(200).json({
         status: 'success',
         data: {
             user,
             userfiles,
-            userGoal
+            userGoal,
         }
     });
 });
 
+exports.getUserRoutine = catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+        return next(new AppError('Date is required', 400));
+    }
+
+    const userGoal = await Goal.findOne({ userId });
+    if (!userGoal) {
+        return next(new AppError('User goal not found', 400));
+    }
+    const userRoutine = await Routine.findOne({ userId, date });
+    if (!userRoutine) {
+        return next(new AppError('Routine for the given date not found', 400)); s
+    }
+
+    const calculatePercentage = (achieved, target) => {
+        if (!target || target === 0) return 0;
+        return Math.min((achieved / target) * 100, 100).toFixed(2);
+    };
+
+    const stepsAchieved = parseInt(userRoutine.steps?.steps || 0, 10);
+    const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
+    const stepsPercentage = calculatePercentage(stepsAchieved, stepsTarget);
+
+    const waterAchieved = parseInt(userRoutine.water?.qty || 0, 10);
+    const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
+    const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
+
+    const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
+    const nutritionAchieved = nutritionDoses.filter(dose => userRoutine.nutrition[dose] === 'take').length;
+    const nutritionTarget = nutritionDoses.length;
+    const nutritionPercentage = calculatePercentage(nutritionAchieved, nutritionTarget);
+
+    const currentWeight = userRoutine.body_data?.health_log_parameters?.currentWeight || null;
+    const goalWeight = userGoal.weightGoal?.goalWeight || null;
+    const weightGoalStatus = currentWeight
+        ? `${currentWeight} kg (Goal: ${goalWeight} kg)`
+        : 'Weight not updated';
+
+
+    const mealCategories = Object.keys(userRoutine.meal || {});
+    const mealReport = mealCategories.map(category => {
+        const mealData = userRoutine.meal[category];
+        return {
+            category,
+            status: mealData?.status || 'N/A',
+            note: mealData?.note || 'No notes',
+            items: mealData?.items || {},
+        };
+    });
+
+    const response = {
+        status: 'success',
+        data: {
+            goals: {
+                weightGoal: weightGoalStatus,
+                steps: {
+                    achieved: stepsAchieved,
+                    target: stepsTarget,
+                    percentage: stepsPercentage,
+                },
+                water: {
+                    achieved: waterAchieved,
+                    target: waterTarget,
+                    percentage: waterPercentage,
+                },
+                nutrition: {
+                    achieved: nutritionAchieved,
+                    target: nutritionTarget,
+                    percentage: nutritionPercentage,
+                },
+            },
+            routine: {
+                date,
+                currentWeight,
+                meals: mealReport,
+            },
+        },
+    };
+
+    res.status(200).json(response);
+});
 
 
 exports.getCms = catchAsync(async (req, res, next) => {
@@ -398,9 +483,6 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 });
 
 
-
-
-
 exports.createNutrition = async (req, res, next) => {
     try {
         const { title, description } = req.body;
@@ -415,19 +497,6 @@ exports.createNutrition = async (req, res, next) => {
         next(error);
     }
 };
-
-exports.getNutritions = async (req, res, next) => {
-    try {
-        const nutritions = await Nutrition.find({ active: true},( "title description" ));
-        res.status(200).json({
-            status: 'success',
-            data: nutritions,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
 
 exports.createMeal = async (req, res, next) => {
     try {
@@ -445,6 +514,17 @@ exports.createMeal = async (req, res, next) => {
     }
 };
 
+exports.getNutritions = async (req, res, next) => {
+    try {
+        const nutritions = await Nutrition.find({ active: true }, ("title description"));
+        res.status(200).json({
+            status: 'success',
+            data: nutritions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 exports.getMeals = async (req, res, next) => {
     try {
@@ -453,7 +533,7 @@ exports.getMeals = async (req, res, next) => {
             {
                 $group: {
                     _id: '$category',
-                    meals: { $push: { item: '$item'} },
+                    meals: { $push: { item: '$item' } },
                 },
             },
             { $sort: { _id: 1 } },

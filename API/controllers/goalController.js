@@ -7,6 +7,7 @@ const Routine = require("../models/Routine");
 const videos = require("../models/videos");
 const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
+const moment = require('moment');
 
 
 exports.createGoal = catchAsync(async (req, res, next) => {
@@ -258,7 +259,7 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
 
 exports.getNutritions = async (req, res, next) => {
     try {
-        const nutritions = await Nutrition.find({ active: true},( "title description" ));
+        const nutritions = await Nutrition.find({ active: true }, ("title description"));
         res.status(200).json({
             status: 'success',
             data: nutritions,
@@ -275,7 +276,7 @@ exports.getMeals = async (req, res, next) => {
             {
                 $group: {
                     _id: '$category',
-                    meals: { $push: { item: '$item'} },
+                    meals: { $push: { item: '$item' } },
                 },
             },
             { $sort: { _id: 1 } },
@@ -296,3 +297,28 @@ exports.getMeals = async (req, res, next) => {
 
 
 
+
+exports.get_sleep_records = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = moment().startOf('day');
+    const sevenDaysAgo = moment().subtract(7, 'days').startOf('day');
+    const sleepRecords = await Routine.find({
+        userId: new mongoose.Types.ObjectId(userId),
+        date: { $gte: sevenDaysAgo.format('YYYY-MM-DD'), $lte: today.format('YYYY-MM-DD') }
+    }).select('date sleep');
+
+    if (sleepRecords.length === 0) {
+        return res.status(404).json({ message: 'No sleep records found for the last 7 days.' });
+    }
+
+    const simplifiedData = sleepRecords.map(record => ({
+        date: record.date,
+        wake_up: record.sleep?.wake_up || 'N/A',
+        bed_at: record.sleep?.bed_at || 'N/A'
+      }));
+
+    res.status(200).json({
+        status: 'success',
+        data: simplifiedData,
+    });
+})

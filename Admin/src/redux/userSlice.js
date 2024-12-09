@@ -22,6 +22,9 @@ export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ }, { rej
 export const fetchUserDetails = createAsyncThunk('/admin/get-user-profile', async ({ id }, { rejectWithValue }) => {
     try {
         const response = await Axios.get(`/admin/get-user-profile/${id}`);
+
+        console.log(response.data.data)
+
         return response.data.data;
     } catch (error) {
         return rejectWithValue(error.message);

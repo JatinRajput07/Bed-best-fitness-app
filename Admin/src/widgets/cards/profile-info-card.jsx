@@ -2,96 +2,70 @@ import PropTypes from "prop-types";
 import { Card, CardHeader, CardBody, Input, Typography } from "@material-tailwind/react";
 
 export function ProfileInfoCard({ user }) {
-  return (
-    <Card color="transparent" shadow={false} className=" border-blue-gray-100 rounded-lg">
-      <CardHeader
-        color="transparent"
-        shadow={false}
-        floated={false}
-        className="mx-0 mt-0 mb-4 flex items-center justify-between"
-      >
-        <Typography variant="h6" color="blue-gray">
-          Profile Information
-        </Typography>
-      </CardHeader>
-      <CardBody className="p-4">
-        {user ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* First Row */}
-            <div>
-              <Input
-                label="First Name"
-                value={user["name"]}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-            <div>
-              <Input
-                label="Email"
-                value={user?.email}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-
-            {/* Second Row */}
-            <div>
-              <Input
-                label="Phone"
-                value={user?.phone}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-            <div>
-              <Input
-                label="Location"
-                value={`${user?.city}, ${user?.Country}`}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-            <div>
-              <Input
-                label="Membership Level"
-                value={user["membership level"]}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-
-            {/* Third Row */}
-            <div>
-              <Input
-                label="Date of Birth"
-                value={user.dob}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-            <div>
-              <Input
-                label="Gender"
-                value={user.gender}
-                variant="outlined"
-                color="blue-gray"
-              />
-            </div>
-          </div>
-        ) : (
+  if (!user) {
+    return (
+      <Card color="transparent" shadow={false} className="border-blue-gray-100 rounded-lg">
+        <CardHeader color="transparent" shadow={false} floated={false} className="mx-0 mt-0 mb-4 flex items-center justify-between">
+          <Typography variant="h6" color="blue-gray">Profile Information</Typography>
+        </CardHeader>
+        <CardBody className="p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
             No user information available.
           </Typography>
-        )}
+        </CardBody>
+      </Card>
+    );
+  }
+
+  const userInfo = [
+    { label: "First Name", value: user?.name },
+    { label: "Email", value: user?.email },
+    { label: "Phone", value: user?.phone },
+    { label: "Location", value: `${user?.city || ""}, ${user?.State}, ${user?.Country}` },
+    { label: "ABHA_No", value: user?.ABHA_No },
+    { label: "AadharNo", value: user?.AadharNo },
+    { label: "Alternative ContactNo", value: user?.AlternativeContactNo },
+    { label: "Business Address", value: user?.BusinessAddress },
+    { label: "Favourite Author", value: user?.FavouriteAuthor },
+    { label: "First Report Date", value: user?.FirstReportDate?.split("T")[0] },
+    { label: "Goal", value: user?.Goal },
+    { label: "Health Insurance Company", value: user?.HealthInsuranceCompany },
+    { label: "Health Insurance No", value: user?.HealthInsuranceNo },
+    { label: "Journey Start Date", value: user?.JourneyStartDate?.split("T")[0] },
+    { label: "Nationality", value: user?.Nationality },
+    { label: "Occupation", value: user?.Occupation },
+    { label: "Office Address", value: user?.OfficeAddress },
+    { label: "Oritation Date", value: user?.OritationDate },
+    { label: "ReferBy", value: user?.ReferBy },
+    { label: "SOS Contact No", value: user?.SOS_Contact_No },
+    { label: "Relation With SOS", value: user?.RelationWithSOS },
+    { label: "Date of Birth", value: user?.DOB },
+    { label: "Gender", value: user?.Gender },
+  ];
+
+  return (
+    <Card color="transparent" shadow={false} className="border-blue-gray-100 rounded-lg">
+      <CardHeader color="transparent" shadow={false} floated={false} className="mx-0 mt-0 mb-4 flex items-center justify-between">
+        <Typography variant="h6" color="blue-gray">Profile Information</Typography>
+      </CardHeader>
+      <CardBody className="p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {userInfo.map((field, index) => (
+            <div key={index}>
+              <Input
+                label={field.label}
+                value={field.value}
+                variant="outlined"
+                color="blue-gray"
+                readOnly
+              />
+            </div>
+          ))}
+        </div>
       </CardBody>
     </Card>
   );
 }
-
-ProfileInfoCard.propTypes = {
-  user: PropTypes.object.isRequired,
-};
 
 ProfileInfoCard.displayName = "ProfileInfoCard";
 

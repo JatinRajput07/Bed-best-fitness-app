@@ -27,7 +27,7 @@ const {
     userUploadFiles,
     getUploadFiles
 } = require('../../controllers/userController');
-const { createGoal, getUserGoal, getUserHealthData, getMetricData, getMindnessfull, getMindnessfullByCategory, getMeals, getNutritions } = require('../../controllers/goalController');
+const { createGoal, getUserGoal, getUserHealthData, getMetricData, getMindnessfull, getMindnessfullByCategory, getMeals, getNutritions, get_sleep_records } = require('../../controllers/goalController');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
@@ -101,5 +101,6 @@ router.get("/mindfulness/:category", getMindnessfullByCategory)
 router.get('/meal', getMeals);
 router.get('/nutrition', getNutritions); 
 
+router.get('/get_sleep_records', get_sleep_records); 
 
 module.exports = router;
