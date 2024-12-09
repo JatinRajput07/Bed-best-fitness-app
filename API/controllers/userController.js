@@ -57,6 +57,7 @@ exports.register = catchAsync(async (req, res, next) => {
     const user = await User.create(newUserData);
     // const token = signToken(user._id);
     const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
     await new Email(user, resetToken).welcome();
 
     return res.status(200).json({

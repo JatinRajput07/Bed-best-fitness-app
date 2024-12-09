@@ -32,7 +32,6 @@ const { createGoal, getUserGoal, getUserHealthData, getMetricData, getMindnessfu
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
-verifyAccount
 router.post('/verifyAccount', verifyAccount); // User Account Verify
 router.post('/login', login); // User login
 router.post('/social_login', socialLogin)
