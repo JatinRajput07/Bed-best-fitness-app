@@ -12,6 +12,8 @@ import CreateOrUpdateUser from "./pages/dashboard/user/CreateOrUpdateUser";
 import MealAndNutrition from "./pages/dashboard/MealAndNutrition";
 import Community_guidelines from "./pages/dashboard/Community_guidelines";
 import { useSelector } from "react-redux";
+import MealForm from "./pages/dashboard/MealAndNutrition/MealForm";
+import Nutrition from "./pages/dashboard/MealAndNutrition/NutritionForm";
 
 
 const icon = {
@@ -45,29 +47,41 @@ export const routes = () => {
       ],
     },
     {
-      icon: <UserIcon {...icon} />,
-      name: "Assign UsersTo Host",
+      icon: <HomeIcon {...icon} />,
+      name: "Meal And Nutrition",
       dropdown: [
         {
-          name: "Create",
-          path: "/asignusers",
-          element: <AssignUsersToHost />,
+          name: "Meal",
+          path: "/meal",
+          element: <MealForm />,
         },
         {
-          name: "List",
-          path: "/asignusers-list",
-          element: <AdminAssignments />,
+          name: "Nutrition",
+          path: "/nutrition",
+          element: <Nutrition />,
         },
       ],
     },
-    {
-      icon: <HomeIcon {...icon} />,
-      name: "Meal And Nutrition",
-      path: "/meal_nutrition",
-      element: <MealAndNutrition />,
-    },
+
+
     // Conditionally include the Videos section if role is not 'host'
     ...(role !== "host" ? [
+      {
+        icon: <UserIcon {...icon} />,
+        name: "Assign UsersTo Host",
+        dropdown: [
+          {
+            name: "Create",
+            path: "/asignusers",
+            element: <AssignUsersToHost />,
+          },
+          {
+            name: "List",
+            path: "/asignusers-list",
+            element: <AdminAssignments />,
+          },
+        ],
+      },
       {
         icon: <VideoCameraIcon {...icon} />,
         name: "Videos",

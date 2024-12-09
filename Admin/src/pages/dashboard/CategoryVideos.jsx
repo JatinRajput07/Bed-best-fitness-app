@@ -19,7 +19,7 @@ const CategoryVideos = ({ category_name }) => {
 
     useEffect(() => {
         axios
-            .get(`http://localhost:7200/admin/video-list-byCategory/${category_name}`)
+            .get(`http://43.204.2.84:7200/admin/video-list-byCategory/${category_name}`)
             .then((response) => {
                 if (response.data.status === "success") {
                     setCategoryData(response.data.data);

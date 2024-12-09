@@ -1,43 +1,108 @@
-import React, { useState } from "react";
-import { Button, Input, Textarea } from "@material-tailwind/react";
+import React, { useState, useEffect } from "react";
+import { Button, Card, CardHeader, CardBody, Typography, Dialog, DialogBody, DialogFooter, Input } from "@material-tailwind/react";
+import axios from "axios"; // Or use your preferred API library
 
-const NutritionForm = ({ open, onClose, onSubmit }) => {
-  const [nutritionData, setNutritionData] = useState({
-    description: '',
-    total: '',
-  });
+const Nutrition = () => {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [nutritionData, setNutritionData] = useState([]);
 
-  const handleChange = (e) => {
-    setNutritionData({
-      ...nutritionData,
-      [e.target.name]: e.target.value,
-    });
+  // Fetch nutrition data on component mount
+  useEffect(() => {
+    axios.get("http://43.204.2.84:7200/admin/nutrition")
+      .then(response => {
+        if (response.data.status === "success") {
+          setNutritionData(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching nutrition data:", error);
+      });
+  }, []);
+
+  const handleOpenDialog = () => setOpenDialog(true);
+  const handleCloseDialog = () => {
+    setTitle("");
+    setDescription("");
+    setOpenDialog(false);
   };
 
   const handleSubmit = () => {
-    onSubmit(nutritionData);
-    onClose();
+    if (!title || !description) return;
+
+    const nutrition = { title, description };
+
+    // POST request to add nutrition
+    axios.post("http://43.204.2.84:7200/admin/nutrition", nutrition)
+      .then(response => {
+        if (response.data.status === "success") {
+          // Update the local state with new nutrition data
+          setNutritionData(prevState => [...prevState, response.data.data]);
+          handleCloseDialog();
+        }
+      })
+      .catch(error => {
+        console.error("Error submitting nutrition:", error);
+      });
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-lg p-6 w-96">
-        <h3 className="text-lg font-medium mb-4">Add Nutrition Info</h3>
-        <div className="flex flex-col gap-4">
-          <Input label="Total Nutrition Value" name="total" value={nutritionData.total} onChange={handleChange} />
-          <Textarea label="Description" name="description" value={nutritionData.description} onChange={handleChange} />
-          <Button onClick={handleSubmit} color="blue">
-            Submit Nutrition
-          </Button>
-          <Button onClick={onClose} color="red">
-            Close
-          </Button>
-        </div>
-      </div>
+    <div className="mt-12 mb-8 flex justify-center">
+      <Card className="w-full max-w-6xl shadow-lg">
+        <CardHeader variant="gradient" className="bg-gradient-to-r from-red-800 to-indigo-600 p-6 rounded-t-lg flex justify-between items-center">
+          <Typography variant="h5" color="white">Nutrition Plans</Typography>
+          <Button color="lightBlue" onClick={handleOpenDialog}>Add Nutrition</Button>
+        </CardHeader>
+        <CardBody className="p-6 space-y-6">
+          {/* Nutrition Data Table */}
+          <table className="min-w-full table-auto">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Sr. No.</th>
+                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Title</th>
+                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Loop through each nutrition plan */}
+              {nutritionData.map((nutrition, index) => (
+                <tr key={nutrition._id} className="border-t">
+                  <td className="px-6 py-2 text-sm text-gray-600">{index + 1}</td> {/* Sr. No. */}
+                  <td className="px-6 py-2 text-sm text-gray-600">{nutrition.title}</td> {/* Title */}
+                  <td className="px-6 py-2 text-sm text-gray-600">{nutrition.description}</td> {/* Description */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardBody>
+      </Card>
+
+      {/* Add Nutrition Dialog */}
+      <Dialog open={openDialog} handler={handleCloseDialog} size="lg">
+        <DialogBody>
+          <div className="space-y-4">
+            <Input
+              label="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+            <Input
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button color="red" onClick={handleCloseDialog}>Cancel</Button>
+          <Button color="green" onClick={handleSubmit}>Submit</Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };
 
-export default NutritionForm;
+export default Nutrition;

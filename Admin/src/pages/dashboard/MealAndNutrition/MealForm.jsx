@@ -1,111 +1,127 @@
-import React, { useState } from "react";
-import { Button, Input, Typography } from "@material-tailwind/react";
+import React, { useState, useEffect } from "react";
+import { Button, Card, CardHeader, CardBody, Typography, Dialog, DialogBody, DialogFooter, Input, Select, Option } from "@material-tailwind/react";
+import axios from "axios"; // Or use your preferred API library
 
-const MealForm = ({ open, onClose, onSubmit }) => {
+const Meal = () => {
+    const [openDialog, setOpenDialog] = useState(false);
+    const [category, setCategory] = useState("");
+    const [item, setItem] = useState("");
     const [mealData, setMealData] = useState({
-        wakeupWater: [],
         breakfast: [],
-        lunch: [],
         dinner: [],
-        morningSnack: [],
-        eveningSnack: [],
+        evening_snacks: [],
+        lunch: [],
+        morning_snacks: [],
+        wake_up_food: [],
     });
 
-    const [tempInput, setTempInput] = useState({ field: "", value: "" });
+    // Fetch meal data on component mount
+    useEffect(() => {
+        axios.get("http://43.204.2.84:7200/admin/meal")
+            .then(response => {
+                if (response.data.status === "success") {
+                    setMealData(response.data.data);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching meal data:", error);
+            });
+    }, []);
 
-    const handleAddItem = () => {
-        const { field, value } = tempInput;
-        if (!field || !value) return;
-        setMealData({
-            ...mealData,
-            [field]: [...mealData[field], value],
-        });
-        setTempInput({ field: "", value: "" });
+    const handleOpenDialog = () => setOpenDialog(true);
+    const handleCloseDialog = () => {
+        setCategory("");
+        setItem("");
+        setOpenDialog(false);
     };
 
-    const handleRemoveItem = (field, index) => {
-        setMealData({
-            ...mealData,
-            [field]: mealData[field].filter((_, i) => i !== index),
-        });
-    };
+    const handleSubmit = async () => {
+        if (!category || !item) return;
 
-    const handleSubmit = () => {
-        onSubmit(mealData);
-        onClose();
-    };
+        const meal = { category, item };
 
-    if (!open) return null;
+        // POST request to add meal
+        axios.post("http://43.204.2.84:7200/admin/meal", meal)
+            .then(response => {
+                if (response.data.status === "success") {
+                    // Update the local state with new meal data
+                    setMealData(prevState => {
+                        return {
+                            ...prevState,
+                            [category]: [...prevState[category], { item }]
+                        };
+                    });
+                    handleCloseDialog();
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting meal:", error);
+            });
+    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="bg-white rounded-lg p-6 w-full max-w-4xl">
-                <Typography variant="h5" className="mb-4 text-center font-medium">
-                    Add Meal Plan
-                </Typography>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {["wakeupWater", "breakfast", "morningSnack", "lunch", "eveningSnack", "dinner"].map(
-                        (field) => (
-                            <div key={field} className="flex flex-col gap-3">
-                                <Typography variant="h6" className="font-medium">
-                                    {field.replace(/([A-Z])/g, " $1")}
-                                </Typography>
-                                <ul className="bg-gray-100 p-3 rounded shadow-sm">
-                                    {mealData[field].length > 0 ? (
-                                        mealData[field].map((item, index) => (
-                                            <li
-                                                key={index}
-                                                className="flex items-center justify-between bg-white p-2 rounded mb-2 shadow-sm"
-                                            >
-                                                <span>{item}</span>
-                                                <button
-                                                    onClick={() => handleRemoveItem(field, index)}
-                                                    className="text-red-500 hover:text-red-700 text-sm"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </li>
-                                        ))
-                                    ) : (
-                                        <Typography variant="small" className="text-gray-500">
-                                            No items added yet.
-                                        </Typography>
-                                    )}
-                                </ul>
-                                <div className="flex gap-3">
-                                    <Input
-                                        type="text"
-                                        size="md"
-                                        placeholder={`Add to ${field.replace(/([A-Z])/g, " $1")}`}
-                                        value={tempInput.field === field ? tempInput.value : ""}
-                                        onChange={(e) =>
-                                            setTempInput({ field, value: e.target.value })
-                                        }
-                                    />
-                                    <Button
-                                        onClick={handleAddItem}
-                                        size="sm"
-                                        color="green"
-                                        className="min-w-fit"
-                                    >
-                                        Add
-                                    </Button>
-                                </div>
+        <div className="mt-12 mb-8 flex justify-center">
+            <Card className="w-full max-w-6xl shadow-lg">
+                <CardHeader variant="gradient" className="bg-gradient-to-r from-red-800 to-indigo-600 p-6 rounded-t-lg flex justify-between items-center">
+                    <Typography variant="h5" color="white">Meal</Typography>
+                    <Button color="lightBlue" onClick={handleOpenDialog}>Add Meal</Button>
+                </CardHeader>
+                <CardBody className="p-6 space-y-6">
+                    {/* Meal Data Table */}
+                    {Object.keys(mealData).map((categoryKey) => (
+                        mealData[categoryKey].length > 0 && (
+                            <div key={categoryKey} className="space-y-4">
+                                <Typography className="text-lg font-semibold text-gray-800">{categoryKey.replace("_", " ").toUpperCase()}</Typography>
+                                <table className="min-w-full table-auto">
+                                    <thead>
+                                        <tr className="bg-gray-200">
+                                            <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Sr. No.</th>
+                                            <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Item</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {/* Loop through each meal item within this category */}
+                                        {mealData[categoryKey].map((meal, index) => (
+                                            <tr key={index} className="border-t">
+                                                <td className="px-6 py-2 text-sm text-gray-600">{index + 1}</td> {/* Sr. No. */}
+                                                <td className="px-6 py-2 text-sm text-gray-600">{meal.item}</td> {/* Item */}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )
-                    )}
-                </div>
-                <div className="flex justify-end gap-4 mt-6">
-                    <Button onClick={onSubmit} color="blue">
-                        Submit Meal Plan
-                    </Button>
-                    <Button onClick={onClose} color="red">
-                        Close
-                    </Button>
-                </div>
-            </div>
+                    ))}
+                </CardBody>
+            </Card>
+
+            {/* Add Meal Dialog */}
+            <Dialog open={openDialog} handler={handleCloseDialog} size="lg">
+                <DialogBody>
+                    <div className="space-y-4">
+                        <Select label="Category" onChange={setCategory} value={category}>
+                            <Option value="breakfast">Breakfast</Option>
+                            <Option value="dinner">Dinner</Option>
+                            <Option value="evening_snacks">Evening Snacks</Option>
+                            <Option value="lunch">Lunch</Option>
+                            <Option value="morning_snacks">Morning Snacks</Option>
+                            <Option value="wake_up_food">Wake Up Food</Option>
+                        </Select>
+                        <Input
+                            label="Meal Item"
+                            value={item}
+                            onChange={(e) => setItem(e.target.value)}
+                            required
+                        />
+                    </div>
+                </DialogBody>
+                <DialogFooter>
+                    <Button color="red" onClick={handleCloseDialog}>Cancel</Button>
+                    <Button color="green" onClick={handleSubmit}>Submit</Button>
+                </DialogFooter>
+            </Dialog>
         </div>
     );
 };
 
-export default MealForm;
+export default Meal;

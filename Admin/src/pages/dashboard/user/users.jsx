@@ -17,6 +17,7 @@ export function UserList() {
   const dispatch = useDispatch();
   const [selectedUser, setSelectedUser] = useState(null);
   const { users, loading, error } = useSelector((state) => state.users);
+  const { role } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchUsers({}));
@@ -36,6 +37,9 @@ export function UserList() {
     setSelectedUser(null);
   };
 
+  // Filter users based on the role
+  const filteredUsers = role === "host" ? users.filter((user) => user.role === "user") : users;
+
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       {selectedUser ? (
@@ -44,7 +48,7 @@ export function UserList() {
         <Card>
           <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
             <Typography variant="h6" color="white">
-              User List
+              {role === "host" ? "Host List" : "User List"}
             </Typography>
           </CardHeader>
           <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
@@ -56,11 +60,11 @@ export function UserList() {
               <Typography variant="h6" color="red">
                 {error}
               </Typography>
-            ) : users.length > 0 ? (
+            ) : filteredUsers.length > 0 ? (
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
-                    {["User", "Role", "Status", "Joined", "Actions"].map((el , i) => (
+                    {["User", "Role", "Status", "Joined", "Actions"].map((el, i) => (
                       <th
                         key={i + 1}
                         className="border-b border-blue-gray-50 py-3 px-5 text-left"
@@ -76,8 +80,11 @@ export function UserList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(({ id, img, name, email, role, active, createdAt, ...otherDetails },key) => {
-                      const className=`py-3 px-5 ${key === users.length - 1 ? "" : "border-b border-blue-gray-50"}`;
+                  {filteredUsers.map(
+                    ({ id, img, name, email, role, active, createdAt, ...otherDetails }, key) => {
+                      const className = `py-3 px-5 ${
+                        key === filteredUsers.length - 1 ? "" : "border-b border-blue-gray-50"
+                      }`;
                       return (
                         <tr key={key + 1}>
                           <td className={className}>
@@ -160,7 +167,7 @@ export function UserList() {
               </table>
             ) : (
               <Typography variant="h6" color="blue-gray">
-                No users found.
+                No {role === "host" ? "hosts" : "users"} found.
               </Typography>
             )}
           </CardBody>

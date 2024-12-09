@@ -1,82 +1,78 @@
 import React, { useState } from "react";
-import { Button, Card, CardBody, Typography, Input } from "@material-tailwind/react";
+import { Button, Card, CardBody, Typography } from "@material-tailwind/react";
+import MealForm from "./MealForm";
+import NutritionForm from "./NutritionForm";
 
-const MealPlanForm = ({ onSubmit }) => {
-  const [mealPlan, setMealPlan] = useState({
-    wakeUpFood: [""], // Initialize with one empty string
-    breakfast: [""],
-    morningSnacks: [""],
-    lunch: [""],
-    eveningSnacks: [""],
-    dinner: [""],
-  });
+const MealAndNutrition = () => {
+  const [activeTab, setActiveTab] = useState("list"); 
+  const [mealPlan, setMealPlan] = useState([]);
+  const [nutritionInfo, setNutritionInfo] = useState([]);
 
-  const handleChange = (e, mealType, index) => {
-    const { value } = e.target;
-    const updatedMeal = [...mealPlan[mealType]];
-    updatedMeal[index] = value;
-    setMealPlan({
-      ...mealPlan,
-      [mealType]: updatedMeal,
-    });
+  const handleMealSubmit = (mealData) => {
+    setMealPlan([...mealPlan, mealData]);
+    setActiveTab("list");
   };
 
-  const handleAddItem = (mealType) => {
-    setMealPlan({
-      ...mealPlan,
-      [mealType]: [...mealPlan[mealType], ""], // Add a new empty string for the new input
-    });
+  const handleNutritionSubmit = (nutritionData) => {
+    setNutritionInfo([...nutritionInfo, nutritionData]);
+    setActiveTab("list");
   };
 
-  const handleRemoveItem = (mealType, index) => {
-    const updatedMeal = mealPlan[mealType].filter((_, i) => i !== index);
-    setMealPlan({
-      ...mealPlan,
-      [mealType]: updatedMeal,
-    });
-  };
+  const renderList = () => (
+    <Card>
+      <CardBody>
+        <Typography variant="h6" className="mb-4">
+          Meal & Nutrition List
+        </Typography>
+        <Button onClick={() => setActiveTab("choose")} color="blue" className="mb-4">
+          Add
+        </Button>
+        <div className="mt-4">
+          <Typography variant="body2">Meal Plan:</Typography>
+          <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(mealPlan, null, 2)}</pre>
+        </div>
+        <div className="mt-4">
+          <Typography variant="body2">Nutrition Info:</Typography>
+          <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(nutritionInfo, null, 2)}</pre>
+        </div>
+      </CardBody>
+    </Card>
+  );
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(mealPlan);
-  };
+  const renderAddOption = () => (
+    <div className="flex flex-col items-center justify-center gap-4">
+      <Button onClick={() => setActiveTab("meal")} color="green">
+        Add Meal Plan
+      </Button>
+      <Button onClick={() => setActiveTab("nutrition")} color="orange">
+        Add Nutrition Info
+      </Button>
+      <Button onClick={() => setActiveTab("list")} color="red">
+        Cancel
+      </Button>
+    </div>
+  );
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
-      {["wakeUpFood", "breakfast", "morningSnacks", "lunch", "eveningSnacks", "dinner"].map((mealType) => (
-        <div key={mealType}>
-          <Typography variant="h6">{mealType.replace(/([A-Z])/g, " $1")}</Typography>
-          {mealPlan[mealType].map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                value={item}
-                onChange={(e) => handleChange(e, mealType, index)}
-                label={`Item ${index + 1}`}
-                className="flex-1"
-              />
-              <Button
-                color="red"
-                onClick={() => handleRemoveItem(mealType, index)}
-                className="bg-red-500 hover:bg-red-600 text-white"
-              >
-                Remove
-              </Button>
-            </div>
-          ))}
-          <Button
-            color="green"
-            onClick={() => handleAddItem(mealType)}
-            className="bg-green-500 hover:bg-green-600 text-white"
-          >
-            Add Item
-          </Button>
-        </div>
-      ))}
-      <Button type="submit" color="green">
-        Submit Meal Plan
-      </Button>
-    </form>
+    <div className="flex flex-col gap-6 p-4">
+      {activeTab === "list" && renderList()}
+      {activeTab === "choose" && renderAddOption()}
+      {activeTab === "meal" && (
+        <MealForm
+          open={activeTab === "meal"}
+          onClose={() => setActiveTab("list")}
+          onSubmit={handleMealSubmit}
+        />
+      )}
+      {activeTab === "nutrition" && (
+        <NutritionForm
+          open={activeTab === "nutrition"}
+          onClose={() => setActiveTab("list")}
+          onSubmit={handleNutritionSubmit}
+        />
+      )}
+    </div>
   );
 };
 
-export default MealPlanForm;
+export default MealAndNutrition;
