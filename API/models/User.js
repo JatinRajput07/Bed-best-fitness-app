@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema({
     socketId: String,
     isOnline: String,
     isVerified: { type: Boolean, default: false },
+    device_token:String,
+    device_type:String,    // 'android'  , 'iso'
     permissions: {
         type: Object,
         default: {}, // Structure: { sectionName: { permission: true/false } }

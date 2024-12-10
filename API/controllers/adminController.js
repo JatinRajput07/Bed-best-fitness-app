@@ -13,6 +13,8 @@ const Goal = require("../models/userGoal");
 const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
 const Routine = require("../models/Routine");
+const Category = require("../models/Category");
+const SubCategory = require("../models/SubCategory");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -122,7 +124,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
 
     const calculatePercentage = (achieved, target) => {
         if (!target || target === 0) return 0;
-        return Math.min((achieved / target) * 100, 100).toFixed(2);
+        return Math.min((achieved / target) * 100, 100).toFixed(2); 
     };
 
     const stepsAchieved = parseInt(userRoutine.steps?.steps || 0, 10);
@@ -283,6 +285,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                 _id: "$category",
                 videos: {
                     $push: {
+                        id:"$_id",
                         path: "$path",
                         title: "$title",
                         subcategories: "$subcategories",
@@ -345,6 +348,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                 _id: "$subcategories",
                 videos: {
                     $push: {
+                        id:"$_id",
                         path: "$path",
                         title: "$title",
                         views: "$views",
@@ -552,3 +556,142 @@ exports.getMeals = async (req, res, next) => {
     }
 };
 
+
+
+// Create Category
+exports.createCategory = catchAsync(async (req, res, next) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return next(new AppError("Category name is required", 400));
+    }
+
+    const category = await Category.create({ name });
+
+    res.status(201).json({
+        status: "success",
+        message: "Category created successfully",
+        data: category,
+    });
+});
+
+// Get All Categories with Subcategories
+exports.getCategories = catchAsync(async (req, res, next) => {
+    const categories = await Category.find().populate("subcategories");
+
+    res.status(200).json({
+        status: "success",
+        data: categories,
+    });
+});
+
+// Update Category
+exports.updateCategory = catchAsync(async (req, res, next) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return next(new AppError("Category name is required", 400));
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
+        req.params.id,
+        { name },
+        { new: true, runValidators: true }
+    );
+
+    if (!updatedCategory) {
+        return next(new AppError("Category not found", 404));
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "Category updated successfully",
+        data: updatedCategory,
+    });
+});
+
+// Delete Category
+exports.deleteCategory = catchAsync(async (req, res, next) => {
+    const category = await Category.findByIdAndDelete(req.params.id);
+
+    if (!category) {
+        return next(new AppError("Category not found", 404));
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "Category deleted successfully",
+    });
+});
+
+
+
+// Create SubCategory
+exports.createSubCategory = catchAsync(async (req, res, next) => {
+    const { name, categoryId } = req.body;
+
+    if (!name || !categoryId) {
+        return next(new AppError("Both SubCategory name and Category ID are required", 400));
+    }
+
+    const category = await Category.findById(categoryId);
+    if (!category) {
+        return next(new AppError("Category not found", 404));
+    }
+
+    const subCategory = await SubCategory.create({ name, category: categoryId });
+
+    // Link SubCategory to Category
+    category.subcategories.push(subCategory._id);
+    await category.save();
+
+    res.status(201).json({
+        status: "success",
+        message: "SubCategory created successfully",
+        data: subCategory,
+    });
+});
+
+// Update SubCategory
+exports.updateSubCategory = catchAsync(async (req, res, next) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return next(new AppError("SubCategory name is required", 400));
+    }
+
+    const updatedSubCategory = await SubCategory.findByIdAndUpdate(
+        req.params.id,
+        { name },
+        { new: true, runValidators: true }
+    );
+
+    if (!updatedSubCategory) {
+        return next(new AppError("SubCategory not found", 404));
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "SubCategory updated successfully",
+        data: updatedSubCategory,
+    });
+});
+
+// Delete SubCategory
+exports.deleteSubCategory = catchAsync(async (req, res, next) => {
+    const subCategory = await SubCategory.findByIdAndDelete(req.params.id);
+
+    if (!subCategory) {
+        return next(new AppError("SubCategory not found", 404));
+    }
+
+    // Remove SubCategory reference from Category
+    await Category.findByIdAndUpdate(subCategory.category, {
+        $pull: { subcategories: subCategory._id },
+    });
+
+    res.status(200).json({
+        status: "success",
+        message: "SubCategory deleted successfully",
+    });
+});

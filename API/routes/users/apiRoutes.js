@@ -39,6 +39,12 @@ router.post('/forgotPassword', forgotPassword); // Forgot password
 router.post('/verif_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
 
+
+
+
+router.get('/recommendation', getUserRecommendations); // Get user recommendations
+router.post('/recommendation', createRecommendation); // Create a recommendation
+
 // Protected Routes (Requires Auth Middleware)
 router.use(Auth);
 
@@ -83,8 +89,7 @@ router.patch('/update/:section', updateRoutineSection);
 router.post('/contact_us', contact_us); // Contact us form submission
 
 // Recommendations Management
-router.get('/recommendation', getUserRecommendations); // Get user recommendations
-router.post('/recommendation', createRecommendation); // Create a recommendation
+
 router.delete('/recommendation', deleteRecommendation); // Delete a recommendation
 
 // Host-only Routes

@@ -14,6 +14,7 @@ import Community_guidelines from "./pages/dashboard/Community_guidelines";
 import { useSelector } from "react-redux";
 import MealForm from "./pages/dashboard/MealAndNutrition/MealForm";
 import Nutrition from "./pages/dashboard/MealAndNutrition/NutritionForm";
+import CategoryManager from "./pages/CategoryManager";
 
 
 const icon = {
@@ -33,18 +34,20 @@ export const routes = () => {
     {
       icon: <UserIcon {...icon} />,
       name: "Users",
-      dropdown: [
-        {
-          name: "Users List",
-          path: "/users",
-          element: <UserList />,
-        },
-        {
-          name: "Create & Update",
-          path: "/createupdate",
-          element: <CreateOrUpdateUser />,
-        },
-      ],
+      path: "/users",
+      element: <UserList />,
+      // dropdown: [
+      //   {
+      //     name: "Users List",
+      //     path: "/users",
+      //     element: <UserList />,
+      //   },
+        // {
+        //   name: "Create & Update",
+        //   path: "/createupdate",
+        //   element: <CreateOrUpdateUser />,
+        // },
+      // ],
     },
     {
       icon: <HomeIcon {...icon} />,
@@ -61,6 +64,12 @@ export const routes = () => {
           element: <Nutrition />,
         },
       ],
+    },
+    {
+      icon: <HomeIcon {...icon} />,
+      name: "Categories",
+      path: "/categories",
+      element: <CategoryManager />,
     },
 
 

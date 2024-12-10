@@ -477,24 +477,25 @@ exports.contact_us = catchAsync(async (req, res, next) => {
 
 
 exports.createRecommendation = catchAsync(async (req, res, next) => {
-    const hostId = req.user.id;
-    const userRole = req.user.role;
     const { videoId, userId } = req.body;
 
-    if (userRole !== "host") {
-        return next(new AppError("Only hosts can recommend videos.", 403));
+    console.log(req.body, '===========req.body======')
+
+    const existingRecommendation = await Recommendation.findOne({
+        user_id: userId,
+        video_id: videoId
+    });
+
+    if (existingRecommendation) {
+        return res.status(200).json({
+            status: "success",
+        });
     }
 
-    const recommendation = await Recommendation.findOneAndUpdate(
-        { host_id: hostId, user_id: userId, video_id: { $ne: videoId } },
-        { $push: { video_id: videoId }, $setOnInsert: { host_id: hostId, user_id: userId } },
-        { new: true, upsert: true }
+    const recommendation = await Recommendation.create(
+        { user_id: userId, video_id: videoId }
     );
 
-
-    if (!recommendation.video_id.includes(videoId)) {
-        return next(new AppError("This video has already been recommended to the user.", 400));
-    }
     return res.status(200).json({
         status: "success",
         recommendation,
