@@ -144,6 +144,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             email,
             name,
             phone,
+            isVerified:true,
             role: role || 'user',
         });
     }
@@ -154,7 +155,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         message: `${socialType} login successful`,
-        data: { user, token },
+        data: { ...user.toObject(), token },
     });
 });
 
