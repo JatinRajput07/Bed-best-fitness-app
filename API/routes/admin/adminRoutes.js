@@ -1,6 +1,6 @@
 const express = require('express');
 const { uploadFiles } = require('../../controllers/userController');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser } = require('../../controllers/adminController');
 const router = express.Router();
 
 
@@ -11,6 +11,7 @@ router.get('/dashboard', dashboard)
 router.post('/upload-file', uploadFiles)
 
 router.get('/user-list', getUserList)
+router.delete('/user-delete/:id',deleteUser)
 
 router.get('/get-user-profile/:id', getUserProfile)
 router.post('/users', createUser)

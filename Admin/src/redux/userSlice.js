@@ -34,6 +34,8 @@ export const fetchUserDetails = createAsyncThunk('/admin/get-user-profile', asyn
 // Delete User
 export const deleteUser = createAsyncThunk('/admin/user-delete', async (userId, { rejectWithValue }) => {
     try {
+
+        console.log(userId,'======userId=====')
         await Axios.delete(`/admin/user-delete/${userId}`);
         return userId;
     } catch (error) {

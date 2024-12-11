@@ -479,8 +479,6 @@ exports.contact_us = catchAsync(async (req, res, next) => {
 exports.createRecommendation = catchAsync(async (req, res, next) => {
     const { videoId, userId } = req.body;
 
-    console.log(req.body, '===========req.body======')
-
     const existingRecommendation = await Recommendation.findOne({
         user_id: userId,
         video_id: videoId
@@ -688,78 +686,39 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
 });
 
 
+const upsertReminder = async (filter, update) => {
+    const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    return Reminder.findOneAndUpdate(filter, update, options);
+};
+
 exports.addReminder = catchAsync(async (req, res, next) => {
-    const { category, isActive, repeatType, time, meal, water, steps, workout, knowledge, nutrition } = req.body;
-    const validCategories = ["meal", "water", "steps", "workout", "knowledge", "nutrition"];
-    if (!validCategories.includes(category)) {
-        return next(new AppError("Invalid category.", 400));
+    const userId = req.user.id
+    const { category, data } = req.body;
+
+    if (!userId || !category || !data) {
+        return res.status(400).json({ message: "userId, category, and data are required." });
     }
 
-    const dataMap = {
-        meal,
-        water,
-        steps,
-        workout,
-        knowledge,
-        nutrition,
-    };
+    const filter = { userId, category };
+    const update = { $set: { ...data, userId, category } };
 
+    const reminder = await upsertReminder(filter, update);
 
-    const categoryData = dataMap[category];
-    // if (!categoryData) {
-    //     return next(new AppError(`Data for category ${category} is required.`, 400));
-    // }
-
-
-    const filter = { userId: req.user.id, category };
-    let reminder = await Reminder.findOne(filter);
-
-    if (!reminder) {
-        reminder = await Reminder.create({
-            userId: req.user.id,
-            category,
-            isActive,
-            time,
-            repeatType,
-            [category]: categoryData,
-        });
-
-        reminder = {
-            _id: reminder._id,
-            userId: reminder.userId,
-            category: reminder.category,
-            isActive: reminder.isActive,
-            time: reminder.time,
-            [category]: reminder[category],
-        };
-    } else {
-        reminder = await Reminder.findOneAndUpdate(
-            filter,
-            { isActive, repeatType, time, [category]: categoryData },
-            { new: true, fields: `_id userId category repeatType time isActive ${[category]}` }
-        );
-    }
-
-    return res.status(201).json({
-        status: "success",
-        message: `${category.charAt(0).toUpperCase() + category.slice(1)} reminder created/updated successfully.`,
-        data: reminder,
-    });
-});
-
+    res.status(200).json({ message: "Reminder saved successfully.", reminder });
+})
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {
-    const reminders = await Reminder.find({ userId: req.user.id });
-    if (!reminders || reminders.length === 0) {
-        return next(new AppError("No reminders found.", 404));
+    const userId = req.user.id
+    const { category } = req.params;
+    if (!userId || !category) {
+        return res.status(400).json({ message: "userId and category are required." });
     }
-    return res.status(200).json({
-        status: "success",
-        message: "Reminders retrieved successfully.",
-        data: reminders,
-    });
+    const reminders = await Reminder.find({ userId, category });
+    if (reminders.length === 0) {
+        return res.status(404).json({ message: "No reminders found for the given user and category." });
+    }
+    res.status(200).json({ message: "Reminders fetched successfully.", reminders });
 });
-
 
 
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
@@ -811,8 +770,6 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
 exports.getUploadFiles = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
-    console.log(userId, '=====d====');
-
     const uploadfile = await UserFiles.aggregate([
         {
             $match: { userId: new mongoose.Types.ObjectId(userId) },
@@ -840,6 +797,347 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 });
 
 
+exports.createBodydata = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedBodyData = {
+            ...existingRoutine.body_data.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.body_data = updatedBodyData;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Body Data Updated.',
+            body_data: updatedBodyData,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        body_data: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Body Data Created.',
+        body_data: req.body,
+    });
+});
+
+
+exports.getBodydata = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+    const routine = await Routine.findOne({ userId, date: today }, { body_data: 1 });
+    if (!routine) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No body data found for today.',
+        });
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Body Data Retrieved Successfully.',
+        body_data: routine.body_data,
+    });
+});
+
+
+exports.createOrUpdateBodyMeasurement = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedBodyMeasurement = {
+            ...existingRoutine.body_measurement_parameters.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.body_measurement_parameters = updatedBodyMeasurement;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Body Measurement Parameters Updated.',
+            body_measurement_parameters: updatedBodyMeasurement,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        body_measurement_parameters: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Body Measurement Parameters Created.',
+        body_measurement_parameters: req.body,
+    });
+});
+
+
+
+exports.getBodyMeasurement = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const routine = await Routine.findOne({ userId, date: today }, { body_measurement_parameters: 1 });
+
+    if (!routine || !routine.body_measurement_parameters) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No Body Measurement Data Found.',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Body Measurement Parameters Retrieved.',
+        body_measurement_parameters: routine.body_measurement_parameters,
+    });
+});
+
+
+exports.createOrUpdateHealthHabits = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedHealthHabits = {
+            ...existingRoutine.health_habits.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.health_habits = updatedHealthHabits;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Health Habits Updated.',
+            health_habits: updatedHealthHabits,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        health_habits: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Health Habits Created.',
+        health_habits: req.body,
+    });
+});
+
+
+
+exports.getHealthHabits = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const routine = await Routine.findOne({ userId, date: today }, { health_habits: 1 });
+
+    if (!routine || !routine.health_habits) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No Health Habits Data Found.',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Health Habits Retrieved.',
+        health_habits: routine.health_habits,
+    });
+});
+
+
+exports.createOrUpdateHygiene = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedHygiene = {
+            ...existingRoutine.hygiene.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.hygiene = updatedHygiene;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Hygiene Data Updated.',
+            hygiene: updatedHygiene,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        hygiene: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Hygiene Data Created.',
+        hygiene: req.body,
+    });
+});
+
+
+
+exports.getHygiene = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const routine = await Routine.findOne({ userId, date: today }, { hygiene: 1 });
+
+    if (!routine || !routine.hygiene) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No Hygiene Data Found.',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Hygiene Data Retrieved.',
+        hygiene: routine.hygiene,
+    });
+});
+
+
+exports.createOrUpdateHolisticWellness = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedHolisticWellness = {
+            ...existingRoutine.holistic_wellness.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.holistic_wellness = updatedHolisticWellness;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Holistic Wellness Data Updated.',
+            holistic_wellness: updatedHolisticWellness,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        holistic_wellness: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Holistic Wellness Data Created.',
+        holistic_wellness: req.body,
+    });
+});
+
+
+
+exports.getHolisticWellness = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const routine = await Routine.findOne({ userId, date: today }, { holistic_wellness: 1 });
+
+    if (!routine || !routine.holistic_wellness) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No Holistic Wellness Data Found.',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Holistic Wellness Data Retrieved.',
+        holistic_wellness: routine.holistic_wellness,
+    });
+});
+
+
+exports.createOrUpdateWhatNewToday = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const existingRoutine = await Routine.findOne({ userId, date: today });
+
+    if (existingRoutine) {
+        const updatedWhatNewToday = {
+            ...existingRoutine.what_new_today.toObject(),
+            ...req.body,
+        };
+
+        existingRoutine.what_new_today = updatedWhatNewToday;
+        await existingRoutine.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'What New Today Data Updated.',
+            what_new_today: updatedWhatNewToday,
+        });
+    }
+
+    const newRoutine = await Routine.create({
+        userId,
+        date: today,
+        what_new_today: req.body,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'What New Today Data Created.',
+        what_new_today: req.body,
+    });
+});
+
+
+exports.getWhatNewToday = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+    const today = getLocalDate();
+
+    const routine = await Routine.findOne({ userId, date: today }, { what_new_today: 1 });
+
+    if (!routine || !routine.what_new_today) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No What New Today Data Found.',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'What New Today Data Retrieved.',
+        what_new_today: routine.what_new_today,
+    });
+});
 
 
 

@@ -81,7 +81,7 @@ export function UserList() {
                 </thead>
                 <tbody>
                   {filteredUsers.map(
-                    ({ id, img, name, email, role, active, createdAt, ...otherDetails }, key) => {
+                    ({ _id, img, name, email, role, active, createdAt, ...otherDetails }, key) => {
                       const className = `py-3 px-5 ${
                         key === filteredUsers.length - 1 ? "" : "border-b border-blue-gray-50"
                       }`;
@@ -155,7 +155,7 @@ export function UserList() {
                               </Button>
                               <TrashIcon
                                 className="h-5 w-5 text-red-500 cursor-pointer"
-                                onClick={() => handleDelete(id)}
+                                onClick={() => handleDelete(_id)}
                               />
                             </div>
                           </td>

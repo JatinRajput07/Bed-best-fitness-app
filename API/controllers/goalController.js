@@ -79,7 +79,7 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
             "muscle_mass"
         ].includes(metric)
     ) {
-        metricPath = `body_data.health_log_parameters.${metric}`;
+        metricPath = `body_data.${metric}`;
     } else if (
         [
             "hip",
@@ -93,7 +93,7 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
             "calf"
         ].includes(metric)
     ) {
-        metricPath = `body_data.body_measurement_parameters.${metric}`;
+        metricPath = `body_measurement_parameters.${metric}`;
     } else {
         return next(new AppError('Invalid metric provided.', 400));
     }

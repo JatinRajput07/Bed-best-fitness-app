@@ -12,7 +12,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const http = require('http'); // Import http module
 const initSocket = require('./socket'); // Assuming this will initialize socket.io
-
+require("./reminderScheduler")
 const PORT = process.env.PORT || 3000;
 
 // DATABASE Connection

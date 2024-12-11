@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
+
+// Middleware
 const Auth = require('../../middleware/Auth');
 const { registrationValidation } = require('../../middleware/Validation/userValidation');
+
+// Controllers
 const {
     register,
     login,
@@ -26,88 +30,112 @@ const {
     socialLogin,
     userUploadFiles,
     getUploadFiles,
-    verifyAccount
+    verifyAccount,
+    createBodydata,
+    getBodydata,
+    getBodyMeasurement,
+    getHealthHabits,
+    getHygiene,
+    getHolisticWellness,
+    getWhatNewToday,
+    createOrUpdateBodyMeasurement,
+    createOrUpdateHealthHabits,
+    createOrUpdateHygiene,
+    createOrUpdateHolisticWellness,
+    createOrUpdateWhatNewToday
 } = require('../../controllers/userController');
-const { createGoal, getUserGoal, getUserHealthData, getMetricData, getMindnessfull, getMindnessfullByCategory, getMeals, getNutritions, get_sleep_records } = require('../../controllers/goalController');
+
+const {
+    createGoal,
+    getUserGoal,
+    getUserHealthData,
+    getMetricData,
+    getMindnessfull,
+    getMindnessfullByCategory,
+    getMeals,
+    getNutritions,
+    get_sleep_records
+} = require('../../controllers/goalController');
+
+const { testNotification } = require('../../reminder/sendPushNotification');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
-router.post('/verifyAccount', verifyAccount); // User Account Verify
+router.post('/verifyAccount', verifyAccount); // User account verification
 router.post('/login', login); // User login
-router.post('/social_login', socialLogin)
+router.post('/social_login', socialLogin); // Social login
 router.post('/forgotPassword', forgotPassword); // Forgot password
-router.post('/verif_otp', verifyOTP); // OTP verification
+router.post('/verify_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
 
-
-
-
+// Recommendations Management
 router.get('/recommendation', getUserRecommendations); // Get user recommendations
 router.post('/recommendation', createRecommendation); // Create a recommendation
+router.delete('/recommendation', deleteRecommendation); // Delete a recommendation
 
 // Protected Routes (Requires Auth Middleware)
 router.use(Auth);
-
 
 // Profile Management
 router.patch('/updateMyPassword', updatePassword); // Update user password
 router.patch('/updateProfile', updateProfile); // Update user profile
 router.get('/getProfile', getProfile); // Get user profile
 
-
 // User Goal Management
-router.post('/set_goal', createGoal); // Add user Goal
-router.get('/get_goal', getUserGoal); // Get user Goal
+router.post('/set_goal', createGoal); // Add user goal
+router.get('/get_goal', getUserGoal); // Get user goal
 
-
-// User Upload File ( FEED and BLOOD REPORT )
-router.post('/user-upload-file', userUploadFiles); // Add user Files
-router.get('/get-upload-file', getUploadFiles); //get  User Files                    
-
+// User Upload File Management (Feed and Blood Report)
+router.post('/user-upload-file', userUploadFiles); // Add user files
+router.get('/get-upload-file', getUploadFiles); // Get user files
 
 // Routine Management
 router.post('/routine', addRoutine); // Add a routine
 router.get('/routine', getRoutine); // Get routine details
+router.patch('/update/:section', updateRoutineSection); // Update routine section
 
-// Home and Video
+router.patch('/body_data', createBodydata)
+router.get('/getBodydata', getBodydata)
+
+router.post('/body_measurement', createOrUpdateBodyMeasurement);
+router.get('/body_measurement', getBodyMeasurement);
+
+// Health Habits
+router.post('/health_habits', createOrUpdateHealthHabits);
+router.get('/health_habits', getHealthHabits);
+
+// Hygiene
+router.post('/hygiene', createOrUpdateHygiene);
+router.get('/hygiene', getHygiene);
+
+// Holistic Wellness
+router.post('/holistic_wellness', createOrUpdateHolisticWellness);
+router.get('/holistic_wellness', getHolisticWellness);
+
+// What New Today
+router.post('/what_new_today', createOrUpdateWhatNewToday);
+router.get('/what_new_today', getWhatNewToday);
+
+// Home and Videos
 router.get('/home', Home); // Home data
 router.get('/video/:category', getVideosByCategory); // Get videos by category
-
-// Update Routes for Specific Sections
-// router.patch('/update/:water', updateWater); // Update water intake
-// router.patch('/update/:meal', updateMeal); // Update meal details
-// router.patch('/update/:steps', updateSteps); // Update steps data
-// router.patch('/update/:workout', updateWorkout); // Update workout details
-// router.patch('/update/:join-session', updateJoinSession); // Update join session status
-// router.patch('/update/:nutrition', updateNutrition); // Update nutrition details
-// router.patch('/update/:sleep', updateSleep); // Update sleep data
-// router.patch('/update/:body-data', updateBodyData); // Update body data
-router.patch('/update/:section', updateRoutineSection);
-
 
 // Contact Us
 router.post('/contact_us', contact_us); // Contact us form submission
 
-// Recommendations Management
-
-router.delete('/recommendation', deleteRecommendation); // Delete a recommendation
-
 // Host-only Routes
-router.get("/asign_users", get_asign_users); // Get assigned users
+router.get('/asign_users', get_asign_users); // Get assigned users
 
+// Reminders
+router.post('/reminders', addReminder); // Add a reminder
+router.get('/reminders/:category', getUserReminders); // Get user reminders
 
-router.post("/reminders", addReminder);
-router.get("/reminders", getUserReminders);
-
-router.get("/userHealthData", getMetricData)
-
-router.get("/mindfulness", getMindnessfull)
-router.get("/mindfulness/:category", getMindnessfullByCategory)
-
-
-router.get('/meal', getMeals);
-router.get('/nutrition', getNutritions); 
-
-router.get('/get_sleep_records', get_sleep_records); 
+// Health and Wellness
+router.get('/userHealthData', getMetricData); // Get user health data
+router.get('/mindfulness', getMindnessfull); // Get mindfulness data
+router.get('/mindfulness/:category', getMindnessfullByCategory); // Get mindfulness data by category
+router.get('/meal', getMeals); // Get meals
+router.get('/nutrition', getNutritions); // Get nutrition data
+router.get('/get_sleep_records', get_sleep_records); // Get sleep records
 
 module.exports = router;
