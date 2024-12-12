@@ -720,6 +720,50 @@ exports.getUserReminders = catchAsync(async (req, res, next) => {
 });
 
 
+
+exports.uploadFiles = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const uploadedFiles = await Promise.all(
+            req.files.map(async (file) => {
+                const fileType = file.mimetype.split('/')[0];
+                const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+
+                const fileData = {
+                    fileName: file.filename,
+                    path: filePath,
+                    mimeType: fileType
+                };
+
+                if (fileType === 'video') {
+                    try {
+                        const thumbnailPath = await generateThumbnail(file.path);
+                        fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
+                    } catch (error) {
+                        console.error('Error generating thumbnail:', error);
+                    }
+                }
+                return fileData;
+            })
+        );
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Files uploaded successfully.',
+            data: uploadedFiles
+        });
+    });
+});
+
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
     upload(req, res, async (err) => {
         if (err instanceof multer.MulterError) {
@@ -728,33 +772,27 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
             return next(new AppError(err.message, 400));
         }
 
-        if (!req.files || Object.keys(req.files).length === 0) {
+        if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
 
         const uploadedFiles = await Promise.all(
-            Object.entries(req.files).map(async ([key, files]) => {
-                let filepath;
-                const field = ['image', 'pdf'];
-                const fileData = {
-                    field: key,
-                    fileName: files[0].filename,
-                    path: '',
-                    mimeType: files[0].mimetype,
-                };
+            req.files.map(async (file) => {
+                const fileType = file.mimetype.split('/')[0];
+                const filePath = `http://43.204.2.84:7200/uploads/${fileType == "application" ? "pdf" : fileType}s/${file.filename}`;
 
-                if (field.includes(key)) {
-                    filepath = `http://43.204.2.84:7200/uploads/${key}s/${files[0].filename}`;
-                    fileData.path = filepath;
-                }
+                const fileData = {
+                    fileName: file.filename,
+                    path: filePath,
+                    mimeType: fileType == "application" ? "pdf" : fileType
+                };
                 return fileData;
             })
         );
-
         const data = {
             userId: req.user.id,
             path: uploadedFiles[0].path,
-            type: uploadedFiles[0].field
+            type: uploadedFiles[0].mimeType
         }
         const uploadfile = await UserFiles.create(data)
         res.status(200).json({

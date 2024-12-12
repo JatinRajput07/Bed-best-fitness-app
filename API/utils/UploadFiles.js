@@ -6,7 +6,7 @@ const { exec } = require('child_process');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const fileType = file.mimetype.split('/')[0];
-        const folder = `./public/uploads/${fileType}s`;
+        const folder = `./public/uploads/${fileType == "application" ? "pdf" : fileType}s`;
 
         fs.mkdirSync(folder, { recursive: true });
         cb(null, folder);
