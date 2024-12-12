@@ -87,14 +87,42 @@ export function Videos() {
         </div>
       ));
 
-  const renderMediaPreview = (path) => {
-    const fileExtension = path.split(".").pop().toLowerCase();
-    if (fileExtension === "mp4") return <video src={path} controls className="w-full h-48 object-cover rounded-t-lg" />;
-    if (["mp3", "wav"].includes(fileExtension))
-      return <audio controls className="w-full h-48 object-cover rounded-t-lg"><source src={path} /></audio>;
-    if (["jpg", "jpeg", "png", "gif"].includes(fileExtension))
-      return <img src={path} alt="media" className="w-full h-48 object-cover rounded-t-lg" />;
-    return null;
+  const renderMediaPreview = (file) => {
+    const { filetype, path } = file;
+
+    switch (filetype) {
+      case "video":
+        return <video src={path} controls className="w-full h-48 object-cover rounded-t-lg" />;
+      case "audio":
+        return (
+          <audio controls className="w-full h-48 object-cover rounded-t-lg">
+            <source src={path} />
+          </audio>
+        );
+      case "image":
+        return <img src={path} alt="media" className="w-full h-48 object-cover rounded-t-lg" />;
+      case "pdf":
+        return (
+          <a
+            href={path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full h-48 flex items-center justify-center bg-gray-200 rounded-t-lg"
+          >
+            <Typography variant="small" color="blue">
+              View PDF
+            </Typography>
+          </a>
+        );
+      default:
+        return (
+          <div className="w-full h-48 flex items-center justify-center bg-gray-200 rounded-t-lg">
+            <Typography variant="small" color="red">
+              Unsupported file type
+            </Typography>
+          </div>
+        );
+    }
   };
 
   const handleViewAll = (category) => setSelectedCategory(category);
@@ -103,6 +131,7 @@ export function Videos() {
     ["workout-video", "recipe-video", "knowledge-video", "story-podcast-recognition-video"].includes(category);
 
   const handleGoBack = () => setSelectedCategory(null);
+
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       {selectedCategory ? (
@@ -131,7 +160,7 @@ export function Videos() {
                     {categoryVideos.map((media) => (
                       <Card key={media._id} className="shadow-lg rounded-lg">
                         <CardHeader floated={false} className="mx-0 mt-0 mb-4 h-48">
-                          {renderMediaPreview(media.path)}
+                          {renderMediaPreview(media)}
                         </CardHeader>
                         <CardBody>
                           <Typography variant="h6" className="text-sm mb-1">
@@ -141,9 +170,6 @@ export function Videos() {
                             {media.description || "No description available."}
                           </Typography>
                           <div className="flex justify-between items-center">
-                            {/* <IconButton color="red" onClick={() => handleDeleteVideo(media._id)}>
-                              <TrashIcon className="h-5 w-5" />
-                            </IconButton> */}
                             {isRecommendedCategory(category) && (
                               <IconButton
                                 color="yellow"
@@ -152,8 +178,7 @@ export function Videos() {
                                   setRecommendationDialogOpen(true);
                                 }}
                               >
-                                {/* <span style={{"fontSize":"10px"}}>{media?.id}</span> */}
-                                <StarIcon className="h-5 w-5" /> {/* Changed to StarIcon */}
+                                <StarIcon className="h-5 w-5" />
                               </IconButton>
                             )}
                           </div>

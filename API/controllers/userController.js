@@ -144,7 +144,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             email,
             name,
             phone,
-            isVerified:true,
+            isVerified: true,
             role: role || 'user',
         });
     }
@@ -420,6 +420,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
+
     upload(req, res, async (err) => {
         if (err instanceof multer.MulterError) {
             return next(new AppError(err.message, 400));
@@ -427,32 +428,29 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
             return next(new AppError(err.message, 400));
         }
 
-        if (!req.files || Object.keys(req.files).length === 0) {
+        if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
 
         const uploadedFiles = await Promise.all(
-            Object.entries(req.files).map(async ([key, files]) => {
-                let filepath;
-                const field = ['image', 'video', 'audio', 'pdf'];
+            req.files.map(async (file) => {
+                const fileType = file.mimetype.split('/')[0];
+                const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+
                 const fileData = {
-                    field: key,
-                    fileName: files[0].filename,
-                    path: '',
-                    mimeType: files[0].mimetype,
+                    fileName: file.filename,
+                    path: filePath,
+                    mimeType: file.mimetype
                 };
 
-                if (field.includes(key)) {
-                    filepath = `http://43.204.2.84:7200/uploads/${key}s/${files[0].filename}`;
-                    fileData.path = filepath;
-
-                    // Generate a thumbnail if it's a video
-                    if (key === 'video') {
-                        const thumbnailPath = await generateThumbnail(files[0].path);
+                if (fileType === 'video') {
+                    try {
+                        const thumbnailPath = await generateThumbnail(file.path);
                         fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
+                    } catch (error) {
+                        console.error('Error generating thumbnail:', error);
                     }
                 }
-
                 return fileData;
             })
         );
@@ -460,7 +458,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: 'Files uploaded successfully.',
-            data: uploadedFiles,
+            data: uploadedFiles
         });
     });
 });

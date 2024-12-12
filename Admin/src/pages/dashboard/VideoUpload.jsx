@@ -21,9 +21,13 @@ const UploadVideo = () => {
     (state) => state.uploadFiles
   );
 
+
+  console.log(filePath, '===============filePath===========')
+
   const [title, setTitle] = useState("");
+  const [description,setDescription] = useState("")
   const [category, setCategory] = useState(null);
-  const [subcategories, setSubcategories] = useState();
+  const [subcategories, setSubcategories] = useState([]);
   const [file, setFile] = useState(null);
   const [errors, setErrors] = useState({});
 
@@ -61,31 +65,27 @@ const UploadVideo = () => {
       { value: "story", label: "Story" },
       { value: "podcast", label: "Podcast" },
     ],
-
-
-    "wallpepar": [
+    wallpaper: [
       { value: "nature", label: "Nature" },
       { value: "motivation", label: "Motivation" },
       { value: "god", label: "God" },
     ],
-
-    "quotes": [
-      { value: "friendship", label: "FriendShip" },
+    quotes: [
+      { value: "friendship", label: "Friendship" },
       { value: "motivation", label: "Motivation" },
       { value: "success", label: "Success" },
     ],
-
     "audio-clips": [
       { value: "new", label: "New" },
       { value: "tophits", label: "Top Hits" },
       { value: "trending", label: "Trending" },
     ],
-    "music": [
+    music: [
       { value: "new", label: "New" },
       { value: "tophits", label: "Top Hits" },
       { value: "trending", label: "Trending" },
     ],
-    "Podcast": [
+    podcast: [
       { value: "new", label: "New" },
       { value: "motivation", label: "Motivation" },
       { value: "educational", label: "Educational" },
@@ -93,7 +93,7 @@ const UploadVideo = () => {
     "audio-book": [
       { value: "new", label: "New" },
       { value: "popular", label: "Most Popular" },
-      { value: "health_wellness", label: "Helth & Wellness" },
+      { value: "health_wellness", label: "Health & Wellness" },
     ],
   };
 
@@ -109,6 +109,7 @@ const UploadVideo = () => {
   const validateForm = () => {
     const formErrors = {};
     if (!title) formErrors.title = "Title is required.";
+    // if (!description) formErrors.description = "Description is required.";
     if (!category) formErrors.category = "Category is required.";
     if (!file) formErrors.file = "File is required.";
     setErrors(formErrors);
@@ -123,17 +124,20 @@ const UploadVideo = () => {
       await dispatch(
         createVideo({
           title,
-          path: filePath,
+          path: filePath?.path,
+          filetype: filePath.mimeType.split('/')[0],
           category: category.value,
           subcategories,
+          description,
         })
       ).then((res) => {
         if (res.meta.requestStatus === "fulfilled") {
           utilService.showSuccessToast("File uploaded successfully!");
           navigate("/videos");
           setTitle("");
+          setDescription("")
           setCategory(null);
-          setSubcategories();
+          setSubcategories([]);
           setFile(null);
           dispatch(resetProgress());
         }
@@ -163,25 +167,6 @@ const UploadVideo = () => {
               {uploadError}
             </Typography>
           )}
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
-              placeholder="Enter video title"
-            />
-            {errors.title && (
-              <Typography color="red" className="text-sm mt-1">
-                {errors.title}
-              </Typography>
-            )}
-          </div>
 
           {/* Category */}
           <div>
@@ -219,6 +204,46 @@ const UploadVideo = () => {
             </div>
           )}
 
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              placeholder="Enter video title"
+            />
+            {errors.title && (
+              <Typography color="red" className="text-sm mt-1">
+                {errors.title}
+              </Typography>
+            )}
+          </div>
+
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              placeholder="Enter file description..."
+            />
+            <textarea/>
+            {errors.description && (
+              <Typography color="red" className="text-sm mt-1">
+                {errors.description}
+              </Typography>
+            )}
+          </div>
+
           {/* File */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -238,20 +263,19 @@ const UploadVideo = () => {
 
           {/* Progress Bar */}
           {progress > 0 && (
-            <div className="mt-4">
-              <Typography className="text-sm">Uploading: {progress}%</Typography>
-              <Progress value={progress} color="blue" className="mt-2" />
+            <div>
+              <Progress value={progress} color="indigo" />
             </div>
           )}
 
           {/* Submit Button */}
           <Button
-            color={isSubmitDisabled ? "gray" : "blue"}
+            color="indigo"
+            fullWidth
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
-            fullWidth
           >
-            {progress > 0 && progress < 100 ? "Uploading..." : "Upload"}
+            Upload File
           </Button>
         </CardBody>
       </Card>

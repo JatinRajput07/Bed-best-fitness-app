@@ -267,10 +267,8 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
 
 exports.uploadVideos = catchAsync(async (req, res, next) => {
-    const { title, path, category, description, subcategories } = req.body;
+    const { title, path, category,filetype, description, subcategories } = req.body;
     console.log(title, path, category, subcategories)
-
-    // const duration = await getVideoDuration.getVideoDurationInSeconds(path)
 
     if (!category || !subcategories > 0) {
         return res.status(400).json({
@@ -284,7 +282,8 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
         path,
         category,
         subcategories: subcategories.value,
-        description
+        description,
+        filetype
         // duration
     });
 
@@ -306,6 +305,8 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                     $push: {
                         id: "$_id",
                         path: "$path",
+                        filetype:"$filetype",
+                        description:"$description",
                         title: "$title",
                         subcategories: "$subcategories",
                         views: "$views",

@@ -5,32 +5,10 @@ const { exec } = require('child_process');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let folder = './public/uploads';
-        // switch (file.fieldname) {
-        //     case 'video':
-        //     case 'videoTrailer':
-        //         folder += '/videos';
-        //         break;
-        //     case 'image':
-        //         folder += '/images';
-        //         break;
-        //     case 'audio':
-        //         folder += '/audio';
-        //         break;
-        //     case 'pdf':
-        //         folder += '/pdfs';
-        //         break;
-        //     default:
-        //         return cb(new Error('Error: Invalid file field.'));
-        // }
+        const fileType = file.mimetype.split('/')[0];
+        const folder = `./public/uploads/${fileType}s`;
 
         fs.mkdirSync(folder, { recursive: true });
-        const filePath = path.join(folder, `${Date.now()}-${file.originalname}`);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            console.log(`Old file deleted: ${filePath}`);
-        }
-
         cb(null, folder);
     },
     filename: (req, file, cb) => {
@@ -39,13 +17,8 @@ const storage = multer.diskStorage({
 });
 
 exports.upload = multer({
-    storage: storage,
-}).fields([
-    { name: 'video', maxCount: 1 },
-    { name: 'image', maxCount: 1 },
-    { name: 'audio', maxCount: 1 },
-    { name: 'pdf', maxCount: 1 }
-]);
+    storage: storage
+}).any();
 
 
 

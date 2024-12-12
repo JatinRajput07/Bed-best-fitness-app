@@ -2,26 +2,9 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import Axios from '@/configs/Axios';
 
 export const uploadFile = createAsyncThunk('files/upload', async (file, { dispatch }) => {
-  // Determine the file type dynamically
-  const fileType = file.type.split("/")[0];
-  let fileField;
-  switch (fileType) {
-    case "image":
-      fileField = "image";
-      break;
-    case "audio":
-      fileField = "audio";
-      break;
-    case "video":
-      fileField = "video";
-      break;
-    default:
-      throw new Error("Unsupported file type. Please upload an image, audio, or video file.");
-  }
 
-  console.log(file, "== File Info ==");
   const formData = new FormData();
-  formData.append(fileField, file);
+  formData.append('file', file);
 
   try {
     const response = await Axios.post(`/admin/upload-file`, formData, {
@@ -31,9 +14,13 @@ export const uploadFile = createAsyncThunk('files/upload', async (file, { dispat
       },
     });
 
+    console.log(response.data ,'================response====================')
+
     // Return the uploaded file's path from the response
-    return response.data.data[0].path;
+    return response.data.data[0];
   } catch (error) {
+
+    console.log()
     throw error.response?.data?.message || error.message;
   }
 });
