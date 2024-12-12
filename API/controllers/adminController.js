@@ -142,7 +142,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
 
     const calculatePercentage = (achieved, target) => {
         if (!target || target === 0) return 0;
-        return Math.min((achieved / target) * 100, 100).toFixed(2); 
+        return Math.min((achieved / target) * 100, 100).toFixed(2);
     };
 
     const stepsAchieved = parseInt(userRoutine.steps?.steps || 0, 10);
@@ -267,7 +267,7 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
 
 exports.uploadVideos = catchAsync(async (req, res, next) => {
-    const { title, path, category, subcategories } = req.body;
+    const { title, path, category, description, subcategories } = req.body;
     console.log(title, path, category, subcategories)
 
     // const duration = await getVideoDuration.getVideoDurationInSeconds(path)
@@ -284,6 +284,7 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
         path,
         category,
         subcategories: subcategories.value,
+        description
         // duration
     });
 
@@ -303,7 +304,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                 _id: "$category",
                 videos: {
                     $push: {
-                        id:"$_id",
+                        id: "$_id",
                         path: "$path",
                         title: "$title",
                         subcategories: "$subcategories",
@@ -366,7 +367,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                 _id: "$subcategories",
                 videos: {
                     $push: {
-                        id:"$_id",
+                        id: "$_id",
                         path: "$path",
                         title: "$title",
                         views: "$views",

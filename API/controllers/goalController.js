@@ -9,6 +9,12 @@ const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
 const moment = require('moment');
 
+const getLocalDate = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().split('T')[0];
+};
+
 
 exports.createGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id
@@ -46,6 +52,7 @@ exports.getUserGoal = catchAsync(async (req, res, next) => {
 exports.getMetricData = catchAsync(async (req, res, next) => {
     const { period, metric } = req.query;
     const userId = req.user.id;
+    const today = getLocalDate();
 
     const endDate = new Date();
     let startDate = new Date();
@@ -131,6 +138,8 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
+        const currentData = await Routine.findOne({ date: today, userId }, (`body_data.${metric} -_id`))
+
         res.status(200).json({
             status: 'success',
             chart: {
@@ -138,6 +147,7 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
                 data: seriesData,
             },
             categories: categories,
+            ...(currentData !== null ? currentData.toObject() : { currentData: "" })
         });
     } catch (err) {
         next(err);
@@ -315,7 +325,7 @@ exports.get_sleep_records = catchAsync(async (req, res, next) => {
         date: record.date,
         wake_up: record.sleep?.wake_up || 'N/A',
         bed_at: record.sleep?.bed_at || 'N/A'
-      }));
+    }));
 
     res.status(200).json({
         status: 'success',
