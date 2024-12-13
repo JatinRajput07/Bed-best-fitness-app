@@ -16,6 +16,8 @@ const Reminder = require("../models/Reminder");
 const Goal = require("../models/userGoal");
 const UserFiles = require("../models/UserFiles");
 const { default: mongoose } = require("mongoose");
+const MealReminder = require("../models/MealReminder");
+const WaterReminder = require("../models/WaterReminder");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -32,11 +34,11 @@ const getLocalDate = () => {
 
 
 exports.register = catchAsync(async (req, res, next) => {
-    const { role, email, name, phone, password, ADS_id, address, batchNo, joiningDate } = req.body;
+    const { role, email, name, phone, password, device_token, device_type, ADS_id, address, batchNo, joiningDate } = req.body;
     if (role === 'admin') {
         return next(new AppError('Resistration Not Allowed for Role', 400))
     }
-    let newUserData = { email, name, phone, password };
+    let newUserData = { email, name, phone, password, device_token, device_type };
     if (role === 'host') {
         newUserData = {
             ...newUserData,
@@ -374,8 +376,8 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
 
 
 exports.updateRoutineSection = catchAsync(async (req, res, next) => {
-    const section = req.params.section; // Get section type from the route
-    const data = req.body[section];    // Get data for the specified section
+    const section = req.params.section;
+    const data = req.body[section];
     const userId = req.user.id;
     const today = getLocalDate();
 
@@ -391,32 +393,67 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         'join_session',
         'nutrition',
         'sleep',
-        'body_data'
     ];
+
     if (!validSections.includes(section)) {
         return next(new AppError(`Invalid section: ${section}`, 400));
     }
 
-    let routine = await Routine.findOne({ userId, date: today }, (section));
+    let routine = await Routine.findOne({ userId, date: today });
+
     if (!routine) {
         routine = await Routine.create({ userId, date: today, [section]: data });
     } else {
-        if (section === 'meal') {
-            routine.meal = { ...routine.meal, ...data };
-        } else if (section === 'body_data') {
-            routine.body_data = { ...routine.body_data, ...data };
+        const updateNestedFields = (target, updates) => {
+            for (const key in updates) {
+                if (
+                    typeof updates[key] === 'object' &&
+                    !Array.isArray(updates[key]) &&
+                    updates[key] !== null
+                ) {
+                    // If the target key doesn't exist, initialize it as an object
+                    if (!target[key] || typeof target[key] !== 'object') {
+                        target[key] = {};
+                    }
+                    // Recursively update nested fields
+                    updateNestedFields(target[key], updates[key]);
+                } else {
+                    // For primitives or arrays, directly update/overwrite
+                    target[key] = updates[key];
+                }
+            }
+        };
+
+
+        if (section === 'nutrition') {
+            routine.nutrition = routine.nutrition || [];
+            data.forEach((item) => {
+                const existingItem = routine.nutrition.find(
+                    (nutri) => nutri.item === item.item
+                );
+                if (existingItem) {
+                    Object.assign(existingItem, item);
+                } else {
+                    routine.nutrition.push(item);
+                }
+            });
         } else {
-            routine[section] = data;
+            routine[section] = routine[section] || {};
+            updateNestedFields(routine[section], data);
         }
+
+
         await routine.save();
     }
 
     res.status(200).json({
         status: 'success',
         message: `${section} updated successfully`,
-        routine
+        routine,
     });
 });
+
+
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
@@ -685,26 +722,29 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
 });
 
 
-const upsertReminder = async (filter, update) => {
-    const options = { upsert: true, new: true, setDefaultsOnInsert: true };
-    return Reminder.findOneAndUpdate(filter, update, options);
-};
+// const upsertReminder = async (filter, update) => {
+//     const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+//     return Reminder.findOneAndUpdate(filter, update, options);
+// };
 
-exports.addReminder = catchAsync(async (req, res, next) => {
-    const userId = req.user.id
-    const { category, data } = req.body;
+// exports.addReminder = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id
+//     const { category, data } = req.body;
 
-    if (!userId || !category || !data) {
-        return res.status(400).json({ message: "userId, category, and data are required." });
-    }
+//     if (!userId || !category || !data) {
+//         return res.status(400).json({ message: "userId, category, and data are required." });
+//     }
 
-    const filter = { userId, category };
-    const update = { $set: { ...data, userId, category } };
+//     const filter = { userId, category };
+//     const update = { $set: { ...data, userId, category } };
 
-    const reminder = await upsertReminder(filter, update);
+//     const reminder = await upsertReminder(filter, update);
 
-    res.status(200).json({ message: "Reminder saved successfully.", reminder });
-})
+//     res.status(200).json({ message: "Reminder saved successfully.", reminder });
+// })
+
+
+
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {
     const userId = req.user.id
@@ -1179,3 +1219,91 @@ exports.getWhatNewToday = catchAsync(async (req, res, next) => {
 
 
 
+exports.addReminder = catchAsync(async (req, res, next) => {
+    const { reminderOn, meals, water, reminderType, reminder_type, onceTime, everydayTime, weeklyTimes } = req.body;
+    const userId = req.user.id;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (meals) {
+        let mealReminder = await MealReminder.findOne({ userId });
+        if (mealReminder) {
+            mealReminder.reminderOn = reminderOn !== undefined ? reminderOn : mealReminder.reminderOn;
+            mealReminder.meals = { ...mealReminder.meals, ...meals };
+            await mealReminder.save();
+        } else {
+            mealReminder = new MealReminder({
+                userId,
+                reminderOn: reminderOn || false,
+                meals: meals || {}
+            });
+            await mealReminder.save();
+        }
+    }
+
+    if (water) {
+        let waterReminder = await WaterReminder.findOne({ userId });
+        if (waterReminder) {
+            waterReminder.reminderOn = water.reminderOn !== undefined ? water.reminderOn : waterReminder.reminderOn;
+            waterReminder.reminderType = reminderType || waterReminder.reminderType;
+            waterReminder.reminderTime = water.reminderTime || waterReminder.reminderTime;
+            waterReminder.startTime = water.startTime || waterReminder.startTime;
+            waterReminder.endTime = water.endTime || waterReminder.endTime;
+            waterReminder.intervalMinutes = water.intervalMinutes || waterReminder.intervalMinutes;
+            waterReminder.customTimes = water.customTimes || waterReminder.customTimes;
+            await waterReminder.save();
+        } else {
+            waterReminder = new WaterReminder({
+                userId,
+                reminderOn: water.reminderOn || false,
+                reminderType: reminderType || 'once',
+                reminderTime: water.reminderTime || '',
+                startTime: water.startTime || '',
+                endTime: water.endTime || '',
+                intervalMinutes: water.intervalMinutes || 15,
+                customTimes: water.customTimes || 7
+            });
+            await waterReminder.save();
+        }
+    }
+
+    const validTypes = ['step', 'workout', 'knowledge', 'nutrition'];
+
+    if (validTypes.includes(reminder_type)) {
+
+        console.log(reminder_type, '=====type====')
+
+        let reminder = await Reminder.findOne({ userId, reminder_type });
+
+        if (reminder) {
+            reminder.reminderOn = reminderOn;
+            reminder.reminderType = reminderType;
+            reminder.onceTime = onceTime;
+            reminder.everydayTime = everydayTime;
+            reminder.weeklyTimes = weeklyTimes;
+            reminder.reminder_type = reminder_type
+
+            reminder = await Reminder.findByIdAndUpdate(reminder._id, reminder, { new: true });
+            return res.status(200).json(reminder);
+        } else {
+            reminder = new Reminder({
+                userId,
+                reminder_type,
+                reminderOn,
+                reminderType,
+                onceTime,
+                everydayTime,
+                weeklyTimes
+            });
+
+            reminder = await reminder.save();
+            return res.status(201).json(reminder);
+        }
+    } else {
+        res.status(400).json({ error: "Invalid reminder type" });
+    }
+
+    res.status(200).json({ status: 'success', message: 'reminder set successfully' });
+})

@@ -8,7 +8,7 @@ const mealSchema = new mongoose.Schema({
     status: { type: String, enum: ['take', 'skip'] },
     note: { type: String },
     image: { type: String },
-    items: { type: Map, of: { qty: { type: String } } }
+    items: [String]
 }, { strict: false });
 
 const routineSchema = new mongoose.Schema({
@@ -40,12 +40,10 @@ const routineSchema = new mongoose.Schema({
         attend: { type: Boolean },
         note: { type: String }
     },
-    nutrition: {
-        dose1: { type: String, enum: ['take', 'skip'] },
-        dose2: { type: String, enum: ['take', 'skip'] },
-        dose3: { type: String, enum: ['take', 'skip'] },
-        dose4: { type: String, enum: ['take', 'skip'] }
-    },
+    nutrition: [{
+        item: { type: String },
+        status: { type: String, enum: ['take', 'skip'] }
+    }],
     sleep: {
         wake_up: { type: String },
         bed_at: { type: String }

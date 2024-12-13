@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 import MealForm from "./pages/dashboard/MealAndNutrition/MealForm";
 import Nutrition from "./pages/dashboard/MealAndNutrition/NutritionForm";
 import CategoryManager from "./pages/CategoryManager";
+import MealReminder from "./pages/testing/mealreminder";
 
 
 const icon = {
@@ -128,6 +129,29 @@ export const routes = () => {
         ],
       }
     ] : []),
+
+
+    {
+      icon: <HomeIcon {...icon} />,
+      name: "Remonders",
+      dropdown: [
+        {
+          name: "Meal",
+          path: "/mealreminder",
+          element: <MealReminder />,
+        },
+        {
+          name: "water",
+          path: "/waterreminder",
+          element: <TermsAndConditions />,
+        },
+        {
+          name: "Community Guidelines",
+          path: "/community_guidelines",
+          element: <Community_guidelines />,
+        },
+      ],
+    },
     {
       icon: <HomeIcon {...icon} />,
       name: "Logout",

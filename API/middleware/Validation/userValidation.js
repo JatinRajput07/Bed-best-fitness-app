@@ -8,6 +8,8 @@ exports.registrationValidation = (req, res, next) => {
         password: Joi.string().min(6).required(),
         role: Joi.string().valid('admin', 'host', 'user').optional(),
         googleId: Joi.string().optional(),
+        device_token: Joi.string().optional(),
+        device_type: Joi.string().optional(),
     });
 
     if (req.body.role === 'host') {
@@ -22,7 +24,7 @@ exports.registrationValidation = (req, res, next) => {
     const { error } = schema.validate(req.body);
 
     if (error) {
-        return res.status(400).json({ status:'error',message: error.details[0].message });
+        return res.status(400).json({ status: 'error', message: error.details[0].message });
     }
     next();
 };

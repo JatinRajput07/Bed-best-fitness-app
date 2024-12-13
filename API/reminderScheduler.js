@@ -20,10 +20,8 @@ cron.schedule("* * * * *", async () => {
             }
 
             if (repeatType === "daily") {
-
                 await checkAndSendNotification(user, reminder, category, "daily");
             } else if (repeatType === "custom") {
-
                 await checkAndSendNotification(user, reminder, category, "custom");
             }
         }
