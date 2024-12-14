@@ -17,24 +17,49 @@ const getLocalDate = () => {
 
 
 exports.createGoal = catchAsync(async (req, res, next) => {
-    const userId = req.user.id
-    const exist = await Goal.findOne({ userId })
-    if (exist) {
-        const updatedGoal = await Goal.findOneAndUpdate(
-            { userId },
-            { $set: req.body },
-            { new: true }
-        );
+    const userId = req.user.id;
+    const { weightGoal, nutritionGoals, dailyWaterGoal, dailyStepsGoal } = req.body;
+
+    console.log(req.body, '=========== Incoming Goal Data ============');
+    let existingGoal = await Goal.findOne({ userId });
+
+    if (existingGoal) {
+        if (weightGoal) {
+            existingGoal.weightGoal = { ...existingGoal.weightGoal, ...weightGoal };
+        }
+        if (nutritionGoals) {
+            existingGoal.nutritionGoals = {
+                ...existingGoal.nutritionGoals,
+                ...nutritionGoals
+            };
+        }
+        if (dailyWaterGoal !== undefined) {
+            existingGoal.dailyWaterGoal = dailyWaterGoal;
+        }
+        if (dailyStepsGoal !== undefined) {
+            existingGoal.dailyStepsGoal = dailyStepsGoal;
+        }
+
+        await existingGoal.save();
         return res.status(200).json({
-            status: "success",
-            message: "Goal updated successfully.",
-            goal: updatedGoal
+            status: 'success',
+            message: 'Goal updated successfully.',
+            goal: existingGoal
         });
     }
-    const goal = await Goal.create({ userId, ...req.body })
-    res.status(200).json({
-        status: "success",
-        message: "Goal created successfully.",
+
+    const newGoal = await Goal.create({
+        userId,
+        weightGoal,
+        nutritionGoals,
+        dailyWaterGoal,
+        dailyStepsGoal
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Goal created successfully.',
+        goal: newGoal
     });
 })
 
@@ -286,7 +311,7 @@ exports.getMeals = async (req, res, next) => {
             {
                 $group: {
                     _id: '$category',
-                    meals: { $push: { item: '$item', id : "$_id"} },
+                    meals: { $push: { item: '$item', id: "$_id" } },
                 },
             },
             { $sort: { _id: 1 } },
