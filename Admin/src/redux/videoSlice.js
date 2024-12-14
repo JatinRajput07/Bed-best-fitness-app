@@ -13,20 +13,44 @@ export const fetchVideos = createAsyncThunk('admin/video-list', async (_, { reje
   }
 });
 
-// Async thunk for creating/uploading a new video
+
 export const createVideo = createAsyncThunk(
   'admin/upload-videos',
   async (data, { rejectWithValue }) => {
     try {
-      const response = await Axios.post('/admin/upload-videos', data);
-      return response.data.video; // Returns the created video
+      const formData = new FormData();
+
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('description', data.description);
+      formData.append('filetype', data.filetype); 
+      formData.append('subcategories', JSON.stringify(data.subcategories)); 
+
+      if (data.file) {
+        formData.append('file', data.file);
+      }
+
+
+      if (data.filetype === 'audio' && data.audioThumbnail) {
+        formData.append('audioThumbnail', data.audioThumbnail); 
+      }
+
+      const response = await Axios.post('/admin/upload-videos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data.video || response.data.audio;
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';
-      utilService.showErrorToast(errorMessage); // Show error toast
-      return rejectWithValue(errorMessage);
+      utilService.showErrorToast(errorMessage); 
+      return rejectWithValue(errorMessage); 
     }
   }
 );
+
+
 
 const videoSlice = createSlice({
   name: 'videos',

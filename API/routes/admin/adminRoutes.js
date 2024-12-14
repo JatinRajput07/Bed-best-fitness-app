@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get('/dashboard', dashboard)
 router.post('/upload-file', uploadFiles)
 
 router.get('/user-list', getUserList)
-router.delete('/user-delete/:id',deleteUser)
+router.delete('/user-delete/:id', deleteUser)
 
 router.get('/get-user-profile/:id', getUserProfile)
 router.post('/users', createUser)
@@ -65,5 +65,8 @@ router
     .patch(updateSubCategory)
     .delete(deleteSubCategory);
 
+
+router.get('/getUserRecomenedVideo/:id', getUserRecomenedVideo)
+router.get('/user/reminders/:id', getAllUserReminders);
 
 module.exports = router;

@@ -4,7 +4,6 @@ const recommendationSchema = new mongoose.Schema({
     host_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        // required: true,
     },
     video_id: {
         type: mongoose.Schema.Types.ObjectId,

@@ -18,6 +18,10 @@ const SubCategory = require("../models/SubCategory");
 const Banner = require("../models/Banner");
 const { upload } = require("../utils/UploadFiles");
 const multer = require("multer");
+const Recommendation = require("../models/recommendation");
+const MealReminder = require("../models/MealReminder");
+const WaterReminder = require("../models/WaterReminder");
+const Reminder = require("../models/Reminder");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -267,33 +271,84 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
 
 exports.uploadVideos = catchAsync(async (req, res, next) => {
-    const { title, path, category,filetype, description, subcategories } = req.body;
-    console.log(title, path, category, subcategories)
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
 
-    if (!category || !subcategories > 0) {
-        return res.status(400).json({
-            status: 'fail',
-            message: 'Category and subcategory are required',
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const { title, category, description, subcategories, filetype, audioThumbnail } = req.body;
+
+        console.log(req.body ,req.files ,'===========================================f=f=f=f=')
+
+        if (!category || !subcategories || subcategories.length === 0) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Category and subcategory are required.',
+            });
+        }
+
+        const uploadedFiles = await Promise.all(
+            req.files.map(async (file) => {
+                const fileType = file.mimetype.split('/')[0];
+                const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+
+                const fileData = {
+                    fileName: file.filename,
+                    path: filePath,
+                    mimeType: fileType,
+                };
+                if (fileType === 'video') {
+                    try {
+                        const thumbnailPath = await generateThumbnail(file.path); // Generate thumbnail
+                        fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
+                    } catch (error) {
+                        console.error('Error generating thumbnail:', error);
+                    }
+                }
+
+                if (fileType === 'audio' && audioThumbnail) {
+                    const thumbnailFile = req.files.find(f => f.filename === audioThumbnail);
+                    if (thumbnailFile) {
+                        fileData.audioThumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailFile.filename)}`;
+                    }
+                }
+                return fileData;
+            })
+        );
+
+        // Create a video (or audio) entry in the database
+        const media = await Video.create({
+            title,
+            path: uploadedFiles[0].path, // Use the path of the first uploaded file
+            category,
+            subcategories, // Store the subcategories as received
+            description,
+            filetype,
+            thumbnail: uploadedFiles[0].thumbnail || null, // Store thumbnail if available
+            audioThumbnail: uploadedFiles[0].audioThumbnail || null, // Store audio thumbnail if available
         });
-    }
 
-    const video = await Video.create({
-        title,
-        path,
-        category,
-        subcategories: subcategories.value,
-        description,
-        filetype
-        // duration
+        // If media is successfully created, send response
+        if (media) {
+            return res.status(200).json({
+                status: 'success',
+                media, // Returning the created media object with its details
+            });
+        } else {
+            return res.status(500).json({
+                status: 'fail',
+                message: 'Failed to create media.',
+            });
+        }
     });
-
-    if (video) {
-        return res.status(200).json({
-            status: 'success',
-            video
-        });
-    }
 });
+
 
 
 exports.getVideos = catchAsync(async (req, res, next) => {
@@ -305,8 +360,8 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                     $push: {
                         id: "$_id",
                         path: "$path",
-                        filetype:"$filetype",
-                        description:"$description",
+                        filetype: "$filetype",
+                        description: "$description",
                         title: "$title",
                         subcategories: "$subcategories",
                         views: "$views",
@@ -747,4 +802,50 @@ exports.createBanner = catchAsync(async (req, res, next) => {
             data: newBanner,
         });
     });
+});
+
+
+exports.getUserRecomenedVideo = catchAsync(async (req, res, next) => {
+    const user_id = req.params.id
+    const videos = await Recommendation.find({ user_id }).populate('video_id')
+    res.status(201).json({
+        status: 'success',
+        message: 'successfully.',
+        data: videos,
+    });
+})
+
+exports.getAllUserReminders = catchAsync(async (req, res, next) => {
+    const userId = req.params.id;
+
+    if (!userId) {
+        return res.status(400).json({ message: "User ID is required." });
+    }
+
+    try {
+        const mealReminders = await MealReminder.find({ userId });
+        const waterReminders = await WaterReminder.find({ userId });
+        const otherReminders = await Reminder.find({ userId });
+
+        const allReminders = [
+            ...mealReminders.map(reminder => ({ ...reminder.toObject(), type: 'meal' })),
+            ...waterReminders.map(reminder => ({ ...reminder.toObject(), type: 'water' })),
+            ...otherReminders.map(reminder => {
+                return {
+                    ...reminder.toObject(),
+                    type: reminder.reminder_type || 'other'
+                };
+            })
+        ];
+        res.status(200).json({
+            message: "All reminders fetched successfully.",
+            reminders: allReminders
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error fetching reminders.",
+            error: error.message
+        });
+    }
 });

@@ -412,7 +412,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
             }
         };
 
-
         if (section === 'nutrition') {
             routine.nutrition = routine.nutrition || [];
             data.forEach((item) => {
@@ -430,16 +429,19 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
             updateNestedFields(routine[section], data);
         }
 
-
         await routine.save();
     }
 
-    res.status(200).json({
+    const responseData = {
         status: 'success',
         message: `${section} updated successfully`,
-        routine,
-    });
+        routine: routine[section],
+    };
+
+    res.status(200).json(responseData);
 });
+
+
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
@@ -881,6 +883,10 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
 
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
     upload(req, res, async (err) => {
+
+
+        console.log(req.files, req.body, '==========================req.files==============')
+
         if (err instanceof multer.MulterError) {
             return next(new AppError(err.message, 400));
         } else if (err) {

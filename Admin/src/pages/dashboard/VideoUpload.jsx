@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { uploadFile, resetProgress } from "@/redux/uploadFileSlice";
-import { createVideo } from "@/redux/videoSlice";
+import { createVideo, fetchVideos } from "@/redux/videoSlice";
 import { utilService } from "@/utilService";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
@@ -17,16 +16,18 @@ import {
 const UploadVideo = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { progress, filePath, error: uploadError } = useSelector(
+  const { progress, error: uploadError } = useSelector(
     (state) => state.uploadFiles
   );
 
   const [title, setTitle] = useState("");
-  const [description,setDescription] = useState("")
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [file, setFile] = useState(null);
+  const [audioThumbnail, setAudioThumbnail] = useState(null); // State for audio thumbnail
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categoryOptions = [
     { value: "workout-video", label: "Workout Video" },
@@ -94,21 +95,55 @@ const UploadVideo = () => {
     ],
   };
 
+  const allowedFileTypes = {
+    "workout-video": ["video/mp4", "video/avi", "video/mov"],
+    "recipe-video": ["video/mp4", "video/avi", "video/mov"],
+    "knowledge-video": ["video/mp4", "video/avi", "video/mov"],
+    "story-podcast-recognition-video": ["video/mp4", "audio/mpeg"],
+    wallpaper: ["image/jpeg", "image/png", "image/jpg"],
+    quotes: ["image/jpeg", "image/png", "image/jpg"],
+    "audio-clips": ["audio/mpeg", "audio/wav"],
+    music: ["audio/mpeg", "audio/wav"],
+    podcast: ["audio/mpeg", "audio/wav"],
+    "audio-book": ["audio/mpeg", "audio/wav"],
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
+    if (selectedFile && allowedFileTypes[category.value].includes(selectedFile.type)) {
       setFile(selectedFile);
-      dispatch(resetProgress());
-      dispatch(uploadFile(selectedFile));
+      setErrors((prevErrors) => ({ ...prevErrors, file: null })); // Clear file error
+    } else {
+      setFile(null);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        file: `Invalid file type. Only ${allowedFileTypes[category.value].join(", ")} files are allowed.`,
+      }));
+    }
+  };
+
+  const handleAudioThumbnailChange = (e) => {
+    const selectedThumbnail = e.target.files[0];
+    if (selectedThumbnail && selectedThumbnail.type.startsWith("image/")) {
+      setAudioThumbnail(selectedThumbnail);
+      setErrors((prevErrors) => ({ ...prevErrors, audioThumbnail: null })); // Clear audio thumbnail error
+    } else {
+      setAudioThumbnail(null);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        audioThumbnail: "Invalid image type for audio thumbnail.",
+      }));
     }
   };
 
   const validateForm = () => {
     const formErrors = {};
     if (!title) formErrors.title = "Title is required.";
-    // if (!description) formErrors.description = "Description is required.";
     if (!category) formErrors.category = "Category is required.";
     if (!file) formErrors.file = "File is required.";
+    if (category?.value?.includes("audio") && !audioThumbnail) {
+      formErrors.audioThumbnail = "Audio thumbnail image is required for audio files.";
+    }
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
   };
@@ -117,35 +152,45 @@ const UploadVideo = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setIsSubmitting(true);
     try {
       await dispatch(
         createVideo({
           title,
-          path: filePath?.path,
-          filetype: filePath.mimeType.split('/')[0],
+          file,
           category: category.value,
           subcategories,
           description,
+          audioThumbnail, // Include audio thumbnail in data
         })
       ).then((res) => {
         if (res.meta.requestStatus === "fulfilled") {
           utilService.showSuccessToast("File uploaded successfully!");
-          navigate("/videos");
+          navigate("/dashboard/videos");
+          dispatch(fetchVideos())
           setTitle("");
-          setDescription("")
+          setDescription("");
           setCategory(null);
           setSubcategories([]);
           setFile(null);
-          dispatch(resetProgress());
+          setAudioThumbnail(null); // Reset audio thumbnail
+          setIsSubmitting(false);
         }
       });
     } catch (err) {
       console.error(err);
       utilService.showErrorToast("Failed to upload video.");
+      setIsSubmitting(false);
     }
   };
 
-  const isSubmitDisabled = !title || !category || !file || (progress > 0 && progress < 100);
+  const isSubmitDisabled =
+    !title ||
+    !category ||
+    !file ||
+    (category?.value?.includes("audio") && !audioThumbnail) ||
+    isSubmitting ||
+    (progress > 0 && progress < 100);
 
   return (
     <div className="mt-12 mb-8 flex justify-center">
@@ -172,7 +217,12 @@ const UploadVideo = () => {
             </label>
             <Select
               value={category}
-              onChange={(selected) => setCategory(selected)}
+              onChange={(selected) => {
+                setCategory(selected);
+                setSubcategories([]); // Reset subcategories when category changes
+                setFile(null); // Clear file when category changes
+                setAudioThumbnail(null); // Clear audio thumbnail when category changes
+              }}
               options={categoryOptions}
               placeholder="Select a category"
               isClearable
@@ -211,7 +261,7 @@ const UploadVideo = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
-              placeholder="Enter video title"
+              placeholder="Enter title"
             />
             {errors.title && (
               <Typography color="red" className="text-sm mt-1">
@@ -220,35 +270,28 @@ const UploadVideo = () => {
             )}
           </div>
 
-
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
             </label>
             <textarea
-              type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
-              placeholder="Enter file description..."
+              placeholder="Enter description"
             />
-            <textarea/>
-            {errors.description && (
-              <Typography color="red" className="text-sm mt-1">
-                {errors.description}
-              </Typography>
-            )}
           </div>
 
-          {/* File */}
+          {/* File Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Video File
+              File
             </label>
             <input
               type="file"
               onChange={handleFileChange}
+              accept={allowedFileTypes[category?.value]?.join(", ")}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
             />
             {errors.file && (
@@ -257,6 +300,26 @@ const UploadVideo = () => {
               </Typography>
             )}
           </div>
+
+          {/* Audio Thumbnail (if audio-related category) */}
+          {category?.value?.includes("audio") && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Audio Thumbnail (Image)
+              </label>
+              <input
+                type="file"
+                onChange={handleAudioThumbnailChange}
+                accept="image/*"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              />
+              {errors.audioThumbnail && (
+                <Typography color="red" className="text-sm mt-1">
+                  {errors.audioThumbnail}
+                </Typography>
+              )}
+            </div>
+          )}
 
           {/* Progress Bar */}
           {progress > 0 && (
@@ -272,7 +335,7 @@ const UploadVideo = () => {
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
           >
-            Upload File
+            {isSubmitting ? "Please Wait..." : "Upload File"}
           </Button>
         </CardBody>
       </Card>

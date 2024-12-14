@@ -9,11 +9,14 @@ import { fetchUserDetails } from "@/redux/userSlice";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import axios from "axios";
+import PDFPreview from "./PDFPreview";
+import RecommendedVideos from "./RecommendedVideos";
+import AllReminders from "./AllReminders";
 
 export function Profile({ id, closeModal }) {
 
   const dispatch = useDispatch();
-  
+
   const { userProfile, profileLoading } = useSelector((state) => state.users);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [data, setData] = useState(null);
@@ -191,6 +194,9 @@ export function Profile({ id, closeModal }) {
                     <Typography variant="h6" color="blue-gray" className="mb-4">
                       Weight Goal
                     </Typography>
+
+                    {console.log(data.goals,';====d==d=d=dd=')}
+
                     <Typography variant="small" className="text-gray-600">
                       {data.goals.weightGoal}
                     </Typography>
@@ -272,7 +278,7 @@ export function Profile({ id, closeModal }) {
                       <ul className="list-disc pl-6 mt-2">
                         {Object.entries(meal.items).map(([key, item]) => (
                           <li key={item._id} className="text-gray-600">
-                            {key.replace("_", " ")}: {item.qty}
+                            {key.replace("_", " ")}: {item}
                           </li>
                         ))}
                       </ul>
@@ -283,56 +289,15 @@ export function Profile({ id, closeModal }) {
             ) : (
               <div>No data available for the selected date.</div>
             )}
-
-
-
-
-          </div><div className="px-4 mt-8 pb-4">
-            <Typography variant="h6" color="blue-gray" className="mb-2">
-              Feed ( Post's )
-            </Typography>
-            <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
-              {userProfile?.userfiles.map(({ path, type }, key) => (
-                type === "image" && (
-                  <Card key={key + 1} color="transparent" shadow={false}>
-                    <CardHeader floated={false} color="gray" className="mx-0 mt-0 mb-4 h-64 xl:h-40">
-                      <img
-                        src={path}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    </CardHeader>
-                  </Card>
-                )
-              ))}
-            </div>
           </div>
 
+          
+          <AllReminders userId={userProfile?.user?._id} />
 
-          <div className="px-4 mt-8 pb-4">
-            <Typography variant="h6" color="blue-gray" className="mb-2">
-              Recomended Videos
-            </Typography>
-            <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
-              {userProfile?.userfiles.map(
-                ({ path }, key) => (
-                  <Card key={key + 1} color="transparent" shadow={false}>
-                    <CardHeader
-                      floated={false}
-                      color="gray"
-                      className="mx-0 mt-0 mb-4 h-64 xl:h-40"
-                    >
-                      <img
-                        src={path}
-                        alt={""}
-                        className="h-full w-full object-cover"
-                      />
-                    </CardHeader>
-                  </Card>
-                )
-              )}
-            </div>
-          </div>
+          <PDFPreview userProfile={userProfile} />
+
+          <RecommendedVideos userId={userProfile?.user?._id} />
+
         </CardBody>
       </Card>
     </>
