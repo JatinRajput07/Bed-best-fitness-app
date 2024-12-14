@@ -43,7 +43,8 @@ const {
     createOrUpdateHygiene,
     createOrUpdateHolisticWellness,
     createOrUpdateWhatNewToday,
-    deleteAccount
+    deleteAccount,
+    get_asign_users_details
 } = require('../../controllers/userController');
 
 const {
@@ -128,6 +129,7 @@ router.post('/contact_us', contact_us); // Contact us form submission
 
 // Host-only Routes
 router.get('/asign_users', get_asign_users); // Get assigned users
+router.get('/asign_users_details/:id',get_asign_users_details)
 
 // Reminders
 router.post('/reminders', addReminder); // Add a reminder

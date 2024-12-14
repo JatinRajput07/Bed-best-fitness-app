@@ -8,6 +8,7 @@ import {
   Avatar,
   Chip,
   Button,
+  Input,
 } from "@material-tailwind/react";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteUser, fetchUsers } from "@/redux/userSlice";
@@ -18,6 +19,11 @@ export function UserList() {
   const [selectedUser, setSelectedUser] = useState(null);
   const { users, loading, error } = useSelector((state) => state.users);
   const { role } = useSelector((state) => state.auth);
+
+  // Pagination and search states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 7; // Adjust as needed
 
   useEffect(() => {
     dispatch(fetchUsers({}));
@@ -37,8 +43,22 @@ export function UserList() {
     setSelectedUser(null);
   };
 
-  // Filter users based on the role
-  const filteredUsers = role === "host" ? users.filter((user) => user.role === "user") : users;
+  // Filter users based on role and search term
+  const filteredUsers = role === "host"
+    ? users.filter((user) => user.role === "user")
+    : users;
+
+  const searchFilteredUsers = filteredUsers.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = searchFilteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
@@ -48,10 +68,16 @@ export function UserList() {
         <Card>
           <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
             <Typography variant="h6" color="white">
-              {role === "host" ? "Host List" : "User List"}
+              {role === "host" ? "users List" : "User List"}
             </Typography>
           </CardHeader>
           <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
+            {/* <Input  
+              variant="standard"
+              label="Search Users"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mt-4"
+            /> */}
             {loading ? (
               <Typography variant="h6" color="blue-gray">
                 Loading users...
@@ -60,7 +86,7 @@ export function UserList() {
               <Typography variant="h6" color="red">
                 {error}
               </Typography>
-            ) : filteredUsers.length > 0 ? (
+            ) : searchFilteredUsers.length > 0 ? (
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
@@ -80,11 +106,9 @@ export function UserList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map(
+                  {currentUsers.map(
                     ({ _id, img, name, email, role, active, createdAt, ...otherDetails }, key) => {
-                      const className = `py-3 px-5 ${
-                        key === filteredUsers.length - 1 ? "" : "border-b border-blue-gray-50"
-                      }`;
+                      const className = `py-3 px-5 ${key === currentUsers.length - 1 ? "" : "border-b border-blue-gray-50"}`;
                       return (
                         <tr key={key + 1}>
                           <td className={className}>
@@ -141,7 +165,7 @@ export function UserList() {
                                 size="sm"
                                 onClick={() =>
                                   handleViewDetails({
-                                    id,
+                                    _id,
                                     name,
                                     email,
                                     role,
@@ -170,6 +194,21 @@ export function UserList() {
                 No {role === "host" ? "hosts" : "users"} found.
               </Typography>
             )}
+
+            {/* Pagination */}
+            <div className="mt-4 flex justify-center gap-4">
+              {Array.from({ length: Math.ceil(searchFilteredUsers.length / usersPerPage) }, (_, index) => (
+                <Button
+                  key={index + 1}
+                  variant="text"
+                  size="sm"
+                  onClick={() => paginate(index + 1)}
+                  color={currentPage === index + 1 ? "blue" : "gray"}
+                >
+                  {index + 1}
+                </Button>
+              ))}
+            </div>
           </CardBody>
         </Card>
       )}

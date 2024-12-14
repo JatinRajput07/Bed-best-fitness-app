@@ -773,16 +773,43 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
         return next(new AppError("Only hosts can get details.", 403));
     }
 
-    const users = await Asign_User.find({ host: hostId }).populate('asign_user')
-    if (!users) {
+    const users = await Asign_User.find({ host: hostId }).populate('asign_user');
+    if (!users || users.length === 0) {
         return next(new AppError("No assigned users found for this host.", 404));
     }
+
+    const assignedUsers = users.flatMap(user => user.asign_user);
+
     return res.status(200).json({
         status: "success",
         message: "Assigned users retrieved successfully.",
-        data: users,
+        data: assignedUsers,
     });
 });
+
+exports.get_asign_users_details = catchAsync(async (req, res, next) => {
+    const userId = req.params.id;
+    const userRole = req.user.role;
+
+    if (userRole !== "host") {
+        return next(new AppError("Only hosts can get details.", 403));
+    }
+    const today = getLocalDate();
+
+    console.log(userId, today, '=====userId , today===')
+
+    const data = await Routine.findOne({ userId, date: today })
+    if (!data) {
+        return next(new AppError("No Data found for this user.", 404));
+    }
+
+    return res.status(200).json({
+        status: "success",
+        message: "users Details.",
+        data,
+    });
+});
+
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {
     const userId = req.user.id

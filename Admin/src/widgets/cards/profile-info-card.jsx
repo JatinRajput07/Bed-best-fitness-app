@@ -21,7 +21,7 @@ export function ProfileInfoCard({ user }) {
     { label: "First Name", value: user?.name },
     { label: "Email", value: user?.email },
     { label: "Phone", value: user?.phone },
-    { label: "Location", value: `${user?.city || ""}, ${user?.State}, ${user?.Country}` },
+    { label: "Location", value: `${user?.city || ""} ${user?.State || ""} ${user?.Country || ""}`.trim() },
     { label: "ABHA_No", value: user?.ABHA_No },
     { label: "AadharNo", value: user?.AadharNo },
     { label: "Alternative ContactNo", value: user?.AlternativeContactNo },
@@ -43,6 +43,8 @@ export function ProfileInfoCard({ user }) {
     { label: "Gender", value: user?.Gender },
   ];
 
+  const filteredUserInfo = userInfo.filter(field => field.value !== null && field.value !== undefined && field.value !== "");
+
   return (
     <Card color="transparent" shadow={false} className="border-blue-gray-100 rounded-lg">
       <CardHeader color="transparent" shadow={false} floated={false} className="mx-0 mt-0 mb-4 flex items-center justify-between">
@@ -50,7 +52,7 @@ export function ProfileInfoCard({ user }) {
       </CardHeader>
       <CardBody className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {userInfo.map((field, index) => (
+          {filteredUserInfo.map((field, index) => (
             <div key={index}>
               <Input
                 label={field.label}

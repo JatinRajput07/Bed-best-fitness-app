@@ -107,8 +107,6 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 });
 
 
-
-
 exports.getUserProfile = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const [user, userfiles, userGoal, routine] = await Promise.all([
@@ -166,7 +164,6 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const weightGoalStatus = currentWeight
         ? `${currentWeight} kg (Goal: ${goalWeight} kg)`
         : 'Weight not updated';
-
 
     const mealCategories = Object.keys(userRoutine.meal || {});
     const mealReport = mealCategories.map(category => {
