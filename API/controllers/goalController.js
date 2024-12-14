@@ -286,7 +286,7 @@ exports.getMeals = async (req, res, next) => {
             {
                 $group: {
                     _id: '$category',
-                    meals: { $push: { item: '$item' } },
+                    meals: { $push: { item: '$item', id : "$_id"} },
                 },
             },
             { $sort: { _id: 1 } },
