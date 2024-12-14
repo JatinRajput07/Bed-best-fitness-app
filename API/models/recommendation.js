@@ -22,6 +22,6 @@ const recommendationSchema = new mongoose.Schema({
     },
 });
 
-recommendationSchema.index({ host_id: 1, user_id: 1 }, { unique: true })
+recommendationSchema.index({ video_id: 1, user_id: 1 }, { unique: true })
 
 module.exports = mongoose.model("Recommendation", recommendationSchema);

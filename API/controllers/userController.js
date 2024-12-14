@@ -18,6 +18,7 @@ const UserFiles = require("../models/UserFiles");
 const { default: mongoose } = require("mongoose");
 const MealReminder = require("../models/MealReminder");
 const WaterReminder = require("../models/WaterReminder");
+const Banner = require("../models/Banner");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -442,7 +443,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
-
     upload(req, res, async (err) => {
         if (err instanceof multer.MulterError) {
             return next(new AppError(err.message, 400));
@@ -572,8 +572,86 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
-    const [videos, recommendationVideosList] = await Promise.all([
+    const past20Days = Array.from({ length: 20 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    });
+
+    const records = await Routine.find({ userId, date: { $in: past20Days } });
+    const userGoal = await Goal.findOne({ userId });
+
+    const calculatePercentage = (achieved, target) => {
+        if (!target || target === 0) return 0;
+        return Math.min((achieved / target) * 100, 100);
+    };
+
+    const today = records.map(record => {
+        const date = record.date;
+        const weekName = new Date(date).toLocaleString('en-US', { weekday: 'long' });
+        const stepsAchieved = parseInt(record.steps?.steps || 0, 10);
+        const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
+        const stepsPercentage = calculatePercentage(stepsAchieved, stepsTarget);
+
+        const waterAchieved = parseInt(record.water?.qty || 0, 10);
+        const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
+        const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
+
+        const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
+        const nutritionAchieved = nutritionDoses.filter(dose => record.nutrition[dose] === 'take').length;
+        const nutritionTarget = nutritionDoses.length;
+        const nutritionPercentage = calculatePercentage(nutritionAchieved, nutritionTarget);
+
+        const mealCategories = Object.keys(record.meal || {});
+        const mealCompleted = mealCategories.filter(category => record.meal[category]?.status === 'completed').length;
+        const mealTarget = mealCategories.length;
+        const mealPercentage = calculatePercentage(mealCompleted, mealTarget);
+        const isStepsAndWaterComplete = stepsPercentage === 100 && waterPercentage === 100;
+        const isAllTasksComplete =
+            stepsPercentage === 100 &&
+            waterPercentage === 100 &&
+            nutritionPercentage === 100 &&
+            mealPercentage === 100;
+
+        let emoji = '';
+        if (isAllTasksComplete) {
+            emoji = '🏆';
+        } else if (isStepsAndWaterComplete) {
+            emoji = '😊';
+        } else if (nutritionPercentage === 100) {
+            emoji = '🏋️';
+        }
+        const taskPercentages = [
+            { task: 'steps', percentage: stepsPercentage },
+            { task: 'water', percentage: waterPercentage },
+            { task: 'nutrition', percentage: nutritionPercentage },
+            { task: 'meals', percentage: mealPercentage }
+        ];
+        const bestTask = taskPercentages.sort((a, b) => b.percentage - a.percentage)[0];
+
+        return {
+            date,
+            weekName,
+            percent: bestTask.percentage.toFixed(2),
+            emoji
+        };
+    });
+
+
+    const [videos, recommendationVideosList, banners] = await Promise.all([
         Video.aggregate([
+            {
+                $match: {
+                    category: {
+                        $in: [
+                            "workout-video",
+                            "recipe-video",
+                            "knowledge-video",
+                            "story-podcast-recognition-video"
+                        ]
+                    }
+                }
+            },
             {
                 $group: {
                     _id: "$category",
@@ -585,6 +663,7 @@ exports.Home = catchAsync(async (req, res, next) => {
                             createdAt: "$createdAt",
                             updatedAt: "$updatedAt",
                             category: "$category",
+                            thumbnail: "$thumbnail"
                         }
                     }
                 }
@@ -594,13 +673,13 @@ exports.Home = catchAsync(async (req, res, next) => {
                     category: "$_id",
                     videos: { $slice: ["$videos", 10] }
                 }
-            },
-
+            }
         ]),
 
-        Recommendation.find()
-            .populate("video_id", "-__v")
+        Recommendation.find({ user_id: userId })
+            .populate("video_id", { path: 1, title: 1, category: 1, filetype: 1, thumbnail: 1 })
             .exec(),
+        Banner.find({ isActive: true }, ('imageUrl -_id')).exec(),
     ]);
 
     const groupedVideos = {};
@@ -609,14 +688,13 @@ exports.Home = catchAsync(async (req, res, next) => {
         groupedVideos[category.category] = category.videos;
     });
 
-
     const recommendationVideos = recommendationVideosList
         .map(item => item.video_id)
         .flat();
 
     return res.status(200).json({
         status: "success",
-        data: { videos: groupedVideos, recommendationVideos },
+        data: { today, videos: groupedVideos, recommendationVideos, banners },
     });
 });
 
@@ -724,7 +802,7 @@ exports.getUserReminders = catchAsync(async (req, res, next) => {
             reminders = await WaterReminder.find({ userId })
             break;
         default:
-            reminders = await Reminder.findOne({ userId , reminder_type: category})
+            reminders = await Reminder.findOne({ userId, reminder_type: category })
             break;
     }
     res.status(200).json({ message: "Reminders fetched successfully.", reminders });
@@ -1243,7 +1321,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
 
     if (validTypes.includes(reminder_type)) {
 
-        console.log(reminder_type, userId,'=====type====')
+        console.log(reminder_type, userId, '=====type====')
 
         let reminder = await Reminder.findOne({ userId, reminder_type });
 

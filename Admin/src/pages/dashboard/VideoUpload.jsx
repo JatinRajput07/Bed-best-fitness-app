@@ -21,9 +21,6 @@ const UploadVideo = () => {
     (state) => state.uploadFiles
   );
 
-
-  console.log(filePath, '===============filePath===========')
-
   const [title, setTitle] = useState("");
   const [description,setDescription] = useState("")
   const [category, setCategory] = useState(null);

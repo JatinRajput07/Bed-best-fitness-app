@@ -1,6 +1,6 @@
 const express = require('express');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser } = require('../../controllers/adminController');
 const router = express.Router();
 
 
@@ -40,6 +40,8 @@ router.get('/nutrition', getNutritions);
 
 
 router.get('/user-daily-report/:userId', getUserRoutine);
+
+router.post('/create_banner', createBanner);
 
 
 // Category Routes

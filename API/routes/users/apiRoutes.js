@@ -58,7 +58,6 @@ const {
     get_sleep_records
 } = require('../../controllers/goalController');
 
-const { testNotification } = require('../../reminder/sendPushNotification');
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
@@ -99,14 +98,14 @@ router.get('/routine', getRoutine); // Get routine details
 router.patch('/update/:section', updateRoutineSection); // Update routine section
 
 router.patch('/body_data', createBodydata)
-router.get('/getBodydata', getBodydata)
+// router.get('/getBodydata', getBodydata)
 
 router.post('/body_measurement', createOrUpdateBodyMeasurement);
-router.get('/body_measurement', getBodyMeasurement);
+// router.get('/body_measurement', getBodyMeasurement);
 
 // Health Habits
 router.post('/health_habits', createOrUpdateHealthHabits);
-router.get('/health_habits', getHealthHabits);
+// router.get('/health_habits', getHealthHabits);
 
 // Hygiene
 router.post('/hygiene', createOrUpdateHygiene);

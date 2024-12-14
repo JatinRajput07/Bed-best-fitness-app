@@ -15,6 +15,9 @@ const Meal = require("../models/Meal");
 const Routine = require("../models/Routine");
 const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
+const Banner = require("../models/Banner");
+const { upload } = require("../utils/UploadFiles");
+const multer = require("multer");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -713,5 +716,38 @@ exports.deleteSubCategory = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success",
         message: "SubCategory deleted successfully",
+    });
+});
+
+
+// Banner Create API
+exports.createBanner = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+
+        console.log(req.files)
+
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const { title, description } = req.body;
+        const imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+        const newBanner = await Banner.create({
+            title,
+            description,
+            imageUrl,
+        });
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Banner created successfully.',
+            data: newBanner,
+        });
     });
 });

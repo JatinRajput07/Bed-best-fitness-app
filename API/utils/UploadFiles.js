@@ -5,6 +5,7 @@ const { exec } = require('child_process');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        console.log(file,'========================create_banner==============')
         const fileType = file.mimetype.split('/')[0];
         const folder = `./public/uploads/${fileType == "application" ? "pdf" : fileType}s`;
 
