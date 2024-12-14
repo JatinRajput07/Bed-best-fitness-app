@@ -294,32 +294,24 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 
 exports.deleteAccount = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-
     const user = await User.findByIdAndDelete(userId);
-
     if (!user) {
         return next(new AppError("User not found.", 404));
     }
-
     const collections = [
         { model: Reminder, field: "userId" },
         { model: Routine, field: "userId" },
     ];
-
     await Promise.all(
         collections.map(async ({ model, field }) => {
             await model.deleteMany({ [field]: userId });
         })
     );
-
     res.status(200).json({
         status: "success",
         message: "Account and all related data deleted successfully.",
     });
 });
-
-
-
 
 
 
@@ -349,8 +341,6 @@ exports.addRoutine = catchAsync(async (req, res, next) => {
         routine
     });
 });
-
-
 
 
 exports.getRoutine = catchAsync(async (req, res, next) => {
@@ -411,14 +401,11 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
                     !Array.isArray(updates[key]) &&
                     updates[key] !== null
                 ) {
-                    // If the target key doesn't exist, initialize it as an object
                     if (!target[key] || typeof target[key] !== 'object') {
                         target[key] = {};
                     }
-                    // Recursively update nested fields
                     updateNestedFields(target[key], updates[key]);
                 } else {
-                    // For primitives or arrays, directly update/overwrite
                     target[key] = updates[key];
                 }
             }
@@ -452,8 +439,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         routine,
     });
 });
-
-
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
@@ -721,44 +706,29 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
     });
 });
 
-
-// const upsertReminder = async (filter, update) => {
-//     const options = { upsert: true, new: true, setDefaultsOnInsert: true };
-//     return Reminder.findOneAndUpdate(filter, update, options);
-// };
-
-// exports.addReminder = catchAsync(async (req, res, next) => {
-//     const userId = req.user.id
-//     const { category, data } = req.body;
-
-//     if (!userId || !category || !data) {
-//         return res.status(400).json({ message: "userId, category, and data are required." });
-//     }
-
-//     const filter = { userId, category };
-//     const update = { $set: { ...data, userId, category } };
-
-//     const reminder = await upsertReminder(filter, update);
-
-//     res.status(200).json({ message: "Reminder saved successfully.", reminder });
-// })
-
-
-
-
 exports.getUserReminders = catchAsync(async (req, res, next) => {
     const userId = req.user.id
     const { category } = req.params;
+
+
     if (!userId || !category) {
         return res.status(400).json({ message: "userId and category are required." });
     }
-    const reminders = await Reminder.find({ userId, category });
-    if (reminders.length === 0) {
-        return res.status(404).json({ message: "No reminders found for the given user and category." });
+    let reminders
+
+    switch (category) {
+        case "meal":
+            reminders = await MealReminder.find({ userId })
+            break;
+        case "water":
+            reminders = await WaterReminder.find({ userId })
+            break;
+        default:
+            reminders = await Reminder.findOne({ userId , reminder_type: category})
+            break;
     }
     res.status(200).json({ message: "Reminders fetched successfully.", reminders });
 });
-
 
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
@@ -1227,7 +1197,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         return res.status(400).json({ error: 'User ID is required' });
     }
 
-    if (meals) {
+    if (req.body.hasOwnProperty("meals")) {
         let mealReminder = await MealReminder.findOne({ userId });
         if (mealReminder) {
             mealReminder.reminderOn = reminderOn !== undefined ? reminderOn : mealReminder.reminderOn;
@@ -1243,7 +1213,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         }
     }
 
-    if (water) {
+    if (req.body.hasOwnProperty("water")) {
         let waterReminder = await WaterReminder.findOne({ userId });
         if (waterReminder) {
             waterReminder.reminderOn = water.reminderOn !== undefined ? water.reminderOn : waterReminder.reminderOn;
@@ -1273,9 +1243,11 @@ exports.addReminder = catchAsync(async (req, res, next) => {
 
     if (validTypes.includes(reminder_type)) {
 
-        console.log(reminder_type, '=====type====')
+        console.log(reminder_type, userId,'=====type====')
 
         let reminder = await Reminder.findOne({ userId, reminder_type });
+
+        console.log(reminder)
 
         if (reminder) {
             reminder.reminderOn = reminderOn;
@@ -1284,7 +1256,6 @@ exports.addReminder = catchAsync(async (req, res, next) => {
             reminder.everydayTime = everydayTime;
             reminder.weeklyTimes = weeklyTimes;
             reminder.reminder_type = reminder_type
-
             reminder = await Reminder.findByIdAndUpdate(reminder._id, reminder, { new: true });
             return res.status(200).json(reminder);
         } else {
@@ -1301,8 +1272,6 @@ exports.addReminder = catchAsync(async (req, res, next) => {
             reminder = await reminder.save();
             return res.status(201).json(reminder);
         }
-    } else {
-        res.status(400).json({ error: "Invalid reminder type" });
     }
 
     res.status(200).json({ status: 'success', message: 'reminder set successfully' });

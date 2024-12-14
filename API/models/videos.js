@@ -5,6 +5,7 @@ const videoSchema = new mongoose.Schema({
     title: String,
     category: String,
     filetype:String,
+    thumbnail:String,
     subcategories: String,
     views: { type: Number, default: 0 },
     description: String,

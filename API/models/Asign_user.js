@@ -11,13 +11,3 @@ const AsignUserSchema = new mongoose.Schema({
 
 const Asign_User = mongoose.model('Asign_User', AsignUserSchema);
 module.exports = Asign_User;
-
-
-
-// {
-//     "_id": {
-//       "$oid": "674608ec2af161106a11ff89"
-//     },
-//     "host":"",
-//     "asign_user":["6731b727edb86c521da2290c","6731b727edb86c521da2290c"]
-//   }

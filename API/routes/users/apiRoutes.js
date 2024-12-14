@@ -42,7 +42,8 @@ const {
     createOrUpdateHealthHabits,
     createOrUpdateHygiene,
     createOrUpdateHolisticWellness,
-    createOrUpdateWhatNewToday
+    createOrUpdateWhatNewToday,
+    deleteAccount
 } = require('../../controllers/userController');
 
 const {
@@ -80,6 +81,8 @@ router.use(Auth);
 router.patch('/updateMyPassword', updatePassword); // Update user password
 router.patch('/updateProfile', updateProfile); // Update user profile
 router.get('/getProfile', getProfile); // Get user profile
+router.delete('/delete_account', deleteAccount); // Get user profile
+
 
 // User Goal Management
 router.post('/set_goal', createGoal); // Add user goal
@@ -92,6 +95,7 @@ router.get('/get-upload-file', getUploadFiles); // Get user files
 // Routine Management
 router.post('/routine', addRoutine); // Add a routine
 router.get('/routine', getRoutine); // Get routine details
+
 router.patch('/update/:section', updateRoutineSection); // Update routine section
 
 router.patch('/body_data', createBodydata)

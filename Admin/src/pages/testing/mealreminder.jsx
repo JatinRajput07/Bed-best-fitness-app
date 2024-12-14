@@ -19,7 +19,7 @@ const ReminderSettings = ({ userId }) => {
     water: { reminderEnabled: false, reminderType: 'once', reminderTime: '', startTime: '', endTime: '', intervalMinutes: 15 }
   });
 
-  // Fetch existing reminder settings
+  
   useEffect(() => {
     const fetchReminderSettings = async () => {
       try {
