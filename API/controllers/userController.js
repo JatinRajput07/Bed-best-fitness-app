@@ -20,6 +20,8 @@ const MealReminder = require("../models/MealReminder");
 const WaterReminder = require("../models/WaterReminder");
 const Banner = require("../models/Banner");
 const Notification = require("../models/Notification");
+const Meal = require("../models/Meal");
+const Nutrition = require("../models/Nutrition");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -282,18 +284,11 @@ const filterObj = (obj, ...allowedFields) => {
 
 
 exports.updateProfile = catchAsync(async (req, res, next) => {
-
-    console.log(req.body, '=======req.body======')
-
     const filteredBody = filterObj(req.body, 'email', 'AadharNo', 'ABHA_No', 'password', 'role');
-    console.log(filteredBody, '=======filteredBody======')
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new: true,
         runValidators: true
     });
-
-    console.log(updatedUser, '=======updatedUser======')
-
     res.status(200).json({
         status: 'success',
         data: {
@@ -813,24 +808,47 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     if (userRole !== "host") {
         return next(new AppError("Only hosts can get details.", 403));
     }
+    
     let today = getLocalDate();
     if (req.query.date) {
-        today = req.query.date
+        today = req.query.date;
     }
 
-    console.log(userId, today, '=====userId , today===')
+    console.log(userId, today, '=====userId , today===');
 
-    const data = await Routine.findOne({ userId, date: today })
+    const data = await Routine.findOne({ userId, date: today });
     if (!data) {
         return next(new AppError("No Data found for this user.", 404));
     }
 
+    const mealSections = Object.keys(data.meal);
+    for (const section of mealSections) {
+        const items = data.meal[section]?.items || [];
+        if (items.length) {
+            const titles = await Meal.find({ _id: { $in: items } }).select('item');
+            data.meal[section].items = titles.map(item => item.item);
+        }
+    }
+
+    const nutritionItems = data.nutrition.map(n => n.item);
+    if (nutritionItems.length) {
+        const nutritionTitles = await Nutrition.find({ _id: { $in: nutritionItems } }).select('title');
+        data.nutrition = data.nutrition.map(n => {
+            const titleObj = nutritionTitles.find(t => t._id.equals(n.item));
+            return {
+                ...n,
+                item: titleObj ? titleObj.title : n.item,
+            };
+        });
+    }
+
     return res.status(200).json({
         status: "success",
-        message: "users Details.",
+        message: "User Details.",
         data,
     });
 });
+
 
 
 exports.getUserReminders = catchAsync(async (req, res, next) => {
