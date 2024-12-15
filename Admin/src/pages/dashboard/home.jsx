@@ -38,7 +38,7 @@ export function Home() {
     // Fetch data from API
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:7200/admin/dashboard");
+        const response = await fetch("http://43.204.2.84:7200/admin/dashboard");
         const data = await response.json();
         if (data.status === "success") {
           // Transform API data to match the required structure

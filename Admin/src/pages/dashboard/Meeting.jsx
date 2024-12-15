@@ -59,7 +59,7 @@ const Meeting = () => {
             formData.append("image", image);
         }
 
-        axios.post("http://localhost:7200/admin/createMeeting", formData)
+        axios.post("http://43.204.2.84:7200/admin/createMeeting", formData)
             .then((response) => {
                 if (response.data.status === "success") {
                     fetchMeetings();
@@ -73,7 +73,7 @@ const Meeting = () => {
     };
 
     const fetchMeetings = () => {
-        axios.get("http://localhost:7200/admin/getMeeting")
+        axios.get("http://43.204.2.84:7200/admin/getMeeting")
             .then((response) => {
                 if (response.data.status === "success") {
                     setMeetings(response.data.meeting);
