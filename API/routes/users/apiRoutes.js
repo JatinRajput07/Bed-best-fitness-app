@@ -44,7 +44,9 @@ const {
     createOrUpdateHolisticWellness,
     createOrUpdateWhatNewToday,
     deleteAccount,
-    get_asign_users_details
+    get_asign_users_details,
+    getNotification,
+    createOrUpdateHealtyHabitRoutine
 } = require('../../controllers/userController');
 
 const {
@@ -105,20 +107,20 @@ router.patch('/body_measurement', createOrUpdateBodyMeasurement);
 // router.get('/body_measurement', getBodyMeasurement);
 
 // Health Habits
-router.post('/health_habits', createOrUpdateHealthHabits);
-// router.get('/health_habits', getHealthHabits);
+router.post('/health_habits', createOrUpdateHealtyHabitRoutine);
+router.get('/health_habits', getHealthHabits);
 
 // Hygiene
-router.post('/hygiene', createOrUpdateHygiene);
-router.get('/hygiene', getHygiene);
+// router.post('/hygiene', createOrUpdateHygiene);
+// router.get('/hygiene', getHygiene);
 
 // Holistic Wellness
-router.post('/holistic_wellness', createOrUpdateHolisticWellness);
-router.get('/holistic_wellness', getHolisticWellness);
+// router.post('/holistic_wellness', createOrUpdateHolisticWellness);
+// router.get('/holistic_wellness', getHolisticWellness);
 
 // What New Today
-router.post('/what_new_today', createOrUpdateWhatNewToday);
-router.get('/what_new_today', getWhatNewToday);
+// router.post('/what_new_today', createOrUpdateWhatNewToday);
+// router.get('/what_new_today', getWhatNewToday);
 
 // Home and Videos
 router.get('/home', Home); // Home data
@@ -129,7 +131,7 @@ router.post('/contact_us', contact_us); // Contact us form submission
 
 // Host-only Routes
 router.get('/asign_users', get_asign_users); // Get assigned users
-router.get('/asign_users_details/:id',get_asign_users_details)
+router.get('/asign_users_details/:id', get_asign_users_details)
 
 // Reminders
 router.post('/reminders', addReminder); // Add a reminder
@@ -142,5 +144,9 @@ router.get('/mindfulness/:category', getMindnessfullByCategory); // Get mindfuln
 router.get('/meal', getMeals); // Get meals
 router.get('/nutrition', getNutritions); // Get nutrition data
 router.get('/get_sleep_records', get_sleep_records); // Get sleep records
+
+router.get('/notification', getNotification); // Get sleep records
+
+
 
 module.exports = router;

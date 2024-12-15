@@ -19,6 +19,7 @@ const { default: mongoose } = require("mongoose");
 const MealReminder = require("../models/MealReminder");
 const WaterReminder = require("../models/WaterReminder");
 const Banner = require("../models/Banner");
+const Notification = require("../models/Notification");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -510,6 +511,13 @@ exports.createRecommendation = catchAsync(async (req, res, next) => {
     });
 
     if (existingRecommendation) {
+        await Notification.create({
+            userId: userId,
+            message: `you have been Recommend a New Video`,
+            type: "Recommend new Video",
+            status: "sent"
+        });
+
         return res.status(200).json({
             status: "success",
         });
@@ -1072,235 +1080,264 @@ exports.getBodyMeasurement = catchAsync(async (req, res, next) => {
 });
 
 
-exports.createOrUpdateHealthHabits = catchAsync(async (req, res, next) => {
+exports.createOrUpdateHealtyHabitRoutine = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const today = getLocalDate();
+
+    const validCategories = {
+        health_habits: ["cut_blue_screen_time", "meditation", "go_to_nature", "read_book", "spend_time_family", "loop_with_friends", "spend_time_hobby"],
+        hygiene: ["bathing", "hand_wash", "teeth_clean", "nail_cut"],
+        holistic_wellness: ["hot_water_wash", "cold_water_wash", "abhyanga", "neti", "palm_rubbing", "foot_massage", "head_massage", "oil_pulling"],
+        what_new_today: ["learn_new_language", "learn_sports_skill", "play_music_today", "travel_fun_today"]
+    };
+
+    const updateData = {};
+    Object.keys(validCategories).forEach(category => {
+        const categoryKeys = validCategories[category];
+        const categoryData = {};
+        categoryKeys.forEach(key => {
+            if (req.body[key] !== undefined) {
+                categoryData[key] = req.body[key];
+            }
+        });
+        if (Object.keys(categoryData).length > 0) {
+            updateData[category] = categoryData;
+        }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'No valid data provided.',
+        });
+    }
 
     const existingRoutine = await Routine.findOne({ userId, date: today });
 
     if (existingRoutine) {
-        const updatedHealthHabits = {
-            ...existingRoutine.health_habits.toObject(),
-            ...req.body,
-        };
-
-        existingRoutine.health_habits = updatedHealthHabits;
+        Object.keys(updateData).forEach(category => {
+            existingRoutine[category] = {
+                ...existingRoutine[category]?.toObject(),
+                ...updateData[category],
+            };
+        });
         await existingRoutine.save();
 
         return res.status(200).json({
             status: 'success',
-            message: 'Health Habits Updated.',
-            health_habits: updatedHealthHabits,
+            message: 'Routine updated successfully.',
+            routine: existingRoutine,
         });
     }
 
     const newRoutine = await Routine.create({
         userId,
         date: today,
-        health_habits: req.body,
+        ...updateData,
     });
 
     res.status(201).json({
         status: 'success',
-        message: 'Health Habits Created.',
-        health_habits: req.body,
+        message: 'Routine created successfully.',
+        routine: newRoutine,
     });
 });
-
 
 
 exports.getHealthHabits = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-    const today = getLocalDate();
-
-    const routine = await Routine.findOne({ userId, date: today }, { health_habits: 1 });
-
-    if (!routine || !routine.health_habits) {
+    const today = req.query.date || getLocalDate();
+    const routine = await Routine.findOne({ userId, date: today });
+    if (!routine) {
         return res.status(404).json({
             status: 'fail',
-            message: 'No Health Habits Data Found.',
+            message: 'No routine data found for the specified date.',
         });
     }
-
     res.status(200).json({
         status: 'success',
-        message: 'Health Habits Retrieved.',
-        health_habits: routine.health_habits,
+        message: 'Routine data fetched successfully.',
+        routine: {
+            health_habits: routine.health_habits || {},
+            hygiene: routine.hygiene || {},
+            holistic_wellness: routine.holistic_wellness || {},
+            what_new_today: routine.what_new_today || {}
+        }
     });
 });
 
 
-exports.createOrUpdateHygiene = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
+// exports.createOrUpdateHygiene = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
 
-    const existingRoutine = await Routine.findOne({ userId, date: today });
+//     const existingRoutine = await Routine.findOne({ userId, date: today });
 
-    if (existingRoutine) {
-        const updatedHygiene = {
-            ...existingRoutine.hygiene.toObject(),
-            ...req.body,
-        };
+//     if (existingRoutine) {
+//         const updatedHygiene = {
+//             ...existingRoutine.hygiene.toObject(),
+//             ...req.body,
+//         };
 
-        existingRoutine.hygiene = updatedHygiene;
-        await existingRoutine.save();
+//         existingRoutine.hygiene = updatedHygiene;
+//         await existingRoutine.save();
 
-        return res.status(200).json({
-            status: 'success',
-            message: 'Hygiene Data Updated.',
-            hygiene: updatedHygiene,
-        });
-    }
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'Hygiene Data Updated.',
+//             hygiene: updatedHygiene,
+//         });
+//     }
 
-    const newRoutine = await Routine.create({
-        userId,
-        date: today,
-        hygiene: req.body,
-    });
+//     const newRoutine = await Routine.create({
+//         userId,
+//         date: today,
+//         hygiene: req.body,
+//     });
 
-    res.status(201).json({
-        status: 'success',
-        message: 'Hygiene Data Created.',
-        hygiene: req.body,
-    });
-});
-
-
-
-exports.getHygiene = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
-
-    const routine = await Routine.findOne({ userId, date: today }, { hygiene: 1 });
-
-    if (!routine || !routine.hygiene) {
-        return res.status(404).json({
-            status: 'fail',
-            message: 'No Hygiene Data Found.',
-        });
-    }
-
-    res.status(200).json({
-        status: 'success',
-        message: 'Hygiene Data Retrieved.',
-        hygiene: routine.hygiene,
-    });
-});
-
-
-exports.createOrUpdateHolisticWellness = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
-
-    const existingRoutine = await Routine.findOne({ userId, date: today });
-
-    if (existingRoutine) {
-        const updatedHolisticWellness = {
-            ...existingRoutine.holistic_wellness.toObject(),
-            ...req.body,
-        };
-
-        existingRoutine.holistic_wellness = updatedHolisticWellness;
-        await existingRoutine.save();
-
-        return res.status(200).json({
-            status: 'success',
-            message: 'Holistic Wellness Data Updated.',
-            holistic_wellness: updatedHolisticWellness,
-        });
-    }
-
-    const newRoutine = await Routine.create({
-        userId,
-        date: today,
-        holistic_wellness: req.body,
-    });
-
-    res.status(201).json({
-        status: 'success',
-        message: 'Holistic Wellness Data Created.',
-        holistic_wellness: req.body,
-    });
-});
+//     res.status(201).json({
+//         status: 'success',
+//         message: 'Hygiene Data Created.',
+//         hygiene: req.body,
+//     });
+// });
 
 
 
-exports.getHolisticWellness = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
+// exports.getHygiene = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
 
-    const routine = await Routine.findOne({ userId, date: today }, { holistic_wellness: 1 });
+//     const routine = await Routine.findOne({ userId, date: today }, { hygiene: 1 });
 
-    if (!routine || !routine.holistic_wellness) {
-        return res.status(404).json({
-            status: 'fail',
-            message: 'No Holistic Wellness Data Found.',
-        });
-    }
+//     if (!routine || !routine.hygiene) {
+//         return res.status(404).json({
+//             status: 'fail',
+//             message: 'No Hygiene Data Found.',
+//         });
+//     }
 
-    res.status(200).json({
-        status: 'success',
-        message: 'Holistic Wellness Data Retrieved.',
-        holistic_wellness: routine.holistic_wellness,
-    });
-});
-
-
-exports.createOrUpdateWhatNewToday = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
-
-    const existingRoutine = await Routine.findOne({ userId, date: today });
-
-    if (existingRoutine) {
-        const updatedWhatNewToday = {
-            ...existingRoutine.what_new_today.toObject(),
-            ...req.body,
-        };
-
-        existingRoutine.what_new_today = updatedWhatNewToday;
-        await existingRoutine.save();
-
-        return res.status(200).json({
-            status: 'success',
-            message: 'What New Today Data Updated.',
-            what_new_today: updatedWhatNewToday,
-        });
-    }
-
-    const newRoutine = await Routine.create({
-        userId,
-        date: today,
-        what_new_today: req.body,
-    });
-
-    res.status(201).json({
-        status: 'success',
-        message: 'What New Today Data Created.',
-        what_new_today: req.body,
-    });
-});
+//     res.status(200).json({
+//         status: 'success',
+//         message: 'Hygiene Data Retrieved.',
+//         hygiene: routine.hygiene,
+//     });
+// });
 
 
-exports.getWhatNewToday = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const today = getLocalDate();
+// exports.createOrUpdateHolisticWellness = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
 
-    const routine = await Routine.findOne({ userId, date: today }, { what_new_today: 1 });
+//     const existingRoutine = await Routine.findOne({ userId, date: today });
 
-    if (!routine || !routine.what_new_today) {
-        return res.status(404).json({
-            status: 'fail',
-            message: 'No What New Today Data Found.',
-        });
-    }
+//     if (existingRoutine) {
+//         const updatedHolisticWellness = {
+//             ...existingRoutine.holistic_wellness.toObject(),
+//             ...req.body,
+//         };
 
-    res.status(200).json({
-        status: 'success',
-        message: 'What New Today Data Retrieved.',
-        what_new_today: routine.what_new_today,
-    });
-});
+//         existingRoutine.holistic_wellness = updatedHolisticWellness;
+//         await existingRoutine.save();
+
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'Holistic Wellness Data Updated.',
+//             holistic_wellness: updatedHolisticWellness,
+//         });
+//     }
+
+//     const newRoutine = await Routine.create({
+//         userId,
+//         date: today,
+//         holistic_wellness: req.body,
+//     });
+
+//     res.status(201).json({
+//         status: 'success',
+//         message: 'Holistic Wellness Data Created.',
+//         holistic_wellness: req.body,
+//     });
+// });
+
+
+
+// exports.getHolisticWellness = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
+
+//     const routine = await Routine.findOne({ userId, date: today }, { holistic_wellness: 1 });
+
+//     if (!routine || !routine.holistic_wellness) {
+//         return res.status(404).json({
+//             status: 'fail',
+//             message: 'No Holistic Wellness Data Found.',
+//         });
+//     }
+
+//     res.status(200).json({
+//         status: 'success',
+//         message: 'Holistic Wellness Data Retrieved.',
+//         holistic_wellness: routine.holistic_wellness,
+//     });
+// });
+
+
+// exports.createOrUpdateWhatNewToday = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
+
+//     const existingRoutine = await Routine.findOne({ userId, date: today });
+
+//     if (existingRoutine) {
+//         const updatedWhatNewToday = {
+//             ...existingRoutine.what_new_today.toObject(),
+//             ...req.body,
+//         };
+
+//         existingRoutine.what_new_today = updatedWhatNewToday;
+//         await existingRoutine.save();
+
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'What New Today Data Updated.',
+//             what_new_today: updatedWhatNewToday,
+//         });
+//     }
+
+//     const newRoutine = await Routine.create({
+//         userId,
+//         date: today,
+//         what_new_today: req.body,
+//     });
+
+//     res.status(201).json({
+//         status: 'success',
+//         message: 'What New Today Data Created.',
+//         what_new_today: req.body,
+//     });
+// });
+
+
+// exports.getWhatNewToday = catchAsync(async (req, res, next) => {
+//     const userId = req.user.id;
+//     const today = getLocalDate();
+
+//     const routine = await Routine.findOne({ userId, date: today }, { what_new_today: 1 });
+
+//     if (!routine || !routine.what_new_today) {
+//         return res.status(404).json({
+//             status: 'fail',
+//             message: 'No What New Today Data Found.',
+//         });
+//     }
+
+//     res.status(200).json({
+//         status: 'success',
+//         message: 'What New Today Data Retrieved.',
+//         what_new_today: routine.what_new_today,
+//     });
+// });
 
 
 
@@ -1391,4 +1428,15 @@ exports.addReminder = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({ status: 'success', message: 'reminder set successfully' });
+})
+
+
+exports.getNotification = catchAsync(async (req, res, next) => {
+    const userId = req.user.id
+    const notification = await Notification.find({ userId })
+    res.status(200).json({
+        status: 'success',
+        message: 'Notification List.',
+        notification
+    });
 })

@@ -162,8 +162,18 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        const currentData = await Routine.findOne({ date: today, userId }, (`body_data.${metric} -_id`))
-
+        const routine = await Routine.findOne({ date: today, userId });
+        let projectionField;
+        if (routine && routine.body_data && routine.body_data.hasOwnProperty(metric)) {
+            projectionField = `body_data.${metric}`;
+        }
+        else if (routine && routine.body_measurement_parameters && routine.body_measurement_parameters.hasOwnProperty(metric)) {
+            projectionField = `body_measurement_parameters.${metric}`;
+        } 
+        const currentData = await Routine.findOne(
+            { date: today, userId },
+            { [projectionField]: 1, _id: 0 }
+        );
         res.status(200).json({
             status: 'success',
             chart: {
@@ -290,7 +300,6 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
 })
 
 
-
 exports.getNutritions = async (req, res, next) => {
     try {
         const nutritions = await Nutrition.find({ active: true }, ("title description"));
@@ -302,6 +311,7 @@ exports.getNutritions = async (req, res, next) => {
         next(error);
     }
 };
+
 
 exports.getMeals = async (req, res, next) => {
     try {
@@ -328,7 +338,6 @@ exports.getMeals = async (req, res, next) => {
         next(error);
     }
 };
-
 
 
 

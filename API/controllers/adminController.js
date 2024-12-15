@@ -489,6 +489,25 @@ exports.assign = catchAsync(async (req, res, next) => {
     }
 
     const newAssignment = new Asign_User({ asign_user, host });
+
+    const hostdata = await User.findOne({ _id: host })
+    if (newAssignment) {
+        await Notification.create({
+            userId: asign_user,
+            message: `you have been appointed ${hostdata?.name} as coach`,
+            type: "Appointed a coach",
+            status: "sent"
+        });
+    }
+    await Notification.create({
+        userId,
+        message,
+        type: payload?.notification?.title,
+        status: "sent"
+    });
+
+
+
     await newAssignment.save();
 
     res.status(201).json({
