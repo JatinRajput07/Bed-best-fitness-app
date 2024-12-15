@@ -12,6 +12,7 @@ import axios from "axios";
 import PDFPreview from "./PDFPreview";
 import RecommendedVideos from "./RecommendedVideos";
 import AllReminders from "./AllReminders";
+import OtherHyginData from "./OtherHyginData";
 
 export function Profile({ id, closeModal }) {
 
@@ -293,6 +294,7 @@ export function Profile({ id, closeModal }) {
             )}
           </div>
 
+          <OtherHyginData  selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />
 
           <AllReminders userId={userProfile?.user?._id} />
 

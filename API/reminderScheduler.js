@@ -58,9 +58,12 @@ cron.schedule("* * * * *", async () => {
 
 const checkMealReminders = async (user, meals) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
+    const [hours, minutes] = currentTime.split(":");
+    console.log(`${hours}:${minutes}`);
+
     for (let mealType in meals) {
         const meal = meals[mealType];
-        if (meal.enabled && meal.time === currentTime) {
+        if (meal.enabled && meal.time ===  `${hours}:${minutes}`) {
             await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
         }
     }
@@ -70,6 +73,7 @@ const checkWaterReminders = async (user, reminder) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
     console.log(`${hours}:${minutes}`);
+
     const currentMinute = new Date().getMinutes();
 
     console.log(reminder.reminderTime, '=============currentTime========', `${hours}:${minutes}`)
@@ -77,7 +81,7 @@ const checkWaterReminders = async (user, reminder) => {
     if (reminder.reminderType === "once" && reminder.reminderTime === `${hours}:${minutes}`) {
         console.log('water reminder...')
         await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
-    } else if (!reminder.reminderType && reminder.startTime <= currentTime && reminder.endTime >= currentTime) {
+    } else if (!reminder.reminderType && reminder.startTime <= `${hours}:${minutes}` && reminder.endTime >= `${hours}:${minutes}`) {
         const intervalSent = currentMinute % reminder.intervalMinutes === 0;
         const maxTimesReached = reminder.customTimes <= 0;
 
@@ -92,6 +96,8 @@ const checkWaterReminders = async (user, reminder) => {
 
 const checkOtherReminders = async (user, reminder) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
+    const [hours, minutes] = currentTime.split(":");
+    console.log(`${hours}:${minutes}`);
     const currentDay = new Date().toLocaleString("en-US", { weekday: "long" }).toLowerCase();
 
     let reminderMessage = "";
@@ -113,13 +119,13 @@ const checkOtherReminders = async (user, reminder) => {
             reminderMessage = "Reminder!";
     }
 
-    if (reminder.reminderType === "once" && reminder.onceTime === currentTime) {
+    if (reminder.reminderType === "once" && reminder.onceTime === `${hours}:${minutes}`) {
         await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
-    } else if (reminder.reminderType === "everyday" && reminder.everydayTime === currentTime) {
+    } else if (reminder.reminderType === "everyday" && reminder.everydayTime === `${hours}:${minutes}`) {
         await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
     } else if (
         reminder.reminderType === "specificDays" &&
-        reminder.weeklyTimes[currentDay] === currentTime
+        reminder.weeklyTimes[currentDay] === `${hours}:${minutes}`
     ) {
         await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
     }
