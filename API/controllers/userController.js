@@ -798,7 +798,10 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     if (userRole !== "host") {
         return next(new AppError("Only hosts can get details.", 403));
     }
-    const today = getLocalDate();
+    let today = getLocalDate();
+    if (req.query.date) {
+        today = req.query.date
+    }
 
     console.log(userId, today, '=====userId , today===')
 

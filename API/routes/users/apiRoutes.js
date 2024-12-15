@@ -101,7 +101,7 @@ router.patch('/update/:section', updateRoutineSection); // Update routine sectio
 router.patch('/body_data', createBodydata)
 // router.get('/getBodydata', getBodydata)
 
-router.post('/body_measurement', createOrUpdateBodyMeasurement);
+router.patch('/body_measurement', createOrUpdateBodyMeasurement);
 // router.get('/body_measurement', getBodyMeasurement);
 
 // Health Habits

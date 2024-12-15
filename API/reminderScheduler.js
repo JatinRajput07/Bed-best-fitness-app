@@ -68,16 +68,21 @@ const checkMealReminders = async (user, meals) => {
 
 const checkWaterReminders = async (user, reminder) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
+    const [hours, minutes] = currentTime.split(":");
+    console.log(`${hours}:${minutes}`);
     const currentMinute = new Date().getMinutes();
 
-    if (reminder.reminderType === "once" && reminder.reminderTime === currentTime) {
-        await sendPushNotification(user.device_token, "Time to drink water!",user._id, "userApp");
+    console.log(reminder.reminderTime, '=============currentTime========', `${hours}:${minutes}`)
+
+    if (reminder.reminderType === "once" && reminder.reminderTime === `${hours}:${minutes}`) {
+        console.log('water reminder...')
+        await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
     } else if (!reminder.reminderType && reminder.startTime <= currentTime && reminder.endTime >= currentTime) {
         const intervalSent = currentMinute % reminder.intervalMinutes === 0;
         const maxTimesReached = reminder.customTimes <= 0;
 
         if (intervalSent && !maxTimesReached) {
-            await sendPushNotification(user.device_token, "Time to drink water!",user._id, "userApp");
+            await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
 
             reminder.customTimes -= 1;
             await reminder.save();

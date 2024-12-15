@@ -11,13 +11,17 @@ exports.sendPushNotification = async (deviceToken, message, userId, app) => {
       },
     };
 
-    const response = await userApp.messaging().sendToDevice(deviceToken, payload);
     await Notification.create({
       userId,
       message,
       type: payload?.notification?.title,
-      status: success ? "sent" : "failed",
+      status: "sent"
     });
+
+
+
+    const response = await userApp.messaging().sendToDevice(deviceToken, payload);
+   
     console.log("Push notification sent:", response);
   } catch (error) {
     console.error("Error sending push notification:", error);

@@ -5,7 +5,6 @@ const Message = require('./models/Message');
 const reminderScheduler = require('./reminderScheduler');
 
 module.exports = (io) => {
-
     io.on('connection', (socket) => {
         console.log('New client connected:', socket.id);
 
