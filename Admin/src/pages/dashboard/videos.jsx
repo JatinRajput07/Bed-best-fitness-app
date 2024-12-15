@@ -8,11 +8,12 @@ import {
   CardHeader,
   Typography,
   Button,
-  IconButton,
   Dialog,
   DialogBody,
   DialogFooter,
   Checkbox,
+  Input,
+  IconButton,
 } from "@material-tailwind/react";
 import { toast } from "react-hot-toast";
 import { TrashIcon, StarIcon } from "@heroicons/react/24/outline";
@@ -25,6 +26,7 @@ export function Videos() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [recommendationDialogOpen, setRecommendationDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { videos, loading: videoLoading, error: videoError } = useSelector((state) => state.videos);
   const { users, loading: userLoading, error: userError } = useSelector((state) => state.users);
@@ -39,7 +41,7 @@ export function Videos() {
 
   const handleDeleteVideo = (videoId) => {
     axios
-      .delete(`http://43.204.2.84:7200/api/videos/${videoId}`)
+      .delete(`http://43.204.2.84:7200/admin/video-list/${videoId}`)
       .then(() => {
         toast.success("Video deleted successfully!");
         dispatch(fetchVideos());
@@ -74,9 +76,9 @@ export function Videos() {
 
   const renderUsers = () =>
     users
-      .filter((user) => user.role === "user")
+      .filter((user) => user.role === "user" && user.name.toLowerCase().includes(searchQuery.toLowerCase())) // Filter users based on search query
       .map((user) => (
-        <div key={user._id} className="flex items-center gap-2">
+        <div key={user._id} className="flex items-center gap-4 py-2">
           <Checkbox
             checked={selectedUsers.includes(user._id)}
             onChange={() => handleToggleUserSelection(user._id)}
@@ -144,6 +146,13 @@ export function Videos() {
             </Typography>
           </CardHeader>
           <CardBody className="p-4">
+            {/* Search Bar for User List */}
+            <Input
+              label="Search Users"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-4 w-full"
+            />
             {Object.keys(videos).map((category) => {
               const categoryVideos = videos[category];
               return (
@@ -170,16 +179,29 @@ export function Videos() {
                             {media.description || "No description available."}
                           </Typography>
                           <div className="flex justify-between items-center">
-                            {isRecommendedCategory(category) && (
-                              <button onClick={() => {
-                                setSelectedVideo(media?.id);
-                                setRecommendationDialogOpen(true);
-                              }} className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150" type="button"
-                              >
-                                 Asign to User
-                              </button>
 
+                            {isRecommendedCategory(category) && (
+                              <button
+                                onClick={() => {
+                                  setSelectedVideo(media?.id);
+                                  setRecommendationDialogOpen(true);
+                                }}
+                                className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                type="button"
+                              >
+                                Assign to User
+                              </button>
                             )}
+                             <IconButton
+                             style={{
+                              height:"25px",
+                              width:"25px"
+                             }}
+                              color="red"
+                              onClick={() => handleDeleteVideo(media.id)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </IconButton>
                           </div>
                         </CardBody>
                       </Card>
@@ -196,6 +218,16 @@ export function Videos() {
           <Typography variant="h6" className="mb-4">
             Recommend Video to Users
           </Typography>
+
+          {/* Search bar to filter users */}
+          <Input
+            label="Search Users"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="mb-4 w-full"
+          />
+
+          {/* Render filtered users with checkboxes */}
           {renderUsers()}
         </DialogBody>
         <DialogFooter>

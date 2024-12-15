@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const router = express.Router();
 
@@ -24,6 +24,7 @@ router.get('/contacts', getContactUsList)
 router.post('/upload-videos', uploadVideos)
 router.get('/video-list', getVideos)
 router.get('/video-list-byCategory/:category', getVideosByCategoryAndSubcategory)
+router.delete('/video-list/:id', deleteVideo)
 
 
 router.post('/assign', assign)

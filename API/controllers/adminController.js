@@ -16,12 +16,14 @@ const Routine = require("../models/Routine");
 const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
 const Banner = require("../models/Banner");
-const { upload } = require("../utils/UploadFiles");
+const { upload, generateThumbnail } = require("../utils/UploadFiles");
 const multer = require("multer");
 const Recommendation = require("../models/recommendation");
 const MealReminder = require("../models/MealReminder");
 const WaterReminder = require("../models/WaterReminder");
 const Reminder = require("../models/Reminder");
+const path = require("path")
+
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -281,11 +283,7 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
         if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
-
         const { title, category, description, subcategories, filetype, audioThumbnail } = req.body;
-
-        console.log(req.body ,req.files ,'===========================================f=f=f=f=')
-
         if (!category || !subcategories || subcategories.length === 0) {
             return res.status(400).json({
                 status: 'fail',
@@ -305,22 +303,25 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
                 };
                 if (fileType === 'video') {
                     try {
-                        const thumbnailPath = await generateThumbnail(file.path); // Generate thumbnail
+                        const thumbnailPath = await generateThumbnail(file.path);
                         fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailPath)}`;
                     } catch (error) {
                         console.error('Error generating thumbnail:', error);
                     }
                 }
 
-                if (fileType === 'audio' && audioThumbnail) {
-                    const thumbnailFile = req.files.find(f => f.filename === audioThumbnail);
+                if (fileType === 'audio') {
+                    const thumbnailFile = req.files.find(f => f.fieldname === 'audioThumbnail');
                     if (thumbnailFile) {
                         fileData.audioThumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailFile.filename)}`;
                     }
                 }
+
                 return fileData;
             })
         );
+
+        console.log(uploadedFiles, '[---------------------uploadedFiles=------------------]');
 
         // Create a video (or audio) entry in the database
         const media = await Video.create({
@@ -329,7 +330,7 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
             category,
             subcategories, // Store the subcategories as received
             description,
-            filetype,
+            filetype: uploadedFiles[0].mimeType,
             thumbnail: uploadedFiles[0].thumbnail || null, // Store thumbnail if available
             audioThumbnail: uploadedFiles[0].audioThumbnail || null, // Store audio thumbnail if available
         });
@@ -364,6 +365,8 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                         description: "$description",
                         title: "$title",
                         subcategories: "$subcategories",
+                        thumbnail: "$thumbnail",
+                        audioThumbnail: "$audioThumbnail",
                         views: "$views",
                         likes: "$likes",
                         createdAt: "$createdAt"
@@ -428,6 +431,8 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                         title: "$title",
                         views: "$views",
                         likes: "$likes",
+                        thumbnail: "$thumbnail",
+                        audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt"
                     }
                 }
@@ -849,3 +854,20 @@ exports.getAllUserReminders = catchAsync(async (req, res, next) => {
         });
     }
 });
+
+
+
+exports.deleteVideo = catchAsync(async (req, res, next) => {
+    const _id = req.params.id
+    const videos = await Video.findByIdAndDelete(_id)
+    if (videos) {
+        await Recommendation.findOneAndDelete({ video_id: _id })
+    }
+    res.status(201).json({
+        status: 'success',
+        message: 'successfully.',
+        data: videos,
+    });
+})
+
+

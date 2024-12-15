@@ -98,7 +98,7 @@ exports.verifyAccount = catchAsync(async (req, res, next) => {
 
 
 exports.login = catchAsync(async (req, res, next) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, device_type, device_token } = req.body;
     if (!email || !password) {
         return next(new AppError('Please provide email and password!', 400));
     }
@@ -113,7 +113,9 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     const token = signToken(user._id);
-
+    if (device_type, device_token) {
+        await User.findByIdAndUpdate(user?._id, { device_type, device_token });
+    }
     if (user) {
         return res.json({
             status: 'success',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createVideo, fetchVideos } from "@/redux/videoSlice";
+import { createVideo, fetchVideos, resetProgress } from "@/redux/videoSlice";
 import { utilService } from "@/utilService";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
@@ -16,16 +16,13 @@ import {
 const UploadVideo = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { progress, error: uploadError } = useSelector(
-    (state) => state.uploadFiles
-  );
-
+  const { progress, error: uploadError } = useSelector((state) => state.videos);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [file, setFile] = useState(null);
-  const [audioThumbnail, setAudioThumbnail] = useState(null); // State for audio thumbnail
+  const [audioThumbnail, setAudioThumbnail] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -126,7 +123,7 @@ const UploadVideo = () => {
     const selectedThumbnail = e.target.files[0];
     if (selectedThumbnail && selectedThumbnail.type.startsWith("image/")) {
       setAudioThumbnail(selectedThumbnail);
-      setErrors((prevErrors) => ({ ...prevErrors, audioThumbnail: null })); // Clear audio thumbnail error
+      setErrors((prevErrors) => ({ ...prevErrors, audioThumbnail: null }));
     } else {
       setAudioThumbnail(null);
       setErrors((prevErrors) => ({
@@ -161,7 +158,7 @@ const UploadVideo = () => {
           category: category.value,
           subcategories,
           description,
-          audioThumbnail, // Include audio thumbnail in data
+          audioThumbnail,
         })
       ).then((res) => {
         if (res.meta.requestStatus === "fulfilled") {
@@ -173,8 +170,9 @@ const UploadVideo = () => {
           setCategory(null);
           setSubcategories([]);
           setFile(null);
-          setAudioThumbnail(null); // Reset audio thumbnail
+          setAudioThumbnail(null);
           setIsSubmitting(false);
+          dispatch(resetProgress());
         }
       });
     } catch (err) {
@@ -219,9 +217,9 @@ const UploadVideo = () => {
               value={category}
               onChange={(selected) => {
                 setCategory(selected);
-                setSubcategories([]); // Reset subcategories when category changes
-                setFile(null); // Clear file when category changes
-                setAudioThumbnail(null); // Clear audio thumbnail when category changes
+                setSubcategories([]);
+                setFile(null);
+                setAudioThumbnail(null); 
               }}
               options={categoryOptions}
               placeholder="Select a category"
@@ -302,7 +300,7 @@ const UploadVideo = () => {
           </div>
 
           {/* Audio Thumbnail (if audio-related category) */}
-          {category?.value?.includes("audio") && (
+          {["audio", "music", "podcast", "story"].some(item => category?.value?.includes(item)) && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Audio Thumbnail (Image)
@@ -335,7 +333,11 @@ const UploadVideo = () => {
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
           >
-            {isSubmitting ? "Please Wait..." : "Upload File"}
+            {isSubmitting
+              ? progress > 0
+                ? `Uploading... ${progress}%`
+                : "Please Wait..."
+              : "Upload File"}
           </Button>
         </CardBody>
       </Card>

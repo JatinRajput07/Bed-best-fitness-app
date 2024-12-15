@@ -129,29 +129,6 @@ export const routes = () => {
         ],
       }
     ] : []),
-
-
-    {
-      icon: <HomeIcon {...icon} />,
-      name: "Remonders",
-      dropdown: [
-        {
-          name: "Meal",
-          path: "/mealreminder",
-          element: <MealReminder />,
-        },
-        {
-          name: "water",
-          path: "/waterreminder",
-          element: <TermsAndConditions />,
-        },
-        {
-          name: "Community Guidelines",
-          path: "/community_guidelines",
-          element: <Community_guidelines />,
-        },
-      ],
-    },
     {
       icon: <HomeIcon {...icon} />,
       name: "Logout",

@@ -195,7 +195,7 @@ export function Profile({ id, closeModal }) {
                       Weight Goal
                     </Typography>
 
-                    {console.log(data.goals,';====d==d=d=dd=')}
+                    {console.log(data.goals, ';====d==d=d=dd=')}
 
                     <Typography variant="small" className="text-gray-600">
                       {data.goals.weightGoal}
@@ -235,7 +235,9 @@ export function Profile({ id, closeModal }) {
                     </Typography>
                     <Typography variant="small" className="text-gray-600">
                       Water Drank:{" "}
-                      <span className="text-blue-gray-800">{data.goals.water.achieved} L</span>
+                      <span className="text-blue-gray-800">
+                        {data.goals.water.achieved} L ({Math.round((data.goals.water.achieved * 1000) / 250)} glasses)
+                      </span>
                     </Typography>
                     <Typography variant="small" className="text-gray-600">
                       Daily Goal:{" "}
@@ -291,7 +293,7 @@ export function Profile({ id, closeModal }) {
             )}
           </div>
 
-          
+
           <AllReminders userId={userProfile?.user?._id} />
 
           <PDFPreview userProfile={userProfile} />

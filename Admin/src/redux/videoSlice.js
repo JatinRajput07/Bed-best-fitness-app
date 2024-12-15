@@ -13,39 +13,50 @@ export const fetchVideos = createAsyncThunk('admin/video-list', async (_, { reje
   }
 });
 
-
+// Async thunk for creating/uploading a new video
 export const createVideo = createAsyncThunk(
   'admin/upload-videos',
-  async (data, { rejectWithValue }) => {
+  async (data, { dispatch, rejectWithValue }) => {
+
+
+    console.log(data, '=========================videos=============================')
+
     try {
       const formData = new FormData();
 
+      // Append all necessary fields to the FormData object
       formData.append('title', data.title);
       formData.append('category', data.category);
       formData.append('description', data.description);
-      formData.append('filetype', data.filetype); 
-      formData.append('subcategories', JSON.stringify(data.subcategories)); 
+      formData.append('filetype', data.filetype);  // This helps identify whether it's a video, audio, etc.
+      formData.append('subcategories', data.subcategories?.value);  // Ensure subcategories is an array or object
 
+      // Append the file(s) - video, audio, or both
       if (data.file) {
-        formData.append('file', data.file);
+        formData.append('file', data.file);  // Video or audio file
       }
 
-
-      if (data.filetype === 'audio' && data.audioThumbnail) {
-        formData.append('audioThumbnail', data.audioThumbnail); 
+      // If there is an audio thumbnail (for audio files), add it to the formData
+      if (data.audioThumbnail && data.audioThumbnail !== null) {
+        formData.append('audioThumbnail', data.audioThumbnail);  // Audio thumbnail
       }
 
+      // Make the API request to upload the video/audio
       const response = await Axios.post('/admin/upload-videos', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          dispatch(updateProgress(progress));
+        },
       });
 
-      return response.data.video || response.data.audio;
+      return response.data.video || response.data.audio;  // Returning the uploaded video or audio details
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred.';
-      utilService.showErrorToast(errorMessage); 
-      return rejectWithValue(errorMessage); 
+      utilService.showErrorToast(errorMessage);  // Show error toast for the user
+      return rejectWithValue(errorMessage);  // Return error message in case of failure
     }
   }
 );
@@ -58,8 +69,18 @@ const videoSlice = createSlice({
     videos: [], // Ensure this is an array
     loading: false,
     error: null,
+    progress: 0,
   },
-  reducers: {}, // You can add any sync reducers if needed
+  reducers: {
+    resetProgress: (state) => {
+      state.progress = 0;
+      state.error = null;
+      state.filePath = null;
+    },
+    updateProgress: (state, action) => {
+      state.progress = action.payload;
+    },
+  }, // You can add any sync reducers if needed
   extraReducers: (builder) => {
     // Handling the fetchVideos action states
     builder
@@ -81,6 +102,7 @@ const videoSlice = createSlice({
     builder
       .addCase(createVideo.pending, (state) => {
         state.loading = true; // Show loading when creating a video
+        state.progress = 0;
       })
       .addCase(createVideo.fulfilled, (state, action) => {
         state.loading = false;
@@ -92,8 +114,11 @@ const videoSlice = createSlice({
       })
       .addCase(createVideo.rejected, (state) => {
         state.loading = false; // Stop loading if the video creation failed
+        state.progress = 0;
       });
   },
 });
 
+
+export const { resetProgress, updateProgress } = videoSlice.actions;
 export default videoSlice.reducer;

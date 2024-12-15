@@ -9,8 +9,10 @@ import {
 } from "@material-tailwind/react";
 import { useState } from "react";
 import { useMaterialTailwindController, setOpenSidenav } from "@/context";
+import { useSelector } from "react-redux";
 
 export function Sidenav({ brandImg, brandName, routes }) {
+  const { role } = useSelector((state) => state.auth);
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavColor, sidenavType, openSidenav } = controller;
   const [openDropdown, setOpenDropdown] = useState(null); // For dropdown state
@@ -37,6 +39,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
             color={sidenavType === "dark" ? "white" : "blue-gray"}
           >
             <img className="m-auto" width={"100px"} src="/free-logo.png" alt="" />
+            <span>{role === "host" ? "Coach" : "Admin"}</span>
           </Typography>
         </Link>
         <IconButton

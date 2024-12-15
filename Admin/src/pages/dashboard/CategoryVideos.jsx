@@ -17,9 +17,11 @@ import {
 import axios from "axios";
 import { TrashIcon, StarIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchVideos } from "@/redux/videoSlice";
 
 const CategoryVideos = ({ category_name, onGoBack }) => {
+    const dispatch = useDispatch();
     const [categoryData, setCategoryData] = useState({});
     const [selectedTab, setSelectedTab] = useState("All");
     const [filteredVideos, setFilteredVideos] = useState([]);
@@ -82,11 +84,16 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
         }
     };
 
+   
+
     const handleDeleteVideo = (videoId) => {
+
+        console.log(videoId, '====videoId===')
         axios
-            .delete(`http://43.204.2.84:7200/api/videos/${videoId}`)
+            .delete(`http://43.204.2.84:7200/admin/video-list/${videoId}`)
             .then(() => {
                 toast.success("Video deleted successfully!");
+                dispatch(fetchVideos());
                 // Update the category data after deletion
                 setCategoryData((prevData) => {
                     const updatedData = { ...prevData };
@@ -96,7 +103,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                     return updatedData;
                 });
             })
-            .catch(() => toast.error("Error deleting video."));
+            .catch((err) => console.log(err,"d=f=ff=ff=fff"));
     };
 
     const handleRecommendVideo = () => {
@@ -201,12 +208,16 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                                             </Typography>
                                         )}
                                         <div className="flex justify-between items-center mt-4">
-                                            {/* <IconButton
+                                            <IconButton
+                                                style={{
+                                                    height: "25px",
+                                                    width: "25px"
+                                                }}
                                                 color="red"
-                                                onClick={() => handleDeleteVideo(media._id)}
+                                                onClick={() => handleDeleteVideo(media.id)}
                                             >
-                                                <TrashIcon className="h-5 w-5" />
-                                            </IconButton> */}
+                                                <TrashIcon className="h-4 w-4" />
+                                            </IconButton>
                                             {isRecommendedCategory(category_name) && (
                                                 <IconButton
                                                     color="yellow"
