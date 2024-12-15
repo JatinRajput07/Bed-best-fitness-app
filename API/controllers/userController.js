@@ -152,6 +152,8 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             email,
             isVerified: true,
             role: role || 'user',
+        },{
+            runValidators:false
         });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
