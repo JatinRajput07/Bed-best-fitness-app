@@ -130,7 +130,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
-    const { socialId, socialType, email, role } = req.body;
+    const { socialId, socialType, email, role,device_type, device_token } = req.body;
     if (!socialId || !socialType) {
         return res.status(400).json({
             status: 'fail',
@@ -153,6 +153,8 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             isVerified: true,
             phone:"0000000000",
             role: role || 'user',
+            device_type, 
+            device_token
         });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
