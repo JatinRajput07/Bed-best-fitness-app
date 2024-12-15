@@ -134,6 +134,10 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const { date } = req.query;
 
+
+    console.log('nkdnkdnfkdnfdf')
+
+
     if (!date) {
         return next(new AppError('Date is required', 400));
     }
@@ -144,7 +148,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     }
     const userRoutine = await Routine.findOne({ userId, date });
     if (!userRoutine) {
-        return next(new AppError('Routine for the given date not found', 400)); s
+        return next(new AppError('Routine for the given date not found', 400));
     }
 
     const calculatePercentage = (achieved, target) => {
@@ -167,18 +171,42 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
 
     const currentWeight = userRoutine.body_data?.health_log_parameters?.currentWeight || null;
     const goalWeight = userGoal.weightGoal?.goalWeight || null;
+    const weightLeft = goalWeight && currentWeight ? goalWeight - currentWeight : null;
     const weightGoalStatus = currentWeight
-        ? `${currentWeight} kg (Goal: ${goalWeight} kg)`
+        ? `${currentWeight} kg (Goal: ${goalWeight} kg, Remaining: ${weightLeft > 0 ? weightLeft + ' kg' : 'Achieved'})`
         : 'Weight not updated';
 
     const mealCategories = Object.keys(userRoutine.meal || {});
+
+    // Replace meal item IDs with their titles
+    for (const category of mealCategories) {
+        const mealData = userRoutine.meal[category];
+        const itemIds = mealData?.items || [];
+        if (itemIds.length) {
+            const items = await Meal.find({ _id: { $in: itemIds } }).select('item');
+            userRoutine.meal[category].items = items.map(item => item.item); // Replace IDs with titles
+        }
+    }
+
+    const nutritionItems = userRoutine.nutrition.map(n => n.item);
+    if (nutritionItems.length) {
+        const nutritionTitles = await Nutrition.find({ _id: { $in: nutritionItems } }).select('title');
+        userRoutine.nutrition = userRoutine.nutrition.map(n => {
+            const titleObj = nutritionTitles.find(t => t._id.equals(n.item));
+            return {
+                ...n,
+                item: titleObj ? titleObj.title : n.item, // Replace ID with title
+            };
+        });
+    }
+
     const mealReport = mealCategories.map(category => {
         const mealData = userRoutine.meal[category];
         return {
             category,
             status: mealData?.status || 'N/A',
             note: mealData?.note || 'No notes',
-            items: mealData?.items || {},
+            items: mealData?.items || [],
         };
     });
 
@@ -213,6 +241,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
 
     res.status(200).json(response);
 });
+
 
 
 exports.getCms = catchAsync(async (req, res, next) => {

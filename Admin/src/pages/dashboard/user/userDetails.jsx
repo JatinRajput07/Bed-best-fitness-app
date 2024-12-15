@@ -294,7 +294,10 @@ export function Profile({ id, closeModal }) {
             )}
           </div>
 
-          <OtherHyginData  selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />
+          <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />
+
+
+          {console.log(userProfile, '=========userProfile====')}
 
           <AllReminders userId={userProfile?.user?._id} />
 

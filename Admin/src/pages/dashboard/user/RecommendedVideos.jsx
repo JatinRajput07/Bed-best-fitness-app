@@ -63,11 +63,11 @@ function RecommendedVideos({ userId }) {
       <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
         {videos.map(({ video_id }, key) => (
           <Card
-            key={video_id._id}
+            key={video_id?._id}
             color="transparent"
             shadow={false}
             className="cursor-pointer"
-            onClick={() => setSelectedVideo(video_id.path)}
+            onClick={() => setSelectedVideo(video_id?.path)}
           >
             <CardHeader
               floated={false}
@@ -76,12 +76,12 @@ function RecommendedVideos({ userId }) {
             >
               <img
                 src="https://via.placeholder.com/300x200.png?text=Thumbnail"
-                alt={video_id.title}
+                alt={video_id?.title}
                 className="h-full w-full object-cover"
               />
             </CardHeader>
             <Typography variant="subtitle1" className="text-center mt-2">
-              {video_id.title}
+              {video_id?.title}
             </Typography>
           </Card>
         ))}

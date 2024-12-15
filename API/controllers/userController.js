@@ -130,7 +130,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
-    const { socialId, socialType, email, name, phone, role } = req.body;
+    const { socialId, socialType, email, role } = req.body;
     if (!socialId || !socialType) {
         return res.status(400).json({
             status: 'fail',
@@ -140,18 +140,16 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
 
     let user = await User.findOne({ socialId, socialType });
     if (!user) {
-        if (!email || !name) {
+        if (!email) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'Email and name are required for new user creation',
+                message: 'Email required for new user creation',
             });
         }
         user = await User.create({
             socialId,
             socialType,
             email,
-            name,
-            phone,
             isVerified: true,
             role: role || 'user',
         });

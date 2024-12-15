@@ -1,4 +1,4 @@
-import { HomeIcon, UserIcon, VideoCameraIcon, DocumentTextIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, UserIcon, VideoCameraIcon, DocumentTextIcon, ListBulletIcon, ArchiveBoxIcon } from "@heroicons/react/24/solid";
 import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 import { Logout } from "@/pages/auth";
 import Videos from "./pages/dashboard/videos";
@@ -16,6 +16,7 @@ import MealForm from "./pages/dashboard/MealAndNutrition/MealForm";
 import Nutrition from "./pages/dashboard/MealAndNutrition/NutritionForm";
 import CategoryManager from "./pages/CategoryManager";
 import MealReminder from "./pages/testing/mealreminder";
+import { ArrowLeftIcon } from "@mui/x-date-pickers";
 
 
 const icon = {
@@ -51,7 +52,7 @@ export const routes = () => {
       // ],
     },
     {
-      icon: <HomeIcon {...icon} />,
+      icon: <ArchiveBoxIcon {...icon} />,
       name: "Meal And Nutrition",
       dropdown: [
         {
@@ -67,7 +68,7 @@ export const routes = () => {
       ],
     },
     {
-      icon: <HomeIcon {...icon} />,
+      icon: <ListBulletIcon {...icon} />,
       name: "Categories",
       path: "/categories",
       element: <CategoryManager />,
@@ -130,7 +131,7 @@ export const routes = () => {
       }
     ] : []),
     {
-      icon: <HomeIcon {...icon} />,
+      icon: <ArrowLeftIcon {...icon} />,
       name: "Logout",
       path: "/logout",
       element: <Logout />,

@@ -54,7 +54,8 @@ const AllReminders = ({ userId }) => {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                minHeight="60vh"
+                minHeight="10vh"
+                maxHeight="10vh"
                 textAlign="center"
             >
                 <Typography variant="h6" color="text.secondary">
@@ -83,12 +84,12 @@ const AllReminders = ({ userId }) => {
     };
 
     const renderReminderDetails = (reminder) => {
-        const { bg, chipBg, chipColor } = getReminderColor(reminder.type);
+        const { bg, chipBg, chipColor } = getReminderColor(reminder?.type);
         return (
             <Grid item xs={12} sm={6} md={4} key={reminder._id}>
                 <Card sx={{ position: "relative", backgroundColor: bg, boxShadow: 3 }}>
                     <Chip
-                        label={reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1)}
+                        label={reminder?.type.charAt(0).toUpperCase() + reminder?.type.slice(1)}
                         size="small"
                         sx={{
                             position: "absolute",
@@ -101,12 +102,12 @@ const AllReminders = ({ userId }) => {
                     />
                     <CardContent sx={{ height: "100%" }}>
                         <Typography variant="h6" sx={{ fontWeight: "medium", mb: 2 }}>
-                            {reminder.type === "meal" ? "Meal Schedule" : `${reminder.type} Reminder`}
+                            {reminder?.type === "meal" ? "Meal Schedule" : `${reminder?.type} Reminder`}
                         </Typography>
 
                         {/* Render Meal Details */}
-                        {reminder.type === "meal" &&
-                            Object.entries(reminder.meals || {}).map(
+                        {reminder?.type === "meal" &&
+                            Object.entries(reminder?.meals || {}).map(
                                 ([meal, details]) =>
                                     details.enabled && (
                                         <Box
