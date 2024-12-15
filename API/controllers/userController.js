@@ -153,8 +153,6 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             isVerified: true,
             phone:"0000000000",
             role: role || 'user',
-        },{
-            runValidators:false
         });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
