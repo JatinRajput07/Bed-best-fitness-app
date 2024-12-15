@@ -151,6 +151,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             socialType,
             email,
             isVerified: true,
+            phone:"0000000000",
             role: role || 'user',
         },{
             runValidators:false
