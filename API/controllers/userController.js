@@ -285,7 +285,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     const filteredBody = filterObj(req.body, 'email', 'AadharNo', 'ABHA_No', 'password', 'role');
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new: true,
-        runValidators: false
+        runValidators: true
     });
     res.status(200).json({
         status: 'success',
