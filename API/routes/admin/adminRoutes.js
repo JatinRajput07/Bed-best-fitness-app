@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const router = express.Router();
 
@@ -69,5 +69,7 @@ router
 
 router.get('/getUserRecomenedVideo/:id', getUserRecomenedVideo)
 router.get('/user/reminders/:id', getAllUserReminders);
+
+router.get('/getHealthHabits/:id',getHealthOtherdata)
 
 module.exports = router;

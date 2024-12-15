@@ -517,6 +517,29 @@ exports.assign = catchAsync(async (req, res, next) => {
 });
 
 
+exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
+    const userId = req.params.id;
+    const today = req.query.date || getLocalDate();
+    const routine = await Routine.findOne({ userId, date: today });
+    if (!routine) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No routine data found for the specified date.',
+        });
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Routine data fetched successfully.',
+        routine: {
+            health_habits: routine.health_habits || {},
+            hygiene: routine.hygiene || {},
+            holistic_wellness: routine.holistic_wellness || {},
+            what_new_today: routine.what_new_today || {}
+        }
+    });
+});
+
+
 exports.getassign = catchAsync(async (req, res, next) => {
     const assignments = await Asign_User.find()
         .populate('asign_user', 'name email')
