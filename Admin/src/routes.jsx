@@ -1,4 +1,4 @@
-import { HomeIcon, UserIcon, VideoCameraIcon, DocumentTextIcon, ListBulletIcon, ArchiveBoxIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, UserIcon, VideoCameraIcon, DocumentTextIcon, ListBulletIcon, ArchiveBoxIcon, CameraIcon } from "@heroicons/react/24/solid";
 import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 import { Logout } from "@/pages/auth";
 import Videos from "./pages/dashboard/videos";
@@ -17,6 +17,7 @@ import Nutrition from "./pages/dashboard/MealAndNutrition/NutritionForm";
 import CategoryManager from "./pages/CategoryManager";
 import MealReminder from "./pages/testing/mealreminder";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
+import Meeting from "./pages/dashboard/Meeting";
 
 
 const icon = {
@@ -72,6 +73,13 @@ export const routes = () => {
       name: "Categories",
       path: "/categories",
       element: <CategoryManager />,
+    },
+
+    {
+      icon: <CameraIcon {...icon} />,
+      name: "Meeting",
+      path: "/meeting",
+      element: <Meeting />,
     },
 
 

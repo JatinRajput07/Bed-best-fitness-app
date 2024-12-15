@@ -3,11 +3,13 @@ const Notification = require('../models/Notification');
 
 // Firebase push notification service
 exports.sendPushNotification = async (deviceToken, msg, userId, app) => {
+
+  console.log(deviceToken, msg, userId, app, '=========msg============')
   try {
     const message = {
       notification: {
         title: "Reminder",
-        body: msg,
+        body: msg
       },
       data: {
         type: "Reminder"

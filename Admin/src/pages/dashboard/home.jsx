@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Typography,
   Card,
@@ -18,16 +18,81 @@ import {
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { StatisticsCard } from "@/widgets/cards";
-import { StatisticsChart } from "@/widgets/charts";
 import {
-  statisticsCardsData,
-  statisticsChartsData,
-  projectsTableData,
-  ordersOverviewData,
-} from "@/data";
-import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+  CheckCircleIcon,
+  ClockIcon,
+  BanknotesIcon,
+  UsersIcon,
+  UserPlusIcon,
+  ChartBarIcon,
+  ArchiveBoxIcon,
+  FilmIcon,
+} from "@heroicons/react/24/solid";
+import { StatisticsChart } from "@/widgets/charts";
+import { statisticsChartsData } from "@/data";
 
 export function Home() {
+  const [statisticsCardsData, setStatisticsCardsData] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from API
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:7200/admin/dashboard");
+        const data = await response.json();
+        if (data.status === "success") {
+          // Transform API data to match the required structure
+          const apiData = [
+            {
+              color: "gray",
+              icon: UsersIcon,
+              title: "Users",
+              value: data.data.users,
+              footer: {
+                color: "text-green-500",
+             
+              },
+            },
+            {
+              color: "gray",
+              icon: UserPlusIcon,
+              title: "Coaches",
+              value: data.data.coach,
+              footer: {
+                color: "text-green-500",
+              
+              },
+            },
+            {
+              color: "gray",
+              icon: ArchiveBoxIcon,
+              title: "Meal & Nutrition",
+              value: data.data.meal + data.data.nutrition,
+              footer: {
+                color: "text-green-500",
+              
+              },
+            },
+            {
+              color: "gray",
+              icon: FilmIcon,
+              title: "Videos",
+              value: data.data.videos,
+              footer: {
+                
+              },
+            },
+          ];
+          setStatisticsCardsData(apiData);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="mt-12">
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">

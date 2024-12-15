@@ -22,7 +22,9 @@ const Recommendation = require("../models/recommendation");
 const MealReminder = require("../models/MealReminder");
 const WaterReminder = require("../models/WaterReminder");
 const Reminder = require("../models/Reminder");
-const path = require("path")
+const path = require("path");
+const Meeting = require("../models/Meeting");
+const { sendPushNotification } = require("../utils/firebaseService");
 
 
 const signToken = id => {
@@ -496,16 +498,21 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
 
 
 exports.dashboard = catchAsync(async (req, res, next) => {
-    const [videoCount, userCount] = await Promise.all([
+    const [videoCount, userCount, coach, meal, nutrition] = await Promise.all([
         Video.countDocuments().exec(),
-        User.countDocuments().exec(),
+        User.countDocuments({ "role": "user" }).exec(),
+        User.countDocuments({ "role": "host" }).exec(),
+        Meal.countDocuments().exec(),
+        Nutrition.countDocuments().exec()
     ]);
-
     return res.status(200).json({
         status: 'success',
         data: {
             videos: videoCount,
             users: userCount,
+            coach: coach,
+            meal: meal,
+            nutrition: nutrition
         },
     });
 });
@@ -942,3 +949,175 @@ exports.deleteVideo = catchAsync(async (req, res, next) => {
 })
 
 
+exports.getGoalAnalytics = catchAsync(async (req, res, next) => {
+    let { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        const currentDate = new Date();
+        endDate = currentDate.toISOString().split('T')[0]; // Current date as YYYY-MM-DD
+        const pastDate = new Date();
+        pastDate.setDate(currentDate.getDate() - 20); // 20 days back
+        startDate = pastDate.toISOString().split('T')[0];
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate)
+
+    // Fetch all users with role 'user'
+    const users = await User.find({ role: 'user' }).select('_id');
+    const userIds = users.map(user => user._id);
+
+    // Fetch routines within the date range for all users
+    const routines = await Routine.find({
+        userId: { $in: userIds },
+        date: { $gte: start, $lte: end },
+    });
+
+    // Fetch goals for all users
+    const goals = await Goal.find({ userId: { $in: userIds } });
+
+    const calculatePercentage = (achieved, target) => {
+        if (!target || target === 0) return 0;
+        return Math.min((achieved / target) * 100, 100);
+    };
+
+    const dailySummary = {};
+
+    routines.forEach(routine => {
+        const { date, userId } = routine;
+        const userGoal = goals.find(goal => goal.userId.equals(userId));
+        if (!userGoal) return;
+
+        const day = date.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
+
+        if (!dailySummary[day]) {
+            dailySummary[day] = {
+                steps: 0,
+                water: 0,
+                nutrition: 0,
+                totalUsers: 0,
+            };
+        }
+
+        dailySummary[day].totalUsers++;
+
+        const stepsAchieved = parseInt(routine.steps?.steps || 0, 10);
+        const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
+        if (calculatePercentage(stepsAchieved, stepsTarget) >= 100) {
+            dailySummary[day].steps++;
+        }
+
+        const waterAchieved = parseInt(routine.water?.qty || 0, 10);
+        const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
+        if (calculatePercentage(waterAchieved, waterTarget) >= 100) {
+            dailySummary[day].water++;
+        }
+
+        const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
+        const nutritionAchieved = nutritionDoses.filter(dose => routine.nutrition[dose] === 'take').length;
+        const nutritionTarget = nutritionDoses.length;
+        if (calculatePercentage(nutritionAchieved, nutritionTarget) >= 100) {
+            dailySummary[day].nutrition++;
+        }
+    });
+
+    // Extract categories (dates) and series data
+    const categories = Object.keys(dailySummary).sort();
+    const stepsData = categories.map(date => dailySummary[date].steps);
+    const waterData = categories.map(date => dailySummary[date].water);
+    const nutritionData = categories.map(date => dailySummary[date].nutrition);
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            categories, // List of dates
+            series: [
+                { name: 'Steps', data: stepsData },
+                { name: 'Water', data: waterData },
+                { name: 'Nutrition', data: nutritionData },
+            ],
+        },
+    });
+});
+
+
+
+exports.createMeeting = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+        const { googleMeetLink, roles, meetingDate, meetingTime, } = req.body;
+        if (!googleMeetLink || !roles || roles.length === 0) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Google Meet link and roles are required.',
+            });
+        }
+        const uploadedFiles = await Promise.all(
+            req.files.map(async (file) => {
+                const fileType = file.mimetype.split('/')[0];
+                const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+                const fileData = {
+                    fileName: file.filename,
+                    path: filePath,
+                    mimeType: fileType,
+                };
+                return fileData;
+            })
+        );
+
+        const newMeeting = await Meeting.create({
+            googleMeetLink,
+            image: uploadedFiles[0].path,
+            roles,
+            meetingDate,
+            meetingTime,
+        });
+
+        if (newMeeting) {
+            let usersToNotify = [];
+            if (roles.includes('user')) {
+                const users = await User.find({ role: 'user' });
+                usersToNotify = [...usersToNotify, ...users];
+            }
+
+            if (roles.includes('coach')) {
+                const coaches = await User.find({ role: 'coach' });
+                usersToNotify = [...usersToNotify, ...coaches];
+            }
+
+            for (const user of usersToNotify) {
+                const reminderMessage = `You have a meeting scheduled on ${meetingDate} at ${meetingTime}.`;
+                await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
+            }
+            return res.status(200).json({
+                status: 'success',
+                message: 'Meeting created and notifications sent successfully.',
+                meeting: newMeeting,
+            });
+        } else {
+            return res.status(500).json({
+                status: 'fail',
+                message: 'Failed to create the meeting.',
+            });
+        }
+    });
+});
+
+
+exports.getMeeting = catchAsync(async (req, res, next) => {
+    const meeting = await Meeting.find({}).sort({ createdAt: -1 })
+    if (meeting) {
+        res.status(200).json({
+            status: 'success',
+            meeting
+        });
+    }
+});
