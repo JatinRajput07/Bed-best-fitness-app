@@ -2,6 +2,9 @@ import PropTypes from "prop-types";
 import { Card, CardHeader, CardBody, Input, Typography } from "@material-tailwind/react";
 
 export function ProfileInfoCard({ user }) {
+
+  console.log(user, ' ========')
+
   if (!user) {
     return (
       <Card color="transparent" shadow={false} className="border-blue-gray-100 rounded-lg">
@@ -41,6 +44,12 @@ export function ProfileInfoCard({ user }) {
     { label: "Relation With SOS", value: user?.RelationWithSOS },
     { label: "Date of Birth", value: user?.DOB },
     { label: "Gender", value: user?.Gender },
+
+
+    { label: "ADS ID", value: user?.additionalInfo?.ADS_id },
+    { label: "Address", value: user ?.additionalInfo?.address },
+    { label: "Batch No.", value: user?.additionalInfo?.batchNo },
+    { label: "Joining Date", value: user?.additionalInfo?.joiningDate.split('T')[0] },
   ];
 
   const filteredUserInfo = userInfo.filter(field => field.value !== null && field.value !== undefined && field.value !== "");

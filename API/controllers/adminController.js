@@ -136,9 +136,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const { date } = req.query;
 
-
-    console.log('nkdnkdnfkdnfdf')
-
+    console.log('Getting user routine...');
 
     if (!date) {
         return next(new AppError('Date is required', 400));
@@ -148,6 +146,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     if (!userGoal) {
         return next(new AppError('User goal not found', 400));
     }
+
     const userRoutine = await Routine.findOne({ userId, date });
     if (!userRoutine) {
         return next(new AppError('Routine for the given date not found', 400));
@@ -166,9 +165,8 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
     const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
 
-    const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
-    const nutritionAchieved = nutritionDoses.filter(dose => userRoutine.nutrition[dose] === 'take').length;
-    const nutritionTarget = nutritionDoses.length;
+    const nutritionAchieved = userRoutine.nutrition.filter(n => n.status === 'take').length;
+    const nutritionTarget = userRoutine.nutrition.length;
     const nutritionPercentage = calculatePercentage(nutritionAchieved, nutritionTarget);
 
     const currentWeight = userRoutine.body_data?.health_log_parameters?.currentWeight || null;
@@ -208,6 +206,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
             category,
             status: mealData?.status || 'N/A',
             note: mealData?.note || 'No notes',
+            image:mealData?.image || '',
             items: mealData?.items || [],
         };
     });
@@ -243,6 +242,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
 
     res.status(200).json(response);
 });
+
 
 
 

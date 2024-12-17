@@ -130,7 +130,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
-    const { socialId, socialType, email, role,device_type, device_token } = req.body;
+    const { socialId, socialType, email, role, device_type, device_token } = req.body;
     if (!socialId || !socialType) {
         return res.status(400).json({
             status: 'fail',
@@ -151,9 +151,9 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             socialType,
             email,
             isVerified: true,
-            phone:"0000000000",
+            phone: "0000000000",
             role: role || 'user',
-            device_type, 
+            device_type,
             device_token
         });
     }
@@ -223,25 +223,32 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
 
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
-    const { otp, email } = req.body;
-    // const hashedToken = crypto.SHA256(req.params.token).toString(crypto.enc.Hex);
-    // const hashedToken = req.params.otp
+    const { otp, email, password } = req.body;
+
+    // Validate input
+    if (!otp || !email || !password) {
+        return next(new AppError("OTP, email, and password are required", 400));
+    }
+
     const user = await User.findOne({
         email: email,
         passwordResetToken: otp,
+        passwordResetExpires: { $gt: Date.now() },
     });
 
-    // if (!user) {
-    //     return next(new AppError('Token is invalid or has expired', 400));
-    // }
+    if (!user) {
+        return next(new AppError("Invalid or expired OTP", 400));
+    }
 
-    user.password = req.body.password;
+    // Update the password and clear the reset token
+    user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+
     res.status(200).json({
-        status: 'success',
-        message: 'Password has been reset successfully'
+        status: "success",
+        message: "Password has been reset successfully",
     });
 });
 
@@ -809,7 +816,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     if (userRole !== "host") {
         return next(new AppError("Only hosts can get details.", 403));
     }
-    
+
     let today = getLocalDate();
     if (req.query.date) {
         today = req.query.date;

@@ -13,6 +13,7 @@ import PDFPreview from "./PDFPreview";
 import RecommendedVideos from "./RecommendedVideos";
 import AllReminders from "./AllReminders";
 import OtherHyginData from "./OtherHyginData";
+import MealCard from "./MealCard";
 
 export function Profile({ id, closeModal }) {
 
@@ -34,7 +35,7 @@ export function Profile({ id, closeModal }) {
     try {
       const formattedDate = date.toISOString().split("T")[0];
       const response = await axios.get(
-        `http://43.204.2.84:7200/admin/user-daily-report/${id}`,
+        `http://localhost:7200/admin/user-daily-report/${id}`,
         {
           params: { date: formattedDate },
         }
@@ -88,7 +89,7 @@ export function Profile({ id, closeModal }) {
             </div>
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-0 xl:grid-cols-0">
-            <div>
+            {userProfile?.user?.role === 'user' && <div>
               {/* Goals Section */}
               <Typography variant="h6" color="blue-gray" className="mb-4">
                 Your Fitness Goals
@@ -154,13 +155,13 @@ export function Profile({ id, closeModal }) {
                   </div>
                 </Card>
               </div>
-            </div>
+            </div>}
 
 
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
-          <div>
+          {userProfile?.user?.role === 'user' && <div>
             {/* Calendar Filter */}
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Typography variant="h6" color="blue-gray" className="mb-4">
@@ -269,41 +270,56 @@ export function Profile({ id, closeModal }) {
                       shadow={false}
                       className="p-6 border border-gray-200 rounded-lg mb-4"
                     >
-                      <Typography variant="h6" color="blue-gray" className="mb-2">
-                        {meal.category.replace("_", " ").toUpperCase()}
-                      </Typography>
-                      <Typography variant="small" className="text-gray-600">
-                        Status: <span className="text-blue-gray-800">{meal.status}</span>
-                      </Typography>
-                      <Typography variant="small" className="text-gray-600">
-                        Note: <span className="text-blue-gray-800">{meal.note}</span>
-                      </Typography>
-                      <ul className="list-disc pl-6 mt-2">
-                        {Object.entries(meal.items).map(([key, item]) => (
-                          <li key={item._id} className="text-gray-600">
-                            {key.replace("_", " ")}: {item}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="flex items-center gap-4">
+                        {/* Meal Details */}
+                        <div className="flex-1">
+                          <Typography variant="h6" color="blue-gray" className="mb-2">
+                            {meal.category.replace("_", " ").toUpperCase()}
+                          </Typography>
+                          <Typography variant="small" className="text-gray-600">
+                            Status: <span className="text-blue-gray-800">{meal.status}</span>
+                          </Typography>
+                          <Typography variant="small" className="text-gray-600">
+                            Note: <span className="text-blue-gray-800">{meal.note}</span>
+                          </Typography>
+                          <ul className="list-disc pl-6 mt-2">
+                            {Object.entries(meal.items).map(([key, item]) => (
+                              <li key={item._id} className="text-gray-600">
+                                {key.replace("_", " ")}: {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Meal Image */}
+                        <div className="flex-shrink-0 w-32 h-32">
+                          <MealCard meal={meal} />
+                          {/* <img
+                            src={meal?.image ? meal?.image : `http://43.204.2.84:7200/uploads/images/1734288231651-vegetables-155616_640.png`}
+                            alt={`${meal.category} image`}
+                            className="w-full h-full object-cover rounded-lg"
+                          /> */}
+                        </div>
+                      </div>
                     </Card>
                   ))}
                 </div>
+
+
               </div>
             ) : (
               <div>No data available for the selected date.</div>
             )}
-          </div>
+          </div>}
 
-          <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />
+          {userProfile?.user?.role === 'user' && <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />}
 
 
-          {console.log(userProfile, '=========userProfile====')}
+          {userProfile?.user?.role === 'user' && <AllReminders userId={userProfile?.user?._id} />}
 
-          <AllReminders userId={userProfile?.user?._id} />
+          {userProfile?.user?.role === 'user' && <PDFPreview userProfile={userProfile} />}
 
-          <PDFPreview userProfile={userProfile} />
-
-          <RecommendedVideos userId={userProfile?.user?._id} />
+          {userProfile?.user?.role === 'user' && <RecommendedVideos userId={userProfile?.user?._id} />}
 
         </CardBody>
       </Card>
