@@ -12,14 +12,14 @@ const Axios = axios.create({
 // Request interceptor to attach token
 Axios.interceptors.request.use(
     (config) => {
-        const token = Cookies.get('jwt');
+        const token = localStorage.getItem("authToken") || Cookies.get('jwt');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
     (error) => {
-        return Promise.reject(error);s
+        return Promise.reject(error); s
     }
 );
 
