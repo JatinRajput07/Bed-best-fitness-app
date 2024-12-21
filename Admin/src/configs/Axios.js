@@ -1,5 +1,5 @@
 import axios from 'axios';
-// import Cookies from 'js-cookie';
+import Cookies from 'js-cookie';
 // import Router from 'next/router'; // Use Router directly for navigation instead of useRouter
 
 const URL = 'http://43.204.2.84:7200/'; // Correct base URL
@@ -10,18 +10,18 @@ const Axios = axios.create({
 });
 
 // Request interceptor to attach token
-// Axios.interceptors.request.use(
-//     (config) => {
-//         const token = Cookies.get('token');
-//         if (token) {
-//             config.headers['Authorization'] = `Bearer ${token}`;
-//         }
-//         return config;
-//     },
-//     (error) => {
-//         return Promise.reject(error);s
-//     }
-// );
+Axios.interceptors.request.use(
+    (config) => {
+        const token = Cookies.get('jwt');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);s
+    }
+);
 
 // Response interceptor to handle errors and redirect
 // Axios.interceptors.response.use(

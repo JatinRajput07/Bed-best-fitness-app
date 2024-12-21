@@ -35,7 +35,7 @@ export function Profile({ id, closeModal }) {
     try {
       const formattedDate = date.toISOString().split("T")[0];
       const response = await axios.get(
-        `http://localhost:7200/admin/user-daily-report/${id}`,
+        `http://43.204.2.84:7200/admin/user-daily-report/${id}`,
         {
           params: { date: formattedDate },
         }
