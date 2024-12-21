@@ -594,6 +594,10 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
+    const coach = await Asign_User.findOne({ asign_user: userId }, ('host'))
+        .populate('host', 'name email')
+        .exec();
+
     const past20Days = Array.from({ length: 20 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - i);
@@ -695,13 +699,19 @@ exports.Home = catchAsync(async (req, res, next) => {
                     category: "$_id",
                     videos: { $slice: ["$videos", 10] }
                 }
+            },
+            {
+                $sort: { "category": -1 }
             }
         ]),
 
         Recommendation.find({ user_id: userId })
             .populate("video_id", { path: 1, title: 1, category: 1, filetype: 1, thumbnail: 1 })
+            .sort({ recommended_at: -1 })
             .exec(),
-        Banner.find({ isActive: true }, ('imageUrl -_id')).exec(),
+        Banner.find({ isActive: true }, ('imageUrl -_id'))
+            .sort({ createdAt: -1 })
+            .exec(),
     ]);
 
     const groupedVideos = {};
@@ -716,7 +726,7 @@ exports.Home = catchAsync(async (req, res, next) => {
 
     return res.status(200).json({
         status: "success",
-        data: { today, videos: groupedVideos, recommendationVideos, banners },
+        data: { today, ...coach.toObject(), videos: groupedVideos, recommendationVideos, banners },
     });
 });
 

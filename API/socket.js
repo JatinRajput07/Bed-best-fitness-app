@@ -2,7 +2,7 @@ const { Server } = require('socket.io');
 const User = require('./models/User');
 const { sendMessage } = require('./Socket_functions');
 const Message = require('./models/Message');
-const reminderScheduler = require('./reminderScheduler');
+// const reminderScheduler = require('./reminderScheduler');
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
@@ -115,7 +115,7 @@ module.exports = (io) => {
             }
         });
 
-        reminderScheduler(io);
+        // reminderScheduler(io);
 
     });
 
