@@ -1,6 +1,7 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
+const Auth = require('../../middleware/Auth');
 const router = express.Router();
 
 
@@ -11,7 +12,7 @@ router.get('/dashboard', dashboard)
 router.get('/getGoalAnalytics',getGoalAnalytics)
 router.post('/upload-file', uploadFiles)
 
-router.get('/user-list', getUserList)
+router.get('/user-list', Auth, getUserList)
 router.delete('/user-delete/:id', deleteUser)
 
 router.get('/get-user-profile/:id', getUserProfile)
@@ -75,5 +76,13 @@ router.get('/getHealthHabits/:id',getHealthOtherdata)
 
 router.post('/createMeeting',createMeeting)
 router.get('/getMeeting',getMeeting)
+
+
+
+router.post('/banner',createBanner)
+router.get('/banner',getBanners)
+router.delete('/banner/:bannerId', deleteBanner);
+router.patch('/banner/:bannerId/status', toggleBannerStatus);
+
 
 module.exports = router;

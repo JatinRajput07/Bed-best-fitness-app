@@ -63,6 +63,7 @@ const checkMealReminders = async (user, meals) => {
 
     for (let mealType in meals) {
         const meal = meals[mealType];
+        console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
         if (meal.enabled && meal.time ===  `${hours}:${minutes}`) {
             await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
         }
@@ -84,6 +85,8 @@ const checkWaterReminders = async (user, reminder) => {
     } else if (!reminder.reminderType && reminder.startTime <= `${hours}:${minutes}` && reminder.endTime >= `${hours}:${minutes}`) {
         const intervalSent = currentMinute % reminder.intervalMinutes === 0;
         const maxTimesReached = reminder.customTimes <= 0;
+
+        console.log(intervalSent && !maxTimesReached,'============intervalSent && !maxTimesReached=========')
 
         if (intervalSent && !maxTimesReached) {
             await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
@@ -124,8 +127,7 @@ const checkOtherReminders = async (user, reminder) => {
     } else if (reminder.reminderType === "everyday" && reminder.everydayTime === `${hours}:${minutes}`) {
         await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
     } else if (
-        reminder.reminderType === "specificDays" &&
-        reminder.weeklyTimes[currentDay] === `${hours}:${minutes}`
+        reminder.reminderType === "specificDays" && reminder.weeklyTimes[currentDay] === `${hours}:${minutes}`
     ) {
         await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
     }

@@ -61,15 +61,23 @@ exports.adminLogin = catchAsync(async (req, res, next) => {
 
 
 exports.getUserList = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
     const { page = 1, limit = 10, search = '' } = req.query;
 
     const limitValue = +limit;
     const pageValue = +page;
     const skipValue = (pageValue - 1) * limitValue;
+    let query = { role: { $ne: 'admin' } };
 
-    const query = {
-        role: { $ne: 'admin' }
-    };
+    if (req.user.role === 'host') {
+        const assignedUsers = await Asign_User.findOne({ host: userId });
+
+        if (assignedUsers) {
+            query._id = { $in: assignedUsers.asign_user };
+        } else {
+            query._id = { $in: [] };
+        }
+    }
 
     if (search) {
         query.$or = [
@@ -78,11 +86,9 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         ];
     }
 
-    const users = await User.find(query)
-    // .skip(skipValue).limit(limitValue);
+    const users = await User.find(query).skip(skipValue).limit(limitValue); 
 
     const totalRecords = await User.countDocuments(query);
-
     const totalPages = Math.ceil(totalRecords / limitValue);
 
     return res.status(200).json({
@@ -206,7 +212,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
             category,
             status: mealData?.status || 'N/A',
             note: mealData?.note || 'No notes',
-            image:mealData?.image || '',
+            image: mealData?.image || '',
             items: mealData?.items || [],
         };
     });
@@ -864,9 +870,6 @@ exports.createBanner = catchAsync(async (req, res, next) => {
             return next(new AppError(err.message, 400));
         }
 
-
-        console.log(req.files)
-
         if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
@@ -884,6 +887,51 @@ exports.createBanner = catchAsync(async (req, res, next) => {
             message: 'Banner created successfully.',
             data: newBanner,
         });
+    });
+});
+
+exports.getBanners = catchAsync(async (req, res, next) => {
+    const banners = await Banner.find().sort({ createdAt: -1 });
+    if (!banners) {
+        return next(new AppError('No banners found.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: banners,
+    });
+});
+
+exports.toggleBannerStatus = catchAsync(async (req, res, next) => {
+    const { bannerId } = req.params;
+
+    const banner = await Banner.findById(bannerId);
+    if (!banner) {
+        return next(new AppError('Banner not found.', 404));
+    }
+
+    banner.isActive = !banner.isActive;
+    await banner.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: `Banner status updated to ${banner.isActive ? 'active' : 'inactive'}.`,
+        data: banner,
+    });
+});
+
+
+exports.deleteBanner = catchAsync(async (req, res, next) => {
+    const { bannerId } = req.params;
+
+    const banner = await Banner.findByIdAndDelete(bannerId);
+    if (!banner) {
+        return next(new AppError('Banner not found.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Banner deleted successfully.',
     });
 });
 
