@@ -2,7 +2,7 @@ const Conversation = require("./models/Conversation");
 const Message = require("./models/Message");
 
 
-exports.sendMessage = async (senderId, receiverId, messageContent, messageType = 'text', attachments = []) => {
+exports.sendMessage = async (senderId, receiverId, messageContent, messageType = 1, attachments = []) => {
     try {
         let conversation = await Conversation.findOne({ participants: { $all: [senderId, receiverId] } });
 

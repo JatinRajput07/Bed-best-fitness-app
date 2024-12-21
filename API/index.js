@@ -10,9 +10,9 @@ const AppError = require('./utils/AppError');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const http = require('http'); // Import http module
-const initSocket = require('./socket'); // Assuming this will initialize socket.io
-require("./reminderScheduler")
+const http = require('http');
+const initSocket = require('./socket');
+// require("./reminderScheduler")
 const PORT = process.env.PORT || 3000;
 
 // DATABASE Connection
@@ -62,14 +62,14 @@ app.use(errorHandler);
 // Create the HTTP server
 const server = http.createServer(app);
 
-// Initialize socket.io with the server instance
 const io = require('socket.io')(server, {
   cors: {
-    origin: "*"
-  }
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
-initSocket(io); // Pass the socket instance to your socket setup
+initSocket(io);
 
 // CREATE SERVER AND RUNNING PORT
 server.listen(PORT, async () => {
