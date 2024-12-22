@@ -1002,26 +1002,23 @@ exports.getGoalAnalytics = catchAsync(async (req, res, next) => {
 
     if (!startDate || !endDate) {
         const currentDate = new Date();
-        endDate = currentDate.toISOString().split('T')[0]; // Current date as YYYY-MM-DD
+        endDate = currentDate.toISOString().split('T')[0];
         const pastDate = new Date();
-        pastDate.setDate(currentDate.getDate() - 20); // 20 days back
+        pastDate.setDate(currentDate.getDate() - 20);
         startDate = pastDate.toISOString().split('T')[0];
     }
 
     const start = new Date(startDate);
-    const end = new Date(endDate)
+    const end = new Date(endDate);
 
-    // Fetch all users with role 'user'
     const users = await User.find({ role: 'user' }).select('_id');
     const userIds = users.map(user => user._id);
 
-    // Fetch routines within the date range for all users
     const routines = await Routine.find({
         userId: { $in: userIds },
-        date: { $gte: start, $lte: end },
+        date: { $gte: start.toISOString().split('T')[0], $lte: end.toISOString().split('T')[0] },
     });
 
-    // Fetch goals for all users
     const goals = await Goal.find({ userId: { $in: userIds } });
 
     const calculatePercentage = (achieved, target) => {
@@ -1036,57 +1033,122 @@ exports.getGoalAnalytics = catchAsync(async (req, res, next) => {
         const userGoal = goals.find(goal => goal.userId.equals(userId));
         if (!userGoal) return;
 
-        const day = date.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
-
+        const day = date;
         if (!dailySummary[day]) {
             dailySummary[day] = {
-                steps: 0,
-                water: 0,
-                nutrition: 0,
                 totalUsers: 0,
+                totalGoalAchieved: 0,
+                totalStepsAchieved: 0,
+                totalWaterAchieved: 0,
+                totalBodyGoalsAchieved: 0, // Add body goal variables as needed
             };
         }
 
         dailySummary[day].totalUsers++;
 
+        // Steps Calculation
         const stepsAchieved = parseInt(routine.steps?.steps || 0, 10);
         const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
-        if (calculatePercentage(stepsAchieved, stepsTarget) >= 100) {
-            dailySummary[day].steps++;
-        }
+        const stepsPercentage = calculatePercentage(stepsAchieved, stepsTarget);
+        if (stepsPercentage >= 100) dailySummary[day].totalStepsAchieved++;
 
+        // Water Calculation
         const waterAchieved = parseInt(routine.water?.qty || 0, 10);
         const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
-        if (calculatePercentage(waterAchieved, waterTarget) >= 100) {
-            dailySummary[day].water++;
-        }
+        const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
+        if (waterPercentage >= 100) dailySummary[day].totalWaterAchieved++;
 
-        const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
-        const nutritionAchieved = nutritionDoses.filter(dose => routine.nutrition[dose] === 'take').length;
-        const nutritionTarget = nutritionDoses.length;
-        if (calculatePercentage(nutritionAchieved, nutritionTarget) >= 100) {
-            dailySummary[day].nutrition++;
-        }
+        // Body Goal Calculations (e.g., BMI, Body Fat, etc.)
+        const { body_fat, bmi, muscle_mass } = routine.body_data;
+        const targetBodyFat = userGoal.targetBodyFat || 20; // Assuming targetBodyFat is part of the user's goal
+        const targetBMI = userGoal.targetBMI || 24; // Similarly, a target BMI
+        const targetMuscleMass = userGoal.targetMuscleMass || 25; // Similarly, a target muscle mass
+
+        const bodyFatPercentage = calculatePercentage(parseFloat(body_fat), targetBodyFat);
+        const bmiPercentage = calculatePercentage(parseFloat(bmi), targetBMI);
+        const muscleMassPercentage = calculatePercentage(parseFloat(muscle_mass), targetMuscleMass);
+
+        // You can combine these percentages based on your logic for achieving the goal
+        const totalBodyGoalPercentage = (bodyFatPercentage + bmiPercentage + muscleMassPercentage) / 3;
+
+        if (totalBodyGoalPercentage >= 100) dailySummary[day].totalBodyGoalsAchieved++;
     });
 
-    // Extract categories (dates) and series data
     const categories = Object.keys(dailySummary).sort();
-    const stepsData = categories.map(date => dailySummary[date].steps);
-    const waterData = categories.map(date => dailySummary[date].water);
-    const nutritionData = categories.map(date => dailySummary[date].nutrition);
+    const goalData = categories.map(date => {
+        const { totalUsers, totalGoalAchieved, totalStepsAchieved, totalWaterAchieved, totalBodyGoalsAchieved } = dailySummary[date];
+        const totalGoalsCompleted = totalStepsAchieved + totalWaterAchieved + totalBodyGoalsAchieved;
+        return ((totalGoalsCompleted / (totalUsers * 3)) * 100).toFixed(2);  // Adjust for number of goals (steps, water, body goals)
+    });
 
     res.status(200).json({
         status: 'success',
         data: {
-            categories, // List of dates
+            categories,
             series: [
-                { name: 'Steps', data: stepsData },
-                { name: 'Water', data: waterData },
-                { name: 'Nutrition', data: nutritionData },
+                { name: 'Achieve Goal', data: goalData },
             ],
         },
     });
 });
+
+
+exports.getuserAndCoachStats = catchAsync(async (req, res, next) => {
+    try {
+
+        const currentDate = new Date();
+        const endDate = currentDate;
+        const startDate = new Date();
+        startDate.setDate(currentDate.getDate() - 19);
+        const startDateStr = startDate;
+
+        // console.log(startDateStr, endDate)
+
+        const stats = await User.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDateStr, $lte: endDate },
+                },
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, 
+                    totalUsers: { $sum: { $cond: [{ $eq: ["$role", "user"] }, 1, 0] } }, 
+                    totalCoaches: { $sum: { $cond: [{ $eq: ["$role", "host"] }, 1, 0] } }, 
+                },
+            },
+            {
+                $sort: { _id: 1 }, 
+            },
+        ]);
+
+
+        const categories = stats.map(item => {
+            const date = new Date(item._id);
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            return `${date.toLocaleDateString('en-US', options)}`;
+        });
+        const userData = stats.map(item => item.totalUsers);
+        const coachData = stats.map(item => item.totalCoaches);
+        res.status(200).json({
+            status: 'success',
+            data: {
+                categories,
+                series: [
+                    { name: 'Users', data: userData },
+                    { name: 'Coaches', data: coachData },
+                ],
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+
+
+
 
 
 

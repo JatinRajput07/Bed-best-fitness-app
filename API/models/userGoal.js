@@ -6,8 +6,8 @@ const goalSchema = new Schema({
     weightGoal: {
         currentWeight: { type: Number },
         goalWeight: { type: Number },
-        weightGoalDescription: { type: String }, // e.g., "Gain 12.0 kg in 25 Weeks"
-        activityLevel: { type: String } // e.g., "Sedentary"    
+        weightGoalDescription: { type: String },
+        activityLevel: { type: String }   
     },
     nutritionGoals: {
         dailyCalorieBudget: { type: String },
@@ -18,8 +18,8 @@ const goalSchema = new Schema({
             fiber: { type: String }
         }
     },
-    dailyWaterGoal: { type: Number } ,// e.g., 6 glasses
-    dailyStepsGoal: { type: Number } // e.g., 10,000 steps
+    dailyWaterGoal: { type: Number } ,
+    dailyStepsGoal: { type: Number }
 });
 
 const Goal = mongoose.model('Goal', goalSchema);

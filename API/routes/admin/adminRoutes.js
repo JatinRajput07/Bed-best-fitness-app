@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const Auth = require('../../middleware/Auth');
 const router = express.Router();
@@ -10,6 +10,9 @@ router.post('/login', adminLogin)
 
 router.get('/dashboard', dashboard)
 router.get('/getGoalAnalytics',getGoalAnalytics)
+router.get('/getuserAndCoachStats',getuserAndCoachStats)
+getuserAndCoachStats
+
 router.post('/upload-file', uploadFiles)
 
 router.get('/user-list', Auth, getUserList)
