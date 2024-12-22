@@ -615,12 +615,12 @@ exports.Home = catchAsync(async (req, res, next) => {
     const today = records.map(record => {
         const date = record.date;
         const weekName = new Date(date).toLocaleString('en-US', { weekday: 'long' });
-        const stepsAchieved = parseInt(record.steps?.steps || 0, 10);
-        const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
+        const stepsAchieved = parseInt(record?.steps?.steps || 0, 10);
+        const stepsTarget = parseInt(userGoal?.dailyStepsGoal || 0, 10);
         const stepsPercentage = calculatePercentage(stepsAchieved, stepsTarget);
 
-        const waterAchieved = parseInt(record.water?.qty || 0, 10);
-        const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
+        const waterAchieved = parseInt(record?.water?.qty || 0, 10);
+        const waterTarget = parseInt(userGoal?.dailyWaterGoal || 0, 10);
         const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
 
         const nutritionDoses = ['dose1', 'dose2', 'dose3', 'dose4'];
