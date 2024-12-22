@@ -75,10 +75,14 @@ module.exports = (io) => {
         });
 
 
-        socket.on("chatList", async ({ conversationId, skip = 0, limit = 20 }) => {
-            if (conversationId) {
+        socket.on("chatList", async ({ senderId, receiverId, skip = 0, limit = 20 }) => {
+            if (senderId && receiverId) {
+                let getMsg = await Conversation.findOne({
+                    participants: { $all: [senderId, receiverId] },
+                });
+
                 const messages = await Message.find({
-                    conversationId: new Types.ObjectId(conversationId),
+                    conversationId: getMsg ? _id
                 })
                     .sort({ createdAt: -1 })
                     .skip(skip)
