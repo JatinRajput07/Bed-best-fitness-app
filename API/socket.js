@@ -6,7 +6,6 @@ const Conversation = require('./models/Conversation')
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
-
         socket.on("connectUser", async (data) => {
             console.log(`User connected: ${data.userId}`);
 

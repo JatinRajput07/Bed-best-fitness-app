@@ -9,13 +9,7 @@ const conversationSchema = new mongoose.Schema({
         },
     ],
     lastMessage: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Message',
-    },
-    unreadCount: {
-        type: Map,
-        of: Number,
-        default: {},
+        type: String
     },
 }, { timestamps: true });
 
