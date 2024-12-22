@@ -109,3 +109,7 @@ const routineSchema = new mongoose.Schema({
 routineSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Routine', routineSchema);
+
+
+
+

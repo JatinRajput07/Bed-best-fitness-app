@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Select, Option, Input, Button, Textarea } from "@material-tailwind/react";
-import axios from "axios";
+import Axios from "@/configs/Axios";
+import toast from "react-hot-toast";
 
 const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel }) => {
   const [selectedUser, setSelectedUser] = useState("");
@@ -8,19 +8,32 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState("");
 
+  const [errors, setErrors] = useState({
+    selectedUser: "",
+    selectedMealTime: "",
+    description: "",
+    quantity: "",
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedUser || !selectedMealTime || !description || !quantity) return;
 
+    let validationErrors = {};
+    if (!selectedUser) validationErrors.selectedUser = "User selection is required.";
+    if (!selectedMealTime) validationErrors.selectedMealTime = "Meal time selection is required.";
+    if (!description) validationErrors.description = "Description is required.";
+    if (!quantity) validationErrors.quantity = "Quantity is required.";
+
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
     const nutrition = {
       userId: selectedUser,
       mealTime: selectedMealTime,
-      description, // Updated field
+      description,
       quantity,
     };
 
-    axios
-      .post("http://43.204.2.84:7200/admin/nutrition", nutrition)
+    Axios.post("/admin/nutrition", nutrition)
       .then((response) => {
         if (response.data.status === "success") {
           onAddNutrition(response.data.data);
@@ -28,6 +41,8 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
         }
       })
       .catch((error) => {
+        console.log(error.response.data.message,'==========================e=r=rr=r===================')
+        toast.error(error?.response?.data?.message)
         console.error("Error submitting nutrition:", error);
       });
   };
@@ -37,6 +52,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
     setSelectedMealTime("");
     setDescription("");
     setQuantity("");
+    setErrors({});
   };
 
   return (
@@ -44,75 +60,91 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
       <h2 className="text-lg font-bold mb-4">Add Nutrition Plan</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Select
-            label="Select User"
+          <label htmlFor="userSelect" className="block text-sm font-medium text-gray-700">
+            Select User
+          </label>
+          <select
+            id="userSelect"
+            className="mt-1 h-8 px-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
-            required
           >
-            {loading ? (
-              <Option disabled>Loading users...</Option>
-            ) : error ? (
-              <Option disabled>Error loading users</Option>
+            <option value="" disabled>
+              {loading ? "Loading users..." : "Select a user"}
+            </option>
+            {error ? (
+              <option disabled>Error loading users</option>
             ) : (
               users.map((user) => (
-                <Option key={user.id} value={user.id}>
+                <option key={user.id} value={user._id}>
                   {user.name}
-                </Option>
+                </option>
               ))
             )}
-          </Select>
+          </select>
+          {errors.selectedUser && <p className="text-red-500 text-xs mt-1">{errors.selectedUser}</p>}
         </div>
 
         <div>
-          <Select
-            label="Select Meal Time"
+          <label htmlFor="mealTimeSelect" className="block text-sm font-medium text-gray-700">
+            Select Nutrition Time
+          </label>
+          <select
+            id="mealTimeSelect"
+            className="mt-1 block px-2 h-8 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             value={selectedMealTime}
             onChange={(e) => setSelectedMealTime(e.target.value)}
-            required
           >
-            <Option value="Breakfast">Breakfast</Option>
-            <Option value="Lunch">Lunch</Option>
-            <Option value="Dinner">Dinner</Option>
-            <Option value="Night">Night</Option>
-          </Select>
+            <option value="" disabled>Select a meal time</option>
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+            <option value="Night">Night</option>
+          </select>
+          {errors.selectedMealTime && <p className="text-red-500 text-xs mt-1">{errors.selectedMealTime}</p>}
         </div>
 
         <div>
-          <Textarea
-            label="Description"
+          <label htmlFor="descriptionInput" className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            id="descriptionInput"
+            className="mt-1 px-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            required
           />
+          {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
         </div>
 
         <div>
-          <Input
-            label="Quantity"
+          <label htmlFor="quantityInput" className="block text-sm font-medium text-gray-700">
+            Quantity
+          </label>
+          <input
+            id="quantityInput"
+            className="mt-1 px-2 h-8 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             value={quantity}
             type="number"
             onChange={(e) => setQuantity(e.target.value)}
-            required
           />
+          {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Button
-            color="red"
-            variant="outlined"
-            ripple
+          <button
+            type="button"
+            className="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600"
             onClick={handleCancel}
           >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             type="submit"
-            color="green"
-            ripple
+            className="px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
           >
             Submit
-          </Button>
+          </button>
         </div>
       </form>
     </div>

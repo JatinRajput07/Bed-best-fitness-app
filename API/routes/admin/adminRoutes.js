@@ -9,8 +9,8 @@ const router = express.Router();
 router.post('/login', adminLogin)
 
 router.get('/dashboard', dashboard)
-router.get('/getGoalAnalytics',getGoalAnalytics)
-router.get('/getuserAndCoachStats',getuserAndCoachStats)
+router.get('/getGoalAnalytics', getGoalAnalytics)
+router.get('/getuserAndCoachStats', getuserAndCoachStats)
 getuserAndCoachStats
 
 router.post('/upload-file', uploadFiles)
@@ -38,11 +38,11 @@ router.put('/assign/:id', editassign)
 router.delete('/assign/:id', deleteassign)
 
 
-router.post('/nutrition', createNutrition); // Create a new nutrition
+router.post('/nutrition', Auth, createNutrition); // Create a new nutrition
 
 router.post('/meal', createMeal);
 router.get('/meal', getMeals);
-router.get('/nutrition', getNutritions);
+router.get('/nutrition', Auth, getNutritions);
 
 
 router.get('/user-daily-report/:userId', getUserRoutine);
@@ -75,15 +75,15 @@ router
 router.get('/getUserRecomenedVideo/:id', getUserRecomenedVideo)
 router.get('/user/reminders/:id', getAllUserReminders);
 
-router.get('/getHealthHabits/:id',getHealthOtherdata)
+router.get('/getHealthHabits/:id', getHealthOtherdata)
 
-router.post('/createMeeting',createMeeting)
-router.get('/getMeeting',getMeeting)
+router.post('/createMeeting', createMeeting)
+router.get('/getMeeting', getMeeting)
 
 
 
-router.post('/banner',createBanner)
-router.get('/banner',getBanners)
+router.post('/banner', createBanner)
+router.get('/banner', getBanners)
 router.delete('/banner/:bannerId', deleteBanner);
 router.patch('/banner/:bannerId/status', toggleBannerStatus);
 

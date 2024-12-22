@@ -25,6 +25,7 @@ const Reminder = require("../models/Reminder");
 const path = require("path");
 const Meeting = require("../models/Meeting");
 const { sendPushNotification } = require("../utils/firebaseService");
+const { default: mongoose } = require("mongoose");
 
 
 const signToken = id => {
@@ -529,9 +530,7 @@ exports.assign = catchAsync(async (req, res, next) => {
     if (!asign_user || !host) {
         return res.status(400).json({ message: "Host and users are required." });
     }
-
     const newAssignment = new Asign_User({ asign_user, host });
-
     const hostdata = await User.findOne({ _id: host })
     if (newAssignment) {
         await Notification.create({
@@ -547,9 +546,6 @@ exports.assign = catchAsync(async (req, res, next) => {
         type: payload?.notification?.title,
         status: "sent"
     });
-
-
-
     await newAssignment.save();
 
     res.status(201).json({
@@ -653,9 +649,23 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
 exports.createNutrition = async (req, res, next) => {
     try {
-        const { title, description } = req.body;
-        const nutrition = await Nutrition.create({ title, description });
+        const coachId = req.user.id
+        const { userId, mealTime } = req.body;
+        const existingNutrition = await Nutrition.findOne({
+            userId: userId,
+            coachId,
+            mealTime: mealTime,
+            active: true,
+            status: { $ne: 1 },
+        });
 
+        if (existingNutrition) {
+            return res.status(400).json({
+                status: 'fail',
+                message: `A nutrition plan for ${mealTime} already exists and is not yet completed or inactive.`,
+            });
+        }
+        const nutrition = await Nutrition.create({ coachId, ...req.body });
         res.status(201).json({
             status: 'success',
             message: 'Nutrition created successfully!',
@@ -665,6 +675,9 @@ exports.createNutrition = async (req, res, next) => {
         next(error);
     }
 };
+
+
+
 
 exports.createMeal = async (req, res, next) => {
     try {
@@ -684,15 +697,74 @@ exports.createMeal = async (req, res, next) => {
 
 exports.getNutritions = async (req, res, next) => {
     try {
-        const nutritions = await Nutrition.find({ active: true }, ("title description"));
+        const coachId = req.user.id;
+        const nutritions = await Nutrition.find({ coachId });
+
+        const userid = [...new Set(nutritions.map(item => item.userId.toString()))];
+        const userObjectIds = userid.map(id => new mongoose.Types.ObjectId(id));
+
+        const routines = await Routine.find({ userId: { $in: userObjectIds } });
+
+        const results = [];
+
+        for (let userId of userid) {
+            const userNutritions = nutritions.filter(nutrition => nutrition.userId.toString() === userId);
+
+            const userRoutines = routines.filter(routine => routine.userId.toString() === userId);
+
+            const nutritionDetails = userNutritions.map(nutrition => {
+                const routineForNutrition = userRoutines.filter(routine => 
+                    routine.nutrition.some(item => item.item.toString() === nutrition._id.toString())
+                );
+
+                const takenCount = routineForNutrition.reduce((count, routine) => {
+                    return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'take').length;
+                }, 0);
+
+                const skippedCount = routineForNutrition.reduce((count, routine) => {
+                    return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'skip').length;
+                }, 0);
+                const isCompleted = takenCount === nutrition.quantity;
+                return {
+                    mealTime: nutrition.mealTime,
+                    description: nutrition.description,
+                    quantity: nutrition.quantity,
+                    active: nutrition.active,
+                    status: isCompleted ? 'completed' : 'in progress',
+                    takenCount,
+                    skippedCount,
+                    isCompleted
+                };
+            });
+
+            const userDetails = await User.findById(userId);
+
+            results.push({
+                userDetails: {
+                    name: userDetails.name,
+                    email: userDetails.email
+                },
+                userId,
+                nutritionDetails
+            });
+        }
+
         res.status(200).json({
             status: 'success',
-            data: nutritions,
+            data: results
         });
+
     } catch (error) {
+        console.error("Error in getNutritions:", error.message);
+        res.status(500).json({
+            status: 'error',
+            message: 'An error occurred while fetching nutrition data.'
+        });
         next(error);
     }
 };
+
+
 
 exports.getMeals = async (req, res, next) => {
     try {
@@ -1111,13 +1183,13 @@ exports.getuserAndCoachStats = catchAsync(async (req, res, next) => {
             },
             {
                 $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, 
-                    totalUsers: { $sum: { $cond: [{ $eq: ["$role", "user"] }, 1, 0] } }, 
-                    totalCoaches: { $sum: { $cond: [{ $eq: ["$role", "host"] }, 1, 0] } }, 
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    totalUsers: { $sum: { $cond: [{ $eq: ["$role", "user"] }, 1, 0] } },
+                    totalCoaches: { $sum: { $cond: [{ $eq: ["$role", "host"] }, 1, 0] } },
                 },
             },
             {
-                $sort: { _id: 1 }, 
+                $sort: { _id: 1 },
             },
         ]);
 

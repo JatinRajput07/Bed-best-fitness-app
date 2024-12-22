@@ -169,7 +169,7 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
         }
         else if (routine && routine.body_measurement_parameters && routine.body_measurement_parameters.hasOwnProperty(metric)) {
             projectionField = `body_measurement_parameters.${metric}`;
-        } 
+        }
         const currentData = await Routine.findOne(
             { date: today, userId },
             { [projectionField]: 1, _id: 0 }
@@ -299,10 +299,9 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
     });
 })
 
-
 exports.getNutritions = async (req, res, next) => {
     try {
-        const nutritions = await Nutrition.find({ active: true }, ("title description"));
+        const nutritions = await Nutrition.find({ active: true, userId: req.user.id });
         res.status(200).json({
             status: 'success',
             data: nutritions,
