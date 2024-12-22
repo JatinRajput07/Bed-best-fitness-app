@@ -34,6 +34,14 @@ module.exports = (io) => {
                 participants: { $all: [senderId, receiverId] },
             });
 
+            if (!conversation) {
+                conversation = new Conversation({
+                    participants: [senderId, receiverId],
+                    lastMessage: newMessage._id,
+                    // unreadCount: { [receiverId]: 1 },
+                });
+            }
+
             const newMessage = new Message({
                 conversationId: conversation?._id,
                 sender: senderId,
@@ -45,16 +53,10 @@ module.exports = (io) => {
 
             await newMessage.save();
 
-            if (!conversation) {
-                conversation = new Conversation({
-                    participants: [senderId, receiverId],
-                    lastMessage: newMessage._id,
-                    unreadCount: { [receiverId]: 1 },
-                });
-            } else {
-                conversation.lastMessage = newMessage._id;
-                conversation.unreadCount.set(receiverId, (conversation.unreadCount.get(receiverId) || 0) + 1);
-            }
+            // } else {
+            //     conversation.lastMessage = newMessage._id;
+            //     conversation.unreadCount.set(receiverId, (conversation.unreadCount.get(receiverId) || 0) + 1);
+            // }
 
             await conversation.save();
 
@@ -70,7 +72,7 @@ module.exports = (io) => {
             socket.emit("messageSent", {
                 success: true,
                 message: newMessage.toObject(),
-              });
+            });
         });
 
 

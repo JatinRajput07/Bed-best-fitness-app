@@ -142,112 +142,16 @@ exports.getUserProfile = catchAsync(async (req, res, next) => {
 exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const { date } = req.query;
-
-    console.log('Getting user routine...');
-
-    if (!date) {
-        return next(new AppError('Date is required', 400));
-    }
-
-    const userGoal = await Goal.findOne({ userId });
-    if (!userGoal) {
-        return next(new AppError('User goal not found', 400));
-    }
-
-    const userRoutine = await Routine.findOne({ userId, date });
-    if (!userRoutine) {
-        return next(new AppError('Routine for the given date not found', 400));
-    }
-
-    const calculatePercentage = (achieved, target) => {
-        if (!target || target === 0) return 0;
-        return Math.min((achieved / target) * 100, 100).toFixed(2);
-    };
-
-    const stepsAchieved = parseInt(userRoutine.steps?.steps || 0, 10);
-    const stepsTarget = parseInt(userGoal.dailyStepsGoal || 0, 10);
-    const stepsPercentage = calculatePercentage(stepsAchieved, stepsTarget);
-
-    const waterAchieved = parseInt(userRoutine.water?.qty || 0, 10);
-    const waterTarget = parseInt(userGoal.dailyWaterGoal || 0, 10);
-    const waterPercentage = calculatePercentage(waterAchieved, waterTarget);
-
-    const nutritionAchieved = userRoutine.nutrition.filter(n => n.status === 'take').length;
-    const nutritionTarget = userRoutine.nutrition.length;
-    const nutritionPercentage = calculatePercentage(nutritionAchieved, nutritionTarget);
-
-    const currentWeight = userRoutine.body_data?.health_log_parameters?.currentWeight || null;
-    const goalWeight = userGoal.weightGoal?.goalWeight || null;
-    const weightLeft = goalWeight && currentWeight ? goalWeight - currentWeight : null;
-    const weightGoalStatus = currentWeight
-        ? `${currentWeight} kg (Goal: ${goalWeight} kg, Remaining: ${weightLeft > 0 ? weightLeft + ' kg' : 'Achieved'})`
-        : 'Weight not updated';
-
-    const mealCategories = Object.keys(userRoutine.meal || {});
-
-    // Replace meal item IDs with their titles
-    for (const category of mealCategories) {
-        const mealData = userRoutine.meal[category];
-        const itemIds = mealData?.items || [];
-        if (itemIds.length) {
-            const items = await Meal.find({ _id: { $in: itemIds } }).select('item');
-            userRoutine.meal[category].items = items.map(item => item.item); // Replace IDs with titles
-        }
-    }
-
-    const nutritionItems = userRoutine.nutrition.map(n => n.item);
-    if (nutritionItems.length) {
-        const nutritionTitles = await Nutrition.find({ _id: { $in: nutritionItems } }).select('title');
-        userRoutine.nutrition = userRoutine.nutrition.map(n => {
-            const titleObj = nutritionTitles.find(t => t._id.equals(n.item));
-            return {
-                ...n,
-                item: titleObj ? titleObj.title : n.item, // Replace ID with title
-            };
-        });
-    }
-
-    const mealReport = mealCategories.map(category => {
-        const mealData = userRoutine.meal[category];
-        return {
-            category,
-            status: mealData?.status || 'N/A',
-            note: mealData?.note || 'No notes',
-            image: mealData?.image || '',
-            items: mealData?.items || [],
-        };
+    // const weightGoal = await Goal.findOne(userId)
+    // const response = {
+    //     status: 'success',
+    //     data: {
+    //         weightGoal
+    //     },
+    // };
+    res.status(200).json({
+        status:"success"
     });
-
-    const response = {
-        status: 'success',
-        data: {
-            goals: {
-                weightGoal: weightGoalStatus,
-                steps: {
-                    achieved: stepsAchieved,
-                    target: stepsTarget,
-                    percentage: stepsPercentage,
-                },
-                water: {
-                    achieved: waterAchieved,
-                    target: waterTarget,
-                    percentage: waterPercentage,
-                },
-                nutrition: {
-                    achieved: nutritionAchieved,
-                    target: nutritionTarget,
-                    percentage: nutritionPercentage,
-                },
-            },
-            routine: {
-                date,
-                currentWeight,
-                meals: mealReport,
-            },
-        },
-    };
-
-    res.status(200).json(response);
 });
 
 
@@ -713,7 +617,7 @@ exports.getNutritions = async (req, res, next) => {
             const userRoutines = routines.filter(routine => routine.userId.toString() === userId);
 
             const nutritionDetails = userNutritions.map(nutrition => {
-                const routineForNutrition = userRoutines.filter(routine => 
+                const routineForNutrition = userRoutines.filter(routine =>
                     routine.nutrition.some(item => item.item.toString() === nutrition._id.toString())
                 );
 
