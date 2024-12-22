@@ -82,7 +82,7 @@ module.exports = (io) => {
                 });
 
                 const messages = await Message.find({
-                    conversationId: getMsg ? _id
+                    conversationId: getMsg?._id
                 })
                     .sort({ createdAt: -1 })
                     .skip(skip)
