@@ -20,16 +20,16 @@ Axios.interceptors.request.use(
     }
 );
 
-Axios.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        if (error.response && error.response.status >= 400 && error.response.status < 500) {
-            window.location.href = '/auth/sign-in';
-        }
-        return Promise.reject(error);
-    }
-);
+// Axios.interceptors.response.use(
+//     (response) => {
+//         return response;
+//     },
+//     (error) => {
+//         if (error.response && error.response.status >= 400 && error.response.status < 500) {
+//             window.location.href = '/auth/sign-in';
+//         }
+//         return Promise.reject(error);
+//     }
+// );
 
 export default Axios;

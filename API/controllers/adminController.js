@@ -1102,7 +1102,6 @@ exports.getuserAndCoachStats = catchAsync(async (req, res, next) => {
         startDate.setDate(currentDate.getDate() - 19);
         const startDateStr = startDate;
 
-        // console.log(startDateStr, endDate)
 
         const stats = await User.aggregate([
             {
