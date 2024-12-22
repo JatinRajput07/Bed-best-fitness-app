@@ -726,7 +726,8 @@ exports.Home = catchAsync(async (req, res, next) => {
 
     return res.status(200).json({
         status: "success",
-        data: { today, ...coach.toObject(), videos: groupedVideos, recommendationVideos, banners },
+        data: { today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners
+    },
     });
 });
 

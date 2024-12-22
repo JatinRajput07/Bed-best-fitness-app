@@ -1217,12 +1217,6 @@ exports.getuserAndCoachStats = catchAsync(async (req, res, next) => {
 });
 
 
-
-
-
-
-
-
 exports.createMeeting = catchAsync(async (req, res, next) => {
     upload(req, res, async (err) => {
         if (err instanceof multer.MulterError) {

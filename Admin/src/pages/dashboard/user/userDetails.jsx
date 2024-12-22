@@ -1,4 +1,10 @@
-import { Card, CardBody, CardHeader, CardFooter, Avatar, Typography, Tabs, TabsHeader, Tab, Switch, Tooltip, Button, Progress, } from "@material-tailwind/react";
+import {
+  Card, CardBody, CardHeader,
+  TabsHeader,
+  TabsBody,
+  Tab,
+  TabPanel, CardFooter, Avatar, Typography, Tabs, Switch, Tooltip, Button, Progress,
+} from "@material-tailwind/react";
 import { HomeIcon, ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
@@ -14,6 +20,10 @@ import RecommendedVideos from "./RecommendedVideos";
 import AllReminders from "./AllReminders";
 import OtherHyginData from "./OtherHyginData";
 import MealCard from "./MealCard";
+import Gallery from "./galleryImages";
+import WeightTracker from "./WeightTracker";
+import StepsTracker from "./StepsTracker";
+import WaterTracker from "./WaterTracker";
 
 export function Profile({ id, closeModal }) {
 
@@ -83,7 +93,6 @@ export function Profile({ id, closeModal }) {
                   className="font-normal text-blue-gray-600"
                 >
                   {userProfile?.user?.City}, {userProfile?.user?.Country}
-                  {/* CEO / Co-Founder */}
                 </Typography>
               </div>
             </div>
@@ -156,10 +165,75 @@ export function Profile({ id, closeModal }) {
                 </Card>
               </div>
             </div>}
-
-
             <ProfileInfoCard user={userProfile?.user} />
           </div>
+
+          <Tabs id="custom-animation" value="Weight">
+            <TabsHeader>
+              {userProfile?.user?.role === 'user' && <Tab value="Weight">Weight</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="steps">Steps</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="water">Water</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="meals">Meals</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="nutritions">Nutritions</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="reminderds">Reminders</Tab>}
+              {userProfile?.user?.role === 'user' && <Tab value="gallery">Gallery</Tab>}
+            </TabsHeader>
+            <TabsBody
+              animate={{
+                initial: { y: 250 },
+                mount: { y: 0 },
+                unmount: { y: 250 },
+              }}
+            >
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="Weight">
+                  <WeightTracker
+                    startWeight={60}
+                    targetWeight={90}
+                    currentWeight={65.800}
+                  />
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="steps">
+                  <StepsTracker />
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="water">
+                  <WaterTracker />
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="meals">
+                  This is the Meals content.
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="nutritions">
+                  This is the Nutritions content.
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="reminderds">
+                  <AllReminders userId={userProfile?.user?._id} />
+                </TabPanel>
+              )}
+
+              {userProfile?.user?.role === 'user' && (
+                <TabPanel value="gallery">
+                  <Gallery />
+                </TabPanel>
+              )}
+            </TabsBody>
+          </Tabs>
+
+
 
           {userProfile?.user?.role === 'user' && <div>
             {/* Calendar Filter */}
@@ -313,9 +387,6 @@ export function Profile({ id, closeModal }) {
           </div>}
 
           {userProfile?.user?.role === 'user' && <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />}
-
-
-          {userProfile?.user?.role === 'user' && <AllReminders userId={userProfile?.user?._id} />}
 
           {userProfile?.user?.role === 'user' && <PDFPreview userProfile={userProfile} />}
 
