@@ -86,7 +86,7 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         ];
     }
 
-    const users = await User.find(query).skip(skipValue).limit(limitValue); 
+    const users = await User.find(query)
 
     const totalRecords = await User.countDocuments(query);
     const totalPages = Math.ceil(totalRecords / limitValue);
