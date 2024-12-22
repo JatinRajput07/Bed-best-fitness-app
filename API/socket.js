@@ -34,7 +34,7 @@ module.exports = (io) => {
                 participants: { $all: [senderId, receiverId] },
             });
 
-            if (!conversation) {
+            if (!getMsg) {
                 getMsg = await Conversation.create({
                     participants: [senderId, receiverId],
                     lastMessage: message,
