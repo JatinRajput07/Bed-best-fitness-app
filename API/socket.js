@@ -30,20 +30,20 @@ module.exports = (io) => {
                 return;
             }
 
-            let conversation = await Conversation.findOne({
+            let getMsg = await Conversation.findOne({
                 participants: { $all: [senderId, receiverId] },
             });
 
             if (!conversation) {
-                conversation = new Conversation({
+                getMsg = await Conversation.create({
                     participants: [senderId, receiverId],
-                    lastMessage: newMessage._id,
+                    lastMessage: message,
                     // unreadCount: { [receiverId]: 1 },
                 });
             }
 
             const newMessage = new Message({
-                conversationId: conversation?._id,
+                conversationId: getMsg?._id,
                 sender: senderId,
                 receiver: receiverId,
                 message,
@@ -58,7 +58,7 @@ module.exports = (io) => {
             //     conversation.unreadCount.set(receiverId, (conversation.unreadCount.get(receiverId) || 0) + 1);
             // }
 
-            await conversation.save();
+            // await conversation.save();
 
             if (receiver.socketId) {
                 io.to(receiver.socketId).emit("receiveMessage", {
