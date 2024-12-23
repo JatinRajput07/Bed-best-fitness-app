@@ -21,7 +21,7 @@ const WeightTracker = ({ startWeight, targetWeight, currentWeight }) => {
               Start Weight
             </Typography>
             <Typography variant="h6" className="font-bold">
-              {startWeight.toFixed(1)} kg
+              {startWeight?.toFixed(1)} kg
             </Typography>
           </div>
           <div>
@@ -29,7 +29,7 @@ const WeightTracker = ({ startWeight, targetWeight, currentWeight }) => {
               Target Weight
             </Typography>
             <Typography variant="h6" className="font-bold">
-              {targetWeight.toFixed(1)} kg
+              {targetWeight?.toFixed(1)} kg
             </Typography>
           </div>
         </div>
@@ -38,7 +38,7 @@ const WeightTracker = ({ startWeight, targetWeight, currentWeight }) => {
             Current Weight
           </Typography>
           <Typography variant="h6" className="font-bold">
-            {currentWeight.toFixed(1)} kg
+            {currentWeight?.toFixed(1)} kg
           </Typography>
         </div>
         <div>

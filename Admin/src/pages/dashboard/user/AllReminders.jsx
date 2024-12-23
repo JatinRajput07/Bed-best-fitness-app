@@ -10,6 +10,7 @@ import {
     Alert,
     Chip,
 } from "@mui/material";
+import Axios from "@/configs/Axios";
 
 const AllReminders = ({ userId }) => {
     const [reminders, setReminders] = useState([]);
@@ -19,8 +20,7 @@ const AllReminders = ({ userId }) => {
     useEffect(() => {
         const fetchReminders = async () => {
             try {
-                const response = await axios.get(
-                    `http://43.204.2.84:7200/admin/user/reminders/${userId}`
+                const response = await Axios.get(`/admin/user/reminders/${userId}`
                 );
                 setReminders(response.data.reminders);
             } catch (err) {

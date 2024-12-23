@@ -1,7 +1,7 @@
 import React from "react";
 
-const WaterTracker = () => {
-  const waterGoal = 8; // Static goal (number of glasses)
+const WaterTracker = ({data}) => {
+  const waterGoal = data?.dailyGoal; // Static goal (number of glasses)
   const records = [
     { date: "22/12/2024", glasses: 8 },
     { date: "21/12/2024", glasses: 6 },
@@ -42,7 +42,7 @@ const WaterTracker = () => {
               </tr>
             </thead>
             <tbody>
-              {records.map((record, index) => (
+              { data && data?.waterAchive.length > 0 && data?.waterAchive?.map((record, index) => (
                 <tr
                   key={index}
                   className={`${
@@ -53,7 +53,7 @@ const WaterTracker = () => {
                     {record.date}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.glasses}
+                    {record?.value?.qty}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span

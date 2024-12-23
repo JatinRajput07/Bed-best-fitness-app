@@ -24,6 +24,8 @@ import Gallery from "./galleryImages";
 import WeightTracker from "./WeightTracker";
 import StepsTracker from "./StepsTracker";
 import WaterTracker from "./WaterTracker";
+import MealTracker from "./MealTracker";
+import Axios from "@/configs/Axios";
 
 export function Profile({ id, closeModal }) {
 
@@ -44,13 +46,15 @@ export function Profile({ id, closeModal }) {
     setError(null);
     try {
       const formattedDate = date.toISOString().split("T")[0];
-      const response = await axios.get(
-        `http://43.204.2.84:7200/admin/user-daily-report/${id}`,
+      const response = await Axios.get(`/admin/user-daily-report/${id}`,
         {
           params: { date: formattedDate },
         }
       );
-      setData(response.data.data);
+
+      console.log(response.data ,'======response======')
+
+      setData(response.data);
     } catch (err) {
       setError("Failed to fetch the daily report.");
     } finally {
@@ -98,73 +102,7 @@ export function Profile({ id, closeModal }) {
             </div>
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-0 xl:grid-cols-0">
-            {userProfile?.user?.role === 'user' && <div>
-              {/* Goals Section */}
-              <Typography variant="h6" color="blue-gray" className="mb-4">
-                Your Fitness Goals
-              </Typography>
-              <div className="grid grid-cols-2 gap-6">
-                <Card shadow={false} className="p-4 border  border-gray-200">
-                  <Typography variant="small" color="blue-gray" className="mb-2">
-                    Current Weight
-                  </Typography>
-                  <Typography variant="h5" color="green">
-                    {userProfile?.userGoal?.weightGoal?.currentWeight || "N/A"} kg
-                  </Typography>
-                </Card>
-                <Card shadow={false} className="p-4 border  border-gray-200">
-                  <Typography variant="small" color="blue-gray" className="mb-2">
-                    Target Weight
-                  </Typography>
-                  <Typography variant="h5" color="cyan">
-                    {userProfile?.userGoal?.weightGoal?.goalWeight || "N/A"} kg
-                  </Typography>
-                </Card>
-                <Card shadow={false} className="p-4 border  border-gray-200">
-                  <Typography variant="small" color="blue-gray" className="mb-2">
-                    {`Daily Steps Goal` || ""}
-                  </Typography>
-                  <Typography variant="h5" color="blue">
-                    {userProfile?.userGoal?.dailyStepsGoal || "N/A"} steps
-                  </Typography>
-                </Card>
-                <Card shadow={false} className="p-4 border  border-gray-200">
-                  <Typography variant="small" color="blue-gray" className="mb-2">
-                    Water Intake Goal
-                  </Typography>
-                  <Typography variant="h5" color="blue-gray">
-                    {userProfile?.userGoal?.dailyWaterGoal || "N/A"} L
-                  </Typography>
-                </Card>
-                <Card shadow={false} className="p-6 border border-gray-200 col-span-2  rounded-xl">
-                  <Typography variant="small" color="blue-gray" className="mb-4 font-semibold">
-                    Nutrition Goal
-                  </Typography>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Typography variant="h5" color="green" className="font-medium">Protein</Typography>
-                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.protein || "N/A"} g</Typography>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <Typography variant="h5" color="yellow-500" className="font-medium">Fats</Typography>
-                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.fats || "N/A"} g</Typography>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <Typography variant="h5" color="blue-500" className="font-medium">Carbs</Typography>
-                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.carbs || "N/A"} g</Typography>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <Typography variant="h5" color="purple-500" className="font-medium">Fiber</Typography>
-                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.macronutrientsBudget?.fiber || "N/A"} g</Typography>
-                    </div>
-                    <div className="flex justify-between items-center border-gray-300 pt-4">
-                      <Typography variant="h5" color="red-500" className="font-medium">Daily Calorie Budget</Typography>
-                      <Typography variant="h5" color="teal">{userProfile?.userGoal?.nutritionGoals?.dailyCalorieBudget || "N/A"} kcal</Typography>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>}
+
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
@@ -188,28 +126,28 @@ export function Profile({ id, closeModal }) {
               {userProfile?.user?.role === 'user' && (
                 <TabPanel value="Weight">
                   <WeightTracker
-                    startWeight={60}
-                    targetWeight={90}
-                    currentWeight={65.800}
+                    startWeight={data?.weightGoal?.startsWeight}
+                    targetWeight={data?.weightGoal?.goalWeight}
+                    currentWeight={data?.weightGoal?.currentWeight}
                   />
                 </TabPanel>
               )}
 
               {userProfile?.user?.role === 'user' && (
                 <TabPanel value="steps">
-                  <StepsTracker />
+                  <StepsTracker data={data?.stepTrack} />
                 </TabPanel>
               )}
 
               {userProfile?.user?.role === 'user' && (
                 <TabPanel value="water">
-                  <WaterTracker />
+                  <WaterTracker data={data?.waterTrack} />
                 </TabPanel>
               )}
 
               {userProfile?.user?.role === 'user' && (
                 <TabPanel value="meals">
-                  This is the Meals content.
+                  <MealTracker />
                 </TabPanel>
               )}
 
@@ -233,158 +171,6 @@ export function Profile({ id, closeModal }) {
             </TabsBody>
           </Tabs>
 
-
-
-          {userProfile?.user?.role === 'user' && <div>
-            {/* Calendar Filter */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Typography variant="h6" color="blue-gray" className="mb-4">
-                Select Date
-              </Typography>
-              <DatePicker
-                value={selectedDate}
-                onChange={(newValue) => setSelectedDate(newValue)}
-                renderInput={({ inputRef, inputProps, InputProps }) => (
-                  <div className="flex items-center">
-                    <input
-                      ref={inputRef}
-                      {...inputProps}
-                      className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                    />
-                    {InputProps?.endAdornment}
-                  </div>
-                )}
-              />
-            </LocalizationProvider>
-
-            {loading ? (
-              <div>Loading...</div>
-            ) : data ? (
-              <div>
-                <Typography variant="h6" color="blue-gray" className="mt-8 mb-4">
-                  Progress for {new Date(data.routine.date).toDateString()}
-                </Typography>
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-                  {/* Weight Goal */}
-                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-                    <Typography variant="h6" color="blue-gray" className="mb-4">
-                      Weight Goal
-                    </Typography>
-
-                    {console.log(data.goals, ';====d==d=d=dd=')}
-
-                    <Typography variant="small" className="text-gray-600">
-                      {data.goals.weightGoal}
-                    </Typography>
-                  </Card>
-
-                  {/* Steps Goal */}
-                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-                    <Typography variant="h6" color="blue-gray" className="mb-4">
-                      Steps Goal
-                    </Typography>
-                    <Typography variant="small" className="text-gray-600">
-                      Steps Taken:{" "}
-                      <span className="text-blue-gray-800">{data.goals.steps.achieved}</span>
-                    </Typography>
-                    <Typography variant="small" className="text-gray-600">
-                      Daily Goal:{" "}
-                      <span className="text-blue-gray-800">{data.goals.steps.target}</span>
-                    </Typography>
-                    <Progress
-                      value={parseFloat(data.goals.steps.percentage)}
-                      color="blue"
-                      className="mt-4"
-                    />
-                    <Typography variant="small" color="blue-gray" className="mt-2 text-center">
-                      Progress:{" "}
-                      <span className="font-bold text-blue-600">
-                        {data.goals.steps.percentage}%
-                      </span>
-                    </Typography>
-                  </Card>
-
-                  {/* Water Intake Goal */}
-                  <Card shadow={false} className="p-6 border border-gray-200 rounded-lg">
-                    <Typography variant="h6" color="blue-gray" className="mb-4">
-                      Water Intake Goal
-                    </Typography>
-                    <Typography variant="small" className="text-gray-600">
-                      Water Drank:{" "}
-                      <span className="text-blue-gray-800">
-                        {data.goals.water.achieved} L ({Math.round((data.goals.water.achieved * 1000) / 250)} glasses)
-                      </span>
-                    </Typography>
-                    <Typography variant="small" className="text-gray-600">
-                      Daily Goal:{" "}
-                      <span className="text-blue-gray-800">{data.goals.water.target} L</span>
-                    </Typography>
-                    <Progress
-                      value={parseFloat(data.goals.water.percentage)}
-                      color="cyan"
-                      className="mt-4"
-                    />
-                    <Typography variant="small" color="blue-gray" className="mt-2 text-center">
-                      Progress:{" "}
-                      <span className="font-bold text-cyan-600">
-                        {data.goals.water.percentage}%
-                      </span>
-                    </Typography>
-                  </Card>
-                </div>
-
-                {/* Meals Section */}
-                <div className="mt-8">
-                  <Typography variant="h6" color="blue-gray" className="mb-4">
-                    Meals for the Day
-                  </Typography>
-                  {data.routine.meals.map((meal, index) => (
-                    <Card
-                      key={index}
-                      shadow={false}
-                      className="p-6 border border-gray-200 rounded-lg mb-4"
-                    >
-                      <div className="flex items-center gap-4">
-                        {/* Meal Details */}
-                        <div className="flex-1">
-                          <Typography variant="h6" color="blue-gray" className="mb-2">
-                            {meal.category.replace("_", " ").toUpperCase()}
-                          </Typography>
-                          <Typography variant="small" className="text-gray-600">
-                            Status: <span className="text-blue-gray-800">{meal.status}</span>
-                          </Typography>
-                          <Typography variant="small" className="text-gray-600">
-                            Note: <span className="text-blue-gray-800">{meal.note}</span>
-                          </Typography>
-                          <ul className="list-disc pl-6 mt-2">
-                            {Object.entries(meal.items).map(([key, item]) => (
-                              <li key={item._id} className="text-gray-600">
-                                {key.replace("_", " ")}: {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Meal Image */}
-                        <div className="flex-shrink-0 w-32 h-32">
-                          <MealCard meal={meal} />
-                          {/* <img
-                            src={meal?.image ? meal?.image : `http://43.204.2.84:7200/uploads/images/1734288231651-vegetables-155616_640.png`}
-                            alt={`${meal.category} image`}
-                            className="w-full h-full object-cover rounded-lg"
-                          /> */}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-
-
-              </div>
-            ) : (
-              <div>No data available for the selected date.</div>
-            )}
-          </div>}
 
           {userProfile?.user?.role === 'user' && <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />}
 

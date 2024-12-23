@@ -1,7 +1,7 @@
 import React from "react";
 
-const StepsTracker = () => {
-  const stepGoal = 10000; // Static goal
+const StepsTracker = ({ data }) => {
+  const stepGoal = data?.dailyGoal;
   const records = [
     { date: "22/12/2024", steps: 12000, calories: 500, time: "1h 30m" },
     { date: "21/12/2024", steps: 9500, calories: 400, time: "1h 10m" },
@@ -46,32 +46,30 @@ const StepsTracker = () => {
               </tr>
             </thead>
             <tbody>
-              {records.map((record, index) => (
+              {data && data?.stepAchive.length > 0 && data?.stepAchive.map((record, index) => (
                 <tr
                   key={index}
-                  className={`${
-                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-gray-100`}
+                  className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    } hover:bg-gray-100`}
                 >
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
                     {record.date}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.steps}
+                    {record?.value?.steps || "N/A"}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.calories} kcal
+                    {record?.value?.calories || "N/A"} kcal
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.time}
+                    {record?.value?.time || "N/A"}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
-                      className={`${
-                        record.steps >= stepGoal
+                      className={`${record.steps >= stepGoal
                           ? "text-green-600"
                           : "text-red-600"
-                      }`}
+                        }`}
                     >
                       {record.steps >= stepGoal
                         ? "Goal Achieved"

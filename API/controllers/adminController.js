@@ -141,18 +141,60 @@ exports.getUserProfile = catchAsync(async (req, res, next) => {
 
 exports.getUserRoutine = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
-    const { date } = req.query;
-    // const weightGoal = await Goal.findOne(userId)
-    // const response = {
-    //     status: 'success',
-    //     data: {
-    //         weightGoal
-    //     },
-    // };
+
+    const goalData = await Goal.findOne(
+        { userId },
+        'weightGoal dailyWaterGoal dailyStepsGoal -_id'
+    );
+
+    const routineData = await Routine.find(
+        { userId },
+        'water steps meal nutrition sleep workout body_data body_measurement_parameters health_habits hygiene holistic_wellness what_new_today date -_id'
+    );
+
+    const waterAchive = routineData.filter(r => r.water).map(r => ({ date: r.date, value: r.water }));
+    const stepAchive = routineData.filter(r => r.steps).map(r => ({ date: r.date, value: r.steps }));
+    const meals = routineData.filter(r => r.meal).map(r => ({ date: r.date, value: r.meal }));
+    const nutrition = routineData.filter(r => r.nutrition).map(r => ({ date: r.date, value: r.nutrition }));
+    const sleep = routineData.filter(r => r.sleep).map(r => ({ date: r.date, value: r.sleep }));
+    const workout = routineData.filter(r => r.workout).map(r => ({ date: r.date, value: r.workout }));
+    const body_data = routineData.filter(r => r.body_data).map(r => ({ date: r.date, value: r.body_data }));
+    const body_measurement_parameters = routineData
+        .filter(r => r.body_measurement_parameters)
+        .map(r => ({ date: r.date, value: r.body_measurement_parameters }));
+    const health_habits = routineData.filter(r => r.health_habits).map(r => ({ date: r.date, value: r.health_habits }));
+    const hygiene = routineData.filter(r => r.hygiene).map(r => ({ date: r.date, value: r.hygiene }));
+    const holistic_wellness = routineData
+        .filter(r => r.holistic_wellness)
+        .map(r => ({ date: r.date, value: r.holistic_wellness }));
+    const what_new_today = routineData
+        .filter(r => r.what_new_today)
+        .map(r => ({ date: r.date, value: r.what_new_today }));
+
     res.status(200).json({
-        status:"success"
+        status: "success",
+        weightGoal: goalData?.weightGoal || null,
+        waterTrack: {
+            dailyGoal: goalData?.dailyWaterGoal || null,
+            waterAchive,
+        },
+        stepTrack: {
+            dailyGoal: goalData?.dailyStepsGoal || null,
+            stepAchive,
+        },
+        sleep,
+        meals,
+        nutrition,
+        workout,
+        body_data,
+        body_measurement_parameters,
+        health_habits,
+        hygiene,
+        holistic_wellness,
+        what_new_today,
     });
 });
+
 
 
 

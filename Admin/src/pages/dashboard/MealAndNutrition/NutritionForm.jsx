@@ -126,7 +126,9 @@ const Nutrition = () => {
             handleCancel={handleCancel}
           />
         )}
+        
       </Card>
+      
     </div>
   );
 };
