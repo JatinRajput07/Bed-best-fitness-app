@@ -100,7 +100,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
             {error ? (
               <option disabled>Error loading users</option>
             ) : (
-              users.map((user) => (
+              users.filter(e => e.role === 'user').map((user) => (
                 <option key={user.id} value={user._id}>
                   {user.name}
                 </option>

@@ -675,8 +675,6 @@ exports.updateMeal = async (req, res, next) => {
         const updatedData = req.body;
         const coachId = req.user.id;
 
-        console.log(mealId,'=====mealId====')
-
         const meal = await Meal.findOneAndUpdate(
             { _id: mealId },
             updatedData,
@@ -730,7 +728,13 @@ exports.deleteMeal = async (req, res, next) => {
 exports.getNutritions = async (req, res, next) => {
     try {
         const coachId = req.user.id;
-        const nutritions = await Nutrition.find({ coachId });
+
+        let query = {}
+        if(req.user.role === 'host'){
+            query.coachId = coachId
+        }
+
+        const nutritions = await Nutrition.find(query);
 
         const userid = [...new Set(nutritions.map(item => item.userId.toString()))];
         const userObjectIds = userid.map(id => new mongoose.Types.ObjectId(id));
@@ -805,47 +809,47 @@ exports.getNutritions = async (req, res, next) => {
 };
 
 
-
-
 exports.getMeals = async (req, res, next) => {
     try {
         const coachId = req.user.id;
-
+        let query = {active: true}
+        if(req.user.role === 'host'){
+            query.coachId = new mongoose.Types.ObjectId(coachId)
+        }
         const mealsByUserAndCategory = await Meal.aggregate([
-            { $match: { coachId: new mongoose.Types.ObjectId(coachId), active: true } }, // Match meals for the logged-in coach and active meals
+            { $match: query }, 
             {
                 $lookup: {
-                    from: 'users', // The collection name for the User model
-                    localField: 'userId', // The field in the Meal model to match
-                    foreignField: '_id', // The field in the User model to match
-                    as: 'userDetails' // Alias to store the user details
+                    from: 'users',
+                    localField: 'userId', 
+                    foreignField: '_id',
+                    as: 'userDetails' 
                 }
             },
-            { $unwind: '$userDetails' }, // Unwind the userDetails array to get the details
+            { $unwind: '$userDetails' },
             {
                 $group: {
-                    _id: { userId: '$userId', userName: '$userDetails.name', userEmail: '$userDetails.email', category: '$category' }, // Group by user details and category
-                    meals: { $push: { itemId: '$_id', itemName: '$item' } }, // Push both item ID and item name
+                    _id: { userId: '$userId', userName: '$userDetails.name', userEmail: '$userDetails.email', category: '$category' }, 
+                    meals: { $push: { itemId: '$_id', itemName: '$item' } },
                 },
             },
-            { $sort: { '_id.userId': 1, '_id.category': 1 } }, // Sort by userId and category
+            { $sort: { '_id.userId': 1, '_id.category': 1 } },
         ]);
 
-        // Group the meals and user details into a final structure
         const result = mealsByUserAndCategory.reduce((acc, { _id: { userId, userName, userEmail, category }, meals }) => {
-            // Check if user is already in the result array
+
             let userEntry = acc.find(user => user.userId.toString() === userId.toString());
             if (!userEntry) {
-                // If not found, add the user details
+     
                 userEntry = {
                     userId,
                     name: userName,
                     email: userEmail,
-                    meals: {} // Initialize an empty meals object for this user
+                    meals: {}
                 };
                 acc.push(userEntry);
             }
-            // Add meals to the correct category for this user, pushing both item IDs and item names
+
             userEntry.meals[category] = meals.map(meal => ({
                 itemId: meal.itemId,
                 itemName: meal.itemName
@@ -856,7 +860,7 @@ exports.getMeals = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: result, // Return the result array
+            data: result, 
         });
     } catch (error) {
         next(error);

@@ -119,56 +119,62 @@ const Meal = () => {
                     </Button>
                 </CardHeader>
                 <CardBody className="p-6 space-y-6">
-                    {/* Accordion for each user */}
-                    {mealData.length > 0 && mealData.map((userMeals, index) => (
-                        <Accordion key={userMeals.userId} open={openAccordions[userMeals.userId]}>
-                            <AccordionHeader onClick={() => handleAccordionToggle(userMeals.userId)}>
-                                <Typography variant="h6" color="gray-700">
-                                    {index + 1}. {userMeals.name}
-                                </Typography>
-                            </AccordionHeader>
-                            <AccordionBody>
-                                <table className="min-w-full table-auto">
-                                    <thead>
-                                        <tr className="bg-gray-200">
-                                            <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Category</th>
-                                            <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Item</th>
-                                            <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {/* Loop through the user's meals */}
-                                        {Object.keys(userMeals.meals).map((categoryKey) => (
-                                            userMeals.meals[categoryKey].length > 0 && (
-                                                userMeals.meals[categoryKey].map((meal) => (
-                                                    <tr key={meal.itemId} className="border-t">
-                                                        <td className="px-6 py-2 text-sm text-gray-600">{categoryKey}</td>
-                                                        <td className="px-6 py-2 text-sm text-gray-600">{meal.itemName}</td>
-                                                        <td className="px-6 py-2 text-sm text-gray-600 flex space-x-2">
-                                                            <PencilIcon
-                                                                className="h-5 w-5 text-blue-500 cursor-pointer"
-                                                                onClick={() => {
-                                                                    setCategory(categoryKey);
-                                                                    setItem(meal.itemName);
-                                                                    setSelectedUserId(userMeals.userId);
-                                                                    setEditMeal(meal);
-                                                                    handleOpenDialog();
-                                                                }}
-                                                            />
-                                                            <TrashIcon
-                                                                className="h-5 w-5 text-red-500 cursor-pointer"
-                                                                onClick={() => handleDelete(meal.itemId)}
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </AccordionBody>
-                        </Accordion>
-                    ))}
+
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <div className="loader border-t-4 border-b-4 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+                        </div>
+                    ) : (
+                        mealData.length > 0 && mealData.map((userMeals, index) => (
+                            <Accordion key={userMeals.userId} open={openAccordions[userMeals.userId]}>
+                                <AccordionHeader onClick={() => handleAccordionToggle(userMeals.userId)}>
+                                    <Typography variant="h6" color="gray-700">
+                                        {index + 1}. {userMeals.name}
+                                    </Typography>
+                                </AccordionHeader>
+                                <AccordionBody>
+                                    <table className="min-w-full table-auto">
+                                        <thead>
+                                            <tr className="bg-gray-200">
+                                                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Category</th>
+                                                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Item</th>
+                                                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {/* Loop through the user's meals */}
+                                            {Object.keys(userMeals.meals).map((categoryKey) => (
+                                                userMeals.meals[categoryKey].length > 0 && (
+                                                    userMeals.meals[categoryKey].map((meal) => (
+                                                        <tr key={meal.itemId} className="border-t">
+                                                            <td className="px-6 py-2 text-sm text-gray-600">{categoryKey}</td>
+                                                            <td className="px-6 py-2 text-sm text-gray-600">{meal.itemName}</td>
+                                                            <td className="px-6 py-2 text-sm text-gray-600 flex space-x-2">
+                                                                <PencilIcon
+                                                                    className="h-5 w-5 text-blue-500 cursor-pointer"
+                                                                    onClick={() => {
+                                                                        setCategory(categoryKey);
+                                                                        setItem(meal.itemName);
+                                                                        setSelectedUserId(userMeals.userId);
+                                                                        setEditMeal(meal);
+                                                                        handleOpenDialog();
+                                                                    }}
+                                                                />
+                                                                <TrashIcon
+                                                                    className="h-5 w-5 text-red-500 cursor-pointer"
+                                                                    onClick={() => handleDelete(meal.itemId)}
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </AccordionBody>
+                            </Accordion>
+                        ))
+                    )}
                 </CardBody>
             </Card>
 
@@ -179,7 +185,7 @@ const Meal = () => {
                         <Typography className="text-lg font-semibold text-gray-800">Add or Edit Meal</Typography>
 
                         <Select label="Select User" onChange={setSelectedUserId} value={selectedUserId}>
-                            {users.map((user) => (
+                            {users.filter(e => e.role === 'user').map((user) => (
                                 <Option key={user._id} value={user._id}>
                                     {user.name}
                                 </Option>
