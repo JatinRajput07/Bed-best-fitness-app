@@ -118,10 +118,10 @@ export function Profile({ id, closeModal }) {
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
-          {userProfile?.user?.role === "user" && ( 
+          {userProfile?.user?.role === "user" && (
             <Tabs id="custom-animation" value={activeTab}>
-            <TabsHeader>
-              
+              <TabsHeader>
+
                 <>
                   <Tab value="Weight" onClick={() => handleTabClick("Weight")}>
                     Weight
@@ -166,83 +166,80 @@ export function Profile({ id, closeModal }) {
                     Gallery
                   </Tab>
                 </>
-              
-            </TabsHeader>
-            <TabsBody
-              animate={{
-                initial: { y: 250 },
-                mount: { y: 0 },
-                unmount: { y: 250 },
-              }}
-            >
-              {activeTab === "Weight" && (
-                <TabPanel value="Weight">
-                  <WeightTracker
-                    startWeight={data?.weightGoal?.startsWeight}
-                    targetWeight={data?.weightGoal?.goalWeight}
-                    currentWeight={data?.weightGoal?.currentWeight}
-                  />
-                </TabPanel>
-              )}
-              {activeTab === "steps" && (
-                <TabPanel value="steps">
-                  <StepsTracker userId={userProfile?.user?._id} />
-                </TabPanel>
-              )}
 
-              {activeTab === "sleep" && (
-                <TabPanel value="sleep">
-                  <SleepTracker userId={userProfile?.user?._id} />
-                </TabPanel>
-              )}
+              </TabsHeader>
+              <TabsBody
+                animate={{
+                  initial: { y: 250 },
+                  mount: { y: 0 },
+                  unmount: { y: 250 },
+                }}
+              >
+                {activeTab === "Weight" && (
+                  <TabPanel value="Weight">
+                    <WeightTracker
+                      startWeight={data?.weightGoal?.startsWeight}
+                      targetWeight={data?.weightGoal?.goalWeight}
+                      currentWeight={data?.weightGoal?.currentWeight}
+                    />
+                  </TabPanel>
+                )}
+                {activeTab === "steps" && (
+                  <TabPanel value="steps">
+                    <StepsTracker userId={userProfile?.user?._id} />
+                  </TabPanel>
+                )}
 
-              {activeTab === "water" && (
-                <TabPanel value="water">
-                  <WaterTracker userId={userProfile?.user?._id} />
-                </TabPanel>
-              )}
-              {activeTab === "meals" && (
-                <TabPanel value="meals">
-                  <MealTracker userId={userProfile?.user?._id} />
-                </TabPanel>
-              )}
-              {activeTab === "nutritions" && (
-                <NutritionTracker userId={userProfile?.user?._id} />
-              )}
-              {activeTab === "bodydata" && (
-                <BodyDataTracker userId={userProfile?.user?._id} />
-              )}
+                {activeTab === "sleep" && (
+                  <TabPanel value="sleep">
+                    <SleepTracker userId={userProfile?.user?._id} />
+                  </TabPanel>
+                )}
 
-              {activeTab === "BodyMeasurement" && (
-                <BodyMeasurementTracker userId={userProfile?.user?._id} />
-              )}
+                {activeTab === "water" && (
+                  <TabPanel value="water">
+                    <WaterTracker userId={userProfile?.user?._id} />
+                  </TabPanel>
+                )}
+                {activeTab === "meals" && (
+                  <TabPanel value="meals">
+                    <MealTracker userId={userProfile?.user?._id} />
+                  </TabPanel>
+                )}
+                {activeTab === "nutritions" && (
+                  <NutritionTracker userId={userProfile?.user?._id} />
+                )}
+                {activeTab === "bodydata" && (
+                  <BodyDataTracker userId={userProfile?.user?._id} />
+                )}
 
-
-              {activeTab === "HealthHabitsTracker" && (
-                <HealthHabitsTracker userId={userProfile?.user?._id} />
-              )}
+                {activeTab === "BodyMeasurement" && (
+                  <BodyMeasurementTracker userId={userProfile?.user?._id} />
+                )}
 
 
-              {activeTab === "HygieneTracker" && (
-                <HygieneTracker userId={userProfile?.user?._id} />
-              )}
-
-              {activeTab === "reminders" && (
-                <TabPanel value="reminders">
-                  <AllReminders userId={userProfile?.user?._id} />
-                </TabPanel>
-              )}
-              {activeTab === "gallery" && (
-                <TabPanel value="gallery">
-                  <Gallery />
-                </TabPanel>
-              )}
-            </TabsBody>
-          </Tabs>)
-}
+                {activeTab === "HealthHabitsTracker" && (
+                  <HealthHabitsTracker userId={userProfile?.user?._id} />
+                )}
 
 
-          {userProfile?.user?.role === 'user' && <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />}
+                {activeTab === "HygieneTracker" && (
+                  <HygieneTracker userId={userProfile?.user?._id} />
+                )}
+
+                {activeTab === "reminders" && (
+                  <TabPanel value="reminders">
+                    <AllReminders userId={userProfile?.user?._id} />
+                  </TabPanel>
+                )}
+                {activeTab === "gallery" && (
+                  <TabPanel value="gallery">
+                    <Gallery />
+                  </TabPanel>
+                )}
+              </TabsBody>
+            </Tabs>)
+          }
 
           {userProfile?.user?.role === 'user' && <PDFPreview userProfile={userProfile} />}
 
