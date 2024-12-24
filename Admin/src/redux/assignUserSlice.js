@@ -44,7 +44,7 @@ const assignUserSlice = createSlice({
                 state.error = action.error.message;
             })
             .addCase(createAssignment.fulfilled, (state, action) => {
-                state.assignments.push(action.payload);
+                // state.assignments.push(action.payload);
             })
             .addCase(editAssignment.fulfilled, (state, action) => {
                 const index = state.assignments.findIndex(a => a._id === action.payload._id);

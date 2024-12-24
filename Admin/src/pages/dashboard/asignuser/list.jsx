@@ -7,7 +7,8 @@ const AdminAssignments = () => {
     const dispatch = useDispatch();
     const { assignments, loading, error } = useSelector((state) => state.assignments);
 
-    
+
+    // console.log(assignments,'=======assignments=====')
 
     useEffect(() => {
         dispatch(fetchAssignments());
@@ -27,7 +28,7 @@ const AdminAssignments = () => {
             <Card>
                 <CardHeader variant="gradient" color="gray" className="p-6">
                     <Typography variant="h6" color="white">
-                        Assignments List
+                        Assign Users List
                     </Typography>
                 </CardHeader>
                 <CardBody className="p-6">
@@ -39,7 +40,7 @@ const AdminAssignments = () => {
                                         Host
                                     </th>
                                     <th className="border border-gray-300 px-4 py-2 text-left text-gray-700 font-semibold">
-                                        Users
+                                        Assigned Users
                                     </th>
                                     <th className="border border-gray-300 px-4 py-2 text-center text-gray-700 font-semibold">
                                         Actions
@@ -47,26 +48,36 @@ const AdminAssignments = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {assignments.map(({ _id, host, asign_user }, index) => (
+                                {assignments.map(({ _id, hostName, hostEmail, assignedUsers }, index) => (
                                     <tr
                                         key={_id}
                                         className={index % 2 === 0 ? "bg-white" : "bg-gray-50 hover:bg-gray-100"}
                                     >
+                                        {/* Host Details */}
                                         <td className="border border-gray-300 px-4 py-2">
                                             <Typography className="text-gray-800">
-                                                {host.name} <span className="text-gray-500">({host.email})</span>
+                                                {hostName} <span className="text-gray-500">({hostEmail})</span>
                                             </Typography>
                                         </td>
+
+                                        {/* Assigned Users */}
                                         <td className="border border-gray-300 px-4 py-2">
-                                            {asign_user.map((user) => (
-                                                <Typography
-                                                    key={user._id}
-                                                    className="text-gray-800"
-                                                >
-                                                    {user.name} <span className="text-gray-500">({user.email})</span>
-                                                </Typography>
+                                            {assignedUsers.map(({ userId, name, email, assignedAt }) => (
+                                                <div key={userId} className="mb-2">
+                                                    <Typography className="text-gray-800">
+                                                        {name} <span className="text-gray-500">({email})</span>
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="small"
+                                                        className="text-gray-400"
+                                                    >
+                                                        Assigned At: {new Date(assignedAt).toLocaleString()}
+                                                    </Typography>
+                                                </div>
                                             ))}
                                         </td>
+
+                                        {/* Actions */}
                                         <td className="border border-gray-300 px-4 py-2 text-center">
                                             <Button
                                                 color="red"

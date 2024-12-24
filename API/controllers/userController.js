@@ -810,9 +810,7 @@ exports.get_asign_users = catchAsync(async (req, res, next) => {
     if (!users || users.length === 0) {
         return next(new AppError("No assigned users found for this host.", 404));
     }
-
     const assignedUsers = users.flatMap(user => user.asign_user);
-
     return res.status(200).json({
         status: "success",
         message: "Assigned users retrieved successfully.",

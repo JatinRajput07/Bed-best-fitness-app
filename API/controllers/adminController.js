@@ -26,6 +26,7 @@ const path = require("path");
 const Meeting = require("../models/Meeting");
 const { sendPushNotification } = require("../utils/firebaseService");
 const { default: mongoose } = require("mongoose");
+const Notification = require("../models/Notification");
 
 
 const signToken = id => {
@@ -473,32 +474,52 @@ exports.dashboard = catchAsync(async (req, res, next) => {
 
 exports.assign = catchAsync(async (req, res, next) => {
     const { asign_user, host } = req.body;
+
     if (!asign_user || !host) {
         return res.status(400).json({ message: "Host and users are required." });
     }
-    const newAssignment = new Asign_User({ asign_user, host });
-    const hostdata = await User.findOne({ _id: host })
-    if (newAssignment) {
+
+    if (!Array.isArray(asign_user)) {
+        return res.status(400).json({ message: "Assigned users must be an array." });
+    }
+
+    const hostData = await User.findById(host);
+    if (!hostData) {
+        return res.status(404).json({ message: "Host not found." });
+    }
+
+    const newAssignments = [];
+    for (const userId of asign_user) {
+        const existingAssignment = await Asign_User.findOne({ asign_user: userId, host });
+        if (existingAssignment) {
+            continue;
+        }
+
+        const newAssignment = await Asign_User.create({ asign_user: userId, host });
+        newAssignments.push(newAssignment);
+
         await Notification.create({
-            userId: asign_user,
-            message: `you have been appointed ${hostdata?.name} as coach`,
+            userId,
+            message: `You have been appointed ${hostData.name} as your coach.`,
             type: "Appointed a coach",
-            status: "sent"
+            status: "sent",
         });
     }
-    await Notification.create({
-        userId,
-        message,
-        type: payload?.notification?.title,
-        status: "sent"
-    });
-    await newAssignment.save();
 
+    if (newAssignments.length === 0) {
+        return res.status(400).json({
+            message: "All users are already assigned to the host. No new assignments were made.",
+        });
+    }
+
+    // Respond with the created assignments
     res.status(201).json({
-        status: 'success',
-        data: newAssignment,
+        status: "success",
+        message: `${newAssignments.length} user(s) assigned successfully.`,
+        data: newAssignments,
     });
 });
+
 
 
 exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
@@ -525,15 +546,55 @@ exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
 
 
 exports.getassign = catchAsync(async (req, res, next) => {
-    const assignments = await Asign_User.find()
-        .populate('asign_user', 'name email')
-        .populate('host', 'name email');
+    const assignments = await Asign_User.aggregate([
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'asign_user',
+                foreignField: '_id',
+                as: 'assignedUserDetails',
+            },
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'host',
+                foreignField: '_id',
+                as: 'hostDetails',
+            },
+        },
+        {
+            $unwind: '$hostDetails',
+        },
+        {
+            $group: {
+                _id: '$host',
+                hostName: { $first: '$hostDetails.name' },
+                hostEmail: { $first: '$hostDetails.email' },
+                assignedUsers: {
+                    $push: {
+                        userId: '$asign_user',
+                        name: { $arrayElemAt: ['$assignedUserDetails.name', 0] },
+                        email: { $arrayElemAt: ['$assignedUserDetails.email', 0] },
+                        assignedAt: '$createdAt',
+                    },
+                },
+            },
+        },
+        {
+            $sort: {
+                'assignedUsers.assignedAt': -1, // Sorting by assignedAt in descending order
+            },
+        },
+    ]);
 
     res.status(200).json({
         status: 'success',
         data: assignments,
     });
 });
+
+
 
 
 exports.editassign = catchAsync(async (req, res, next) => {
@@ -730,7 +791,7 @@ exports.getNutritions = async (req, res, next) => {
         const coachId = req.user.id;
 
         let query = {}
-        if(req.user.role === 'host'){
+        if (req.user.role === 'host') {
             query.coachId = coachId
         }
 
@@ -812,24 +873,24 @@ exports.getNutritions = async (req, res, next) => {
 exports.getMeals = async (req, res, next) => {
     try {
         const coachId = req.user.id;
-        let query = {active: true}
-        if(req.user.role === 'host'){
+        let query = { active: true }
+        if (req.user.role === 'host') {
             query.coachId = new mongoose.Types.ObjectId(coachId)
         }
         const mealsByUserAndCategory = await Meal.aggregate([
-            { $match: query }, 
+            { $match: query },
             {
                 $lookup: {
                     from: 'users',
-                    localField: 'userId', 
+                    localField: 'userId',
                     foreignField: '_id',
-                    as: 'userDetails' 
+                    as: 'userDetails'
                 }
             },
             { $unwind: '$userDetails' },
             {
                 $group: {
-                    _id: { userId: '$userId', userName: '$userDetails.name', userEmail: '$userDetails.email', category: '$category' }, 
+                    _id: { userId: '$userId', userName: '$userDetails.name', userEmail: '$userDetails.email', category: '$category' },
                     meals: { $push: { itemId: '$_id', itemName: '$item' } },
                 },
             },
@@ -840,7 +901,7 @@ exports.getMeals = async (req, res, next) => {
 
             let userEntry = acc.find(user => user.userId.toString() === userId.toString());
             if (!userEntry) {
-     
+
                 userEntry = {
                     userId,
                     name: userName,
@@ -860,7 +921,7 @@ exports.getMeals = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: result, 
+            data: result,
         });
     } catch (error) {
         next(error);
