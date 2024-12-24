@@ -118,9 +118,10 @@ export function Profile({ id, closeModal }) {
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
-          <Tabs id="custom-animation" value={activeTab}>
+          {userProfile?.user?.role === "user" && ( 
+            <Tabs id="custom-animation" value={activeTab}>
             <TabsHeader>
-              {userProfile?.user?.role === "user" && (
+              
                 <>
                   <Tab value="Weight" onClick={() => handleTabClick("Weight")}>
                     Weight
@@ -165,7 +166,7 @@ export function Profile({ id, closeModal }) {
                     Gallery
                   </Tab>
                 </>
-              )}
+              
             </TabsHeader>
             <TabsBody
               animate={{
@@ -208,8 +209,6 @@ export function Profile({ id, closeModal }) {
               {activeTab === "nutritions" && (
                 <NutritionTracker userId={userProfile?.user?._id} />
               )}
-
-
               {activeTab === "bodydata" && (
                 <BodyDataTracker userId={userProfile?.user?._id} />
               )}
@@ -228,16 +227,6 @@ export function Profile({ id, closeModal }) {
                 <HygieneTracker userId={userProfile?.user?._id} />
               )}
 
-
-
-              {/* HealthHabitsTracker */}
-
-              {/* BodyMeasurementTracker */}
-
-
-
-
-
               {activeTab === "reminders" && (
                 <TabPanel value="reminders">
                   <AllReminders userId={userProfile?.user?._id} />
@@ -249,7 +238,8 @@ export function Profile({ id, closeModal }) {
                 </TabPanel>
               )}
             </TabsBody>
-          </Tabs>
+          </Tabs>)
+}
 
 
           {userProfile?.user?.role === 'user' && <OtherHyginData selectedDate={selectedDate.toISOString().split("T")[0]} userId={userProfile?.user?._id} />}
