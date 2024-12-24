@@ -14,13 +14,13 @@ export const uploadFile = createAsyncThunk('files/upload', async (file, { dispat
       },
     });
 
-    console.log(response.data ,'================response====================')
+    // console.log(response.data ,'================response====================')
 
     // Return the uploaded file's path from the response
     return response.data.data[0];
   } catch (error) {
 
-    console.log()
+    // console.log()
     throw error.response?.data?.message || error.message;
   }
 });

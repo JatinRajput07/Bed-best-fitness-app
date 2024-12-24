@@ -4,9 +4,12 @@ import { fetchUsers } from "../../redux/userSlice";
 import { fetchAssignments, createAssignment } from "../../redux/assignUserSlice";
 import Select, { components } from "react-select";
 import { Card, CardHeader, CardBody, Typography, Button } from "@material-tailwind/react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const CreateAssignment = () => {
   const dispatch = useDispatch();
+    const navigate = useNavigate();
   const { users, loading: usersLoading, error: usersError } = useSelector((state) => state.users);
   const { assignments = [], loading: assignmentsLoading, error: assignmentsError } = useSelector((state) => state.assignments);
 
@@ -80,12 +83,16 @@ const CreateAssignment = () => {
         host: selectedHost,
         asign_user: selectedUsers.map((user) => user.value),
       })
-    );
+    ).then((res) => {
+      if (res.meta.requestStatus === "fulfilled") {
+        toast.success("success");
+        navigate("/dashboard/assign-users-list");
+        setSelectedHost(null);
+        setSelectedUsers([]);
+        setErrors({});
+      }
+    })
 
-    alert("Assignment created successfully!");
-    setSelectedHost(null);
-    setSelectedUsers([]);
-    setErrors({});
   };
 
   // Loading state

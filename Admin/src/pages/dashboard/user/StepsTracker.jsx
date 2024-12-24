@@ -1,13 +1,24 @@
-import React from "react";
+import Axios from "@/configs/Axios";
+import React, { useEffect, useState } from "react";
 
-const StepsTracker = ({ data }) => {
+const StepsTracker = ({ userId }) => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const fetchStepTracking = async () => {
+      try {
+        const response = await Axios.get(`/user/getStepTracking/${userId}/getStepTracking`);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching step tracking data:", error);
+      }
+    };
+    if (userId) {
+      fetchStepTracking();
+    }
+  }, [userId]);
+
   const stepGoal = data?.dailyGoal;
-  const records = [
-    { date: "22/12/2024", steps: 12000, calories: 500, time: "1h 30m" },
-    { date: "21/12/2024", steps: 9500, calories: 400, time: "1h 10m" },
-    { date: "20/12/2024", steps: 11000, calories: 450, time: "1h 20m" },
-    { date: "19/12/2024", steps: 8000, calories: 350, time: "1h 0m" },
-  ]; // Static records
 
   return (
     <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
@@ -67,8 +78,8 @@ const StepsTracker = ({ data }) => {
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
                       className={`${record.steps >= stepGoal
-                          ? "text-green-600"
-                          : "text-red-600"
+                        ? "text-green-600"
+                        : "text-red-600"
                         }`}
                     >
                       {record.steps >= stepGoal

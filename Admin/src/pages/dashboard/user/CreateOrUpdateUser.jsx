@@ -86,7 +86,7 @@ const CreateOrUpdateUser = ({ editUserId = null }) => {
             alert("User updated successfully!");
         } else {
 
-            console.log(formData,'=====formData===')
+            // console.log(formData,'=====formData===')
             // Create new user
             dispatch(createUser(formData));
             alert("User created successfully!");

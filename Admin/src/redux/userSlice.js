@@ -23,7 +23,7 @@ export const fetchUserDetails = createAsyncThunk('/admin/get-user-profile', asyn
     try {
         const response = await Axios.get(`/admin/get-user-profile/${id}`);
 
-        console.log(response.data.data)
+        // console.log(response.data.data)
 
         return response.data.data;
     } catch (error) {
@@ -35,7 +35,7 @@ export const fetchUserDetails = createAsyncThunk('/admin/get-user-profile', asyn
 export const deleteUser = createAsyncThunk('/admin/user-delete', async (userId, { rejectWithValue }) => {
     try {
 
-        console.log(userId,'======userId=====')
+        // console.log(userId,'======userId=====')
         await Axios.delete(`/admin/user-delete/${userId}`);
         return userId;
     } catch (error) {

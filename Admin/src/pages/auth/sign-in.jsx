@@ -33,7 +33,7 @@ export function SignIn() {
 
       const data = await response.json();
       if (response.ok) {
-        console.log(data,'==============data===========================')
+        // console.log(data,'==============data===========================')
         Cookies.set('jwt', data.data.token, { expires: 7, path: '' });
         dispatch(login(data));
         utilService.showSuccessToast("Login successfully!");
@@ -42,7 +42,7 @@ export function SignIn() {
         utilService.showErrorToast(data.message || "Login failed. Please try again.");
       }
     } catch (err) {
-      console.log(err,'====')
+      // console.log(err,'====')
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);

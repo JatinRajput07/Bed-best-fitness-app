@@ -4,7 +4,6 @@ const nutritionSchema = mongoose.Schema(
     {
         coachId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        
         mealTime: {
             type: String,
             enum: ['Breakfast', 'Lunch', 'Dinner', 'Night'],

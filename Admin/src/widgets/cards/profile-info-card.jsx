@@ -3,7 +3,7 @@ import { Card, CardHeader, CardBody, Input, Typography } from "@material-tailwin
 
 export function ProfileInfoCard({ user }) {
 
-  console.log(user, ' ========')
+  // console.log(user, ' ========')
 
   if (!user) {
     return (

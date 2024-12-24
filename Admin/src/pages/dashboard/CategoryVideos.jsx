@@ -48,8 +48,8 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
         if (selectedTab === "All") {
             setFilteredVideos(Object.values(categoryData).flat());
         } else {
-            console.log(categoryData, '======categoryData===');
-            console.log(selectedTab, '====selectedTab=====');
+            // console.log(categoryData, '======categoryData===');
+            // console.log(selectedTab, '====selectedTab=====');
             const videosForTab = categoryData[selectedTab] || [];
             setFilteredVideos(videosForTab);
         }
@@ -88,7 +88,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
 
     const handleDeleteVideo = (videoId) => {
 
-        console.log(videoId, '====videoId===')
+        // console.log(videoId, '====videoId===')
         axios
             .delete(`http://43.204.2.84:7200/admin/video-list/${videoId}`)
             .then(() => {

@@ -19,7 +19,7 @@ export const createVideo = createAsyncThunk(
   async (data, { dispatch, rejectWithValue }) => {
 
 
-    console.log(data, '=========================videos=============================')
+    // console.log(data, '=========================videos=============================')
 
     try {
       const formData = new FormData();

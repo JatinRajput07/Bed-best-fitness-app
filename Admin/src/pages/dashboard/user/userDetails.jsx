@@ -26,6 +26,12 @@ import StepsTracker from "./StepsTracker";
 import WaterTracker from "./WaterTracker";
 import MealTracker from "./MealTracker";
 import Axios from "@/configs/Axios";
+import NutritionTracker from "./NutritionTracker";
+import SleepTracker from "./SleepTracker";
+import BodyDataTracker from "./BodyDataTracker";
+import BodyMeasurementTracker from "./BodyMeasurementTracker";
+import HealthHabitsTracker from "./HealthHabitsTracker";
+import HygieneTracker from "./HygieneTracker";
 
 export function Profile({ id, closeModal }) {
 
@@ -52,7 +58,7 @@ export function Profile({ id, closeModal }) {
         }
       );
 
-      console.log(response.data ,'======response======')
+      // console.log(response.data, '======response======')
 
       setData(response.data);
     } catch (err) {
@@ -60,6 +66,12 @@ export function Profile({ id, closeModal }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const [activeTab, setActiveTab] = useState("Weight");
+
+  const handleTabClick = (tabValue) => {
+    setActiveTab(tabValue);
   };
 
   useEffect(() => {
@@ -106,15 +118,54 @@ export function Profile({ id, closeModal }) {
             <ProfileInfoCard user={userProfile?.user} />
           </div>
 
-          <Tabs id="custom-animation" value="Weight">
+          <Tabs id="custom-animation" value={activeTab}>
             <TabsHeader>
-              {userProfile?.user?.role === 'user' && <Tab value="Weight">Weight</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="steps">Steps</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="water">Water</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="meals">Meals</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="nutritions">Nutritions</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="reminderds">Reminders</Tab>}
-              {userProfile?.user?.role === 'user' && <Tab value="gallery">Gallery</Tab>}
+              {userProfile?.user?.role === "user" && (
+                <>
+                  <Tab value="Weight" onClick={() => handleTabClick("Weight")}>
+                    Weight
+                  </Tab>
+                  <Tab value="steps" onClick={() => handleTabClick("steps")}>
+                    Steps
+                  </Tab>
+                  <Tab value="sleep" onClick={() => handleTabClick("sleep")}>
+                    Sleep
+                  </Tab>
+                  <Tab value="water" onClick={() => handleTabClick("water")}>
+                    Water
+                  </Tab>
+                  <Tab value="meals" onClick={() => handleTabClick("meals")}>
+                    Meals
+                  </Tab>
+                  <Tab value="nutritions" onClick={() => handleTabClick("nutritions")}>
+                    Nutritions
+                  </Tab>
+
+                  <Tab value="bodydata" onClick={() => handleTabClick("bodydata")}>
+                    Body Data
+                  </Tab>
+
+                  <Tab value="BodyMeasurement" onClick={() => handleTabClick("BodyMeasurement")}>
+                    Body Measurement
+                  </Tab>
+
+                  <Tab value="HealthHabitsTracker" onClick={() => handleTabClick("HealthHabitsTracker")}>
+                    Health Habits
+                  </Tab>
+
+                  <Tab value="HygieneTracker" onClick={() => handleTabClick("HygieneTracker")}>
+                    Hygiene
+                  </Tab>
+
+
+                  <Tab value="reminders" onClick={() => handleTabClick("reminders")}>
+                    Reminders
+                  </Tab>
+                  <Tab value="gallery" onClick={() => handleTabClick("gallery")}>
+                    Gallery
+                  </Tab>
+                </>
+              )}
             </TabsHeader>
             <TabsBody
               animate={{
@@ -123,7 +174,7 @@ export function Profile({ id, closeModal }) {
                 unmount: { y: 250 },
               }}
             >
-              {userProfile?.user?.role === 'user' && (
+              {activeTab === "Weight" && (
                 <TabPanel value="Weight">
                   <WeightTracker
                     startWeight={data?.weightGoal?.startsWeight}
@@ -132,38 +183,67 @@ export function Profile({ id, closeModal }) {
                   />
                 </TabPanel>
               )}
-
-              {userProfile?.user?.role === 'user' && (
+              {activeTab === "steps" && (
                 <TabPanel value="steps">
-                  <StepsTracker data={data?.stepTrack} />
+                  <StepsTracker userId={userProfile?.user?._id} />
                 </TabPanel>
               )}
 
-              {userProfile?.user?.role === 'user' && (
+              {activeTab === "sleep" && (
+                <TabPanel value="sleep">
+                  <SleepTracker userId={userProfile?.user?._id} />
+                </TabPanel>
+              )}
+
+              {activeTab === "water" && (
                 <TabPanel value="water">
-                  <WaterTracker data={data?.waterTrack} />
+                  <WaterTracker userId={userProfile?.user?._id} />
                 </TabPanel>
               )}
-
-              {userProfile?.user?.role === 'user' && (
+              {activeTab === "meals" && (
                 <TabPanel value="meals">
-                  <MealTracker />
+                  <MealTracker userId={userProfile?.user?._id} />
                 </TabPanel>
               )}
-
-              {userProfile?.user?.role === 'user' && (
-                <TabPanel value="nutritions">
-                  This is the Nutritions content.
-                </TabPanel>
+              {activeTab === "nutritions" && (
+                <NutritionTracker userId={userProfile?.user?._id} />
               )}
 
-              {userProfile?.user?.role === 'user' && (
-                <TabPanel value="reminderds">
+
+              {activeTab === "bodydata" && (
+                <BodyDataTracker userId={userProfile?.user?._id} />
+              )}
+
+              {activeTab === "BodyMeasurement" && (
+                <BodyMeasurementTracker userId={userProfile?.user?._id} />
+              )}
+
+
+              {activeTab === "HealthHabitsTracker" && (
+                <HealthHabitsTracker userId={userProfile?.user?._id} />
+              )}
+
+
+              {activeTab === "HygieneTracker" && (
+                <HygieneTracker userId={userProfile?.user?._id} />
+              )}
+
+
+
+              {/* HealthHabitsTracker */}
+
+              {/* BodyMeasurementTracker */}
+
+
+
+
+
+              {activeTab === "reminders" && (
+                <TabPanel value="reminders">
                   <AllReminders userId={userProfile?.user?._id} />
                 </TabPanel>
               )}
-
-              {userProfile?.user?.role === 'user' && (
+              {activeTab === "gallery" && (
                 <TabPanel value="gallery">
                   <Gallery />
                 </TabPanel>

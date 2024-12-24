@@ -3,9 +3,11 @@ const router = express.Router();
 
 const adminRoutes = require('./admin/adminRoutes');
 const apiRoutes = require('./users/apiRoutes');
+const userDetailrouting = require('./admin/userDetailrouting');
 const Cms = require('../models/Cms');
 
 router.use('/admin', adminRoutes);
+router.use('/user', userDetailrouting);
 router.use('/api', apiRoutes);
 router.use('/page/:title', async (req, res) => {
     try {

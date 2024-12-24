@@ -14,7 +14,7 @@ const MealCard = ({ meal }) => {
         body: JSON.stringify({ imageUrl }),
       });
       const result = await response.json();
-      console.log("Image highlighted:", result);
+      // console.log("Image highlighted:", result);
     } catch (error) {
       console.error("Error highlighting image:", error);
     }

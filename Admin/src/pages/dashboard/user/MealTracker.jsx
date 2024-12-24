@@ -1,146 +1,155 @@
-import React, { useState } from "react";
+import Axios from "@/configs/Axios";
+import React, { useEffect, useState } from "react";
 
-const MealTracker = () => {
-  // Simulating multiple days of meal tracking
-  const mealPlan = [
-    {
-      date: "22/12/2024",
-      meals: [
-        {
-          meal: "Wake-Up Food",
-          status: "take",
-          note: "Had a light start with warm water and lemon.",
-          image: "https://via.placeholder.com/150",
-          items: ["Warm Water", "Lemon"],
-        },
-        {
-          meal: "Breakfast",
-          status: "take",
-          note: "Oats and fruits for a healthy start.",
-          image: "https://via.placeholder.com/150",
-          items: ["Oatmeal", "Banana", "Almond Milk"],
-        },
-        {
-          meal: "Lunch",
-          status: "skip",
-          note: "Skipped due to a busy schedule.",
-          image: "https://via.placeholder.com/150",
-          items: ["Rice", "Dal", "Vegetables"],
-        },
-        {
-          meal: "Dinner",
-          status: "take",
-          note: "Had a light dinner of soup and salad.",
-          image: "https://via.placeholder.com/150",
-          items: ["Soup", "Salad"],
-        },
-      ],
-    },
-    {
-      date: "23/12/2024",
-      meals: [
-        {
-          meal: "Wake-Up Food",
-          status: "skip",
-          note: "Skipped due to early morning rush.",
-          image: "https://via.placeholder.com/150",
-          items: ["Warm Water", "Lemon"],
-        },
-        {
-          meal: "Breakfast",
-          status: "take",
-          note: "Oats with almond milk.",
-          image: "https://via.placeholder.com/150",
-          items: ["Oatmeal", "Almond Milk"],
-        },
-        {
-          meal: "Lunch",
-          status: "take",
-          note: "Healthy vegetable stir fry.",
-          image: "https://via.placeholder.com/150",
-          items: ["Vegetables", "Rice"],
-        },
-        {
-          meal: "Dinner",
-          status: "take",
-          note: "Had soup and crackers.",
-          image: "https://via.placeholder.com/150",
-          items: ["Soup", "Crackers"],
-        },
-      ],
-    },
-    // Add more days as required
-  ];
+const DEFAULT_IMAGE_URL = "https://via.placeholder.com/150"; 
 
-  // State to manage which day's meal list is expanded
+const MealTracker = ({ userId }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Track the current page
+  const recordsPerPage = 5; // Show 10 records per page
+
+  useEffect(() => {
+    const fetchMealsData = async () => {
+      try {
+        const response = await Axios.get(`/user/getMealsData/${userId}/getMealsData`);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching meals data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchMealsData();
+    }
+  }, [userId]);
+
+  const mealPlan = data?.meals || [];
+
+  // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = mealPlan.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const totalPages = Math.ceil(mealPlan.length / recordsPerPage);
 
   const toggleDay = (index) => {
-    if (open === index) {
-      setOpen(null); // Close if the same day is clicked
-    } else {
-      setOpen(index); // Open the selected day
+    setOpen(open === index ? null : index);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setOpen(null); // Close expanded day on page change
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setOpen(null); // Close expanded day on page change
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-xl font-bold text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6 shadow-lg bg-white rounded-lg">
+    <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Meal Tracker</h2>
 
       <div className="space-y-6">
-        {mealPlan.map((day, index) => (
-          <div key={index} className="border-b">
-            <div
-              className="cursor-pointer py-4 px-6 bg-gray-100 hover:bg-gray-200"
-              onClick={() => toggleDay(index)}
-            >
-              <h3 className="text-xl font-semibold text-gray-700">{day.date}</h3>
-            </div>
-
-            {/* Accordion Content (Meal Details) */}
-            {open === index && (
-              <div className="p-4 space-y-4">
-                {day.meals.map((meal, mealIndex) => (
-                  <div
-                    key={mealIndex}
-                    className="border rounded-lg p-4 flex items-center gap-4 shadow-sm bg-gray-50"
-                  >
-                    {/* Meal Image */}
-                    <div className="w-24 h-24 rounded-lg overflow-hidden">
-                      <img
-                        src={meal.image}
-                        alt={meal.meal}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Meal Details */}
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-800">{meal.meal}</h3>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-semibold">Status:</span>{" "}
-                        <span
-                          className={`font-bold ${
-                            meal.status === "take" ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {meal.status === "take" ? "Taken" : "Skipped"}
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-semibold">Note:</span> {meal.note}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-semibold">Items:</span>{" "}
-                        {meal.items.join(", ")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+        {currentRecords.length > 0 ? (
+          currentRecords.map((day, index) => (
+            <div key={index} className="border-b">
+              <div
+                className="cursor-pointer py-4 px-6 bg-gray-100 hover:bg-gray-200"
+                onClick={() => toggleDay(index)}
+              >
+                <h3 className="text-xl font-semibold text-gray-700">{day?.date}</h3>
               </div>
-            )}
-          </div>
-        ))}
+
+              {open === index && (
+                <div className="p-4 space-y-4">
+                  {Object.keys(day?.value || {}).length > 0 ? (
+                    Object.entries(day?.value).map(([mealType, mealDetails], mealIndex) => (
+                      <div
+                        key={mealIndex}
+                        className="border rounded-lg p-4 flex items-center gap-4 shadow-sm bg-gray-50"
+                      >
+                        {/* Meal Image */}
+                        <div className="w-24 h-24 rounded-lg overflow-hidden">
+                          <img
+                            src={mealDetails.image || DEFAULT_IMAGE_URL}
+                            alt={mealType}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Meal Details */}
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-gray-800 capitalize">{mealType}</h3>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-semibold">Status:</span>{" "}
+                            <span
+                              className={`font-bold ${
+                                mealDetails.status === "take" ? "text-green-600" : "text-red-600"
+                              }`}
+                            >
+                              {mealDetails.status === "take" ? "Taken" : "Skipped"}
+                            </span>
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-semibold">Note:</span> {mealDetails.note || "No notes"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-semibold">Items:</span>{" "}
+                            {mealDetails.items.length > 0 ? mealDetails.items.join(", ") : "No items"}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">Record not found</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500">No meal data available</p>
+        )}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-6">
+        <button
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg ${currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"}`}
+        >
+          Previous
+        </button>
+        <p className="text-gray-700">
+          Page {currentPage} of {totalPages}
+        </p>
+        <button
+          onClick={goToNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === totalPages ? "bg-gray-300" : "bg-blue-500 text-white"
+          }`}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

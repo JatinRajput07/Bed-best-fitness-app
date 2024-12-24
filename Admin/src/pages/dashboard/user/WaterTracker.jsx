@@ -1,13 +1,25 @@
-import React from "react";
+import Axios from "@/configs/Axios";
+import React, { useEffect, useState } from "react";
 
-const WaterTracker = ({data}) => {
-  const waterGoal = data?.dailyGoal; // Static goal (number of glasses)
-  const records = [
-    { date: "22/12/2024", glasses: 8 },
-    { date: "21/12/2024", glasses: 6 },
-    { date: "20/12/2024", glasses: 9 },
-    { date: "19/12/2024", glasses: 7 },
-  ]; // Static records
+const WaterTracker = ({userId}) => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const fetchStepTracking = async () => {
+      try {
+        const response = await Axios.get(`/user/getWaterTracking/${userId}/getWaterTracking`);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching step tracking data:", error);
+      }
+    };
+    if (userId) {
+      fetchStepTracking();
+    }
+  }, [userId]);
+
+  const waterGoal = data?.dailyGoal; 
+
 
   return (
     <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
