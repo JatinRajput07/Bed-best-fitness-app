@@ -623,14 +623,41 @@ exports.createNutrition = async (req, res, next) => {
 };
 
 
+exports.updateNutrition = async (req, res, next) => {
+    try {
+        const nutrition = await Nutrition.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
+        res.status(201).json({
+            status: 'success',
+            message: 'update successfully!',
+            data: nutrition,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.deleteNutrition = async (req, res, next) => {
+    try {
+        const nutrition = await Nutrition.findByIdAndDelete(req.params.id);
+        res.status(201).json({
+            status: 'success',
+            message: 'Delete successfully!',
+            data: nutrition,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
 
 
 exports.createMeal = async (req, res, next) => {
     try {
-        const { category, item } = req.body;
-
-        const meal = await Meal.create({ category, item });
-
+        const coachId = req.user.id
+        const meal = await Meal.create({ ...req.body, coachId });
         res.status(201).json({
             status: 'success',
             message: 'Meal created successfully!',
@@ -641,6 +668,65 @@ exports.createMeal = async (req, res, next) => {
     }
 };
 
+// Update Meal API
+exports.updateMeal = async (req, res, next) => {
+    try {
+        const { mealId } = req.params;
+        const updatedData = req.body;
+        const coachId = req.user.id;
+
+        console.log(mealId,'=====mealId====')
+
+        const meal = await Meal.findOneAndUpdate(
+            { _id: mealId },
+            updatedData,
+            { new: true }
+        );
+
+        if (!meal) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Meal not found or you are not authorized to edit this meal.',
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Meal updated successfully!',
+            data: meal,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Delete Meal API
+exports.deleteMeal = async (req, res, next) => {
+    try {
+        const { mealId } = req.params;
+        const coachId = req.user.id;
+
+        const meal = await Meal.findOneAndDelete({ _id: mealId, coachId: coachId });
+
+        if (!meal) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Meal not found or you are not authorized to delete this meal.',
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Meal deleted successfully!',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+
 exports.getNutritions = async (req, res, next) => {
     try {
         const coachId = req.user.id;
@@ -649,16 +735,15 @@ exports.getNutritions = async (req, res, next) => {
         const userid = [...new Set(nutritions.map(item => item.userId.toString()))];
         const userObjectIds = userid.map(id => new mongoose.Types.ObjectId(id));
 
+        // Fetch routines for all users in parallel
         const routines = await Routine.find({ userId: { $in: userObjectIds } });
 
-        const results = [];
-
-        for (let userId of userid) {
+        const results = await Promise.all(userid.map(async (userId) => {
             const userNutritions = nutritions.filter(nutrition => nutrition.userId.toString() === userId);
-
             const userRoutines = routines.filter(routine => routine.userId.toString() === userId);
 
-            const nutritionDetails = userNutritions.map(nutrition => {
+            // Process nutrition data in parallel
+            const nutritionDetails = await Promise.all(userNutritions.map(async (nutrition) => {
                 const routineForNutrition = userRoutines.filter(routine =>
                     routine.nutrition.some(item => item.item.toString() === nutrition._id.toString())
                 );
@@ -670,8 +755,16 @@ exports.getNutritions = async (req, res, next) => {
                 const skippedCount = routineForNutrition.reduce((count, routine) => {
                     return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'skip').length;
                 }, 0);
+
                 const isCompleted = takenCount === nutrition.quantity;
+
+                // Batch update if completed
+                if (isCompleted) {
+                    await Nutrition.updateOne({ _id: nutrition._id }, { status: 1 });
+                }
+
                 return {
+                    _id: nutrition._id,
                     mealTime: nutrition.mealTime,
                     description: nutrition.description,
                     quantity: nutrition.quantity,
@@ -681,19 +774,20 @@ exports.getNutritions = async (req, res, next) => {
                     skippedCount,
                     isCompleted
                 };
-            });
+            }));
 
+            // Fetch user details in parallel
             const userDetails = await User.findById(userId);
 
-            results.push({
+            return {
                 userDetails: {
                     name: userDetails.name,
                     email: userDetails.email
                 },
                 userId,
                 nutritionDetails
-            });
-        }
+            };
+        }));
 
         res.status(200).json({
             status: 'success',
@@ -712,31 +806,65 @@ exports.getNutritions = async (req, res, next) => {
 
 
 
+
 exports.getMeals = async (req, res, next) => {
     try {
-        const mealsByCategory = await Meal.aggregate([
-            { $match: { active: true } },
+        const coachId = req.user.id;
+
+        const mealsByUserAndCategory = await Meal.aggregate([
+            { $match: { coachId: new mongoose.Types.ObjectId(coachId), active: true } }, // Match meals for the logged-in coach and active meals
+            {
+                $lookup: {
+                    from: 'users', // The collection name for the User model
+                    localField: 'userId', // The field in the Meal model to match
+                    foreignField: '_id', // The field in the User model to match
+                    as: 'userDetails' // Alias to store the user details
+                }
+            },
+            { $unwind: '$userDetails' }, // Unwind the userDetails array to get the details
             {
                 $group: {
-                    _id: '$category',
-                    meals: { $push: { item: '$item' } },
+                    _id: { userId: '$userId', userName: '$userDetails.name', userEmail: '$userDetails.email', category: '$category' }, // Group by user details and category
+                    meals: { $push: { itemId: '$_id', itemName: '$item' } }, // Push both item ID and item name
                 },
             },
-            { $sort: { _id: 1 } },
+            { $sort: { '_id.userId': 1, '_id.category': 1 } }, // Sort by userId and category
         ]);
-        const groupedMeals = mealsByCategory.reduce((acc, category) => {
-            acc[category._id] = category.meals;
+
+        // Group the meals and user details into a final structure
+        const result = mealsByUserAndCategory.reduce((acc, { _id: { userId, userName, userEmail, category }, meals }) => {
+            // Check if user is already in the result array
+            let userEntry = acc.find(user => user.userId.toString() === userId.toString());
+            if (!userEntry) {
+                // If not found, add the user details
+                userEntry = {
+                    userId,
+                    name: userName,
+                    email: userEmail,
+                    meals: {} // Initialize an empty meals object for this user
+                };
+                acc.push(userEntry);
+            }
+            // Add meals to the correct category for this user, pushing both item IDs and item names
+            userEntry.meals[category] = meals.map(meal => ({
+                itemId: meal.itemId,
+                itemName: meal.itemName
+            }));
+
             return acc;
-        }, {});
+        }, []);
 
         res.status(200).json({
             status: 'success',
-            data: groupedMeals,
+            data: result, // Return the result array
         });
     } catch (error) {
         next(error);
     }
 };
+
+
+
 
 
 

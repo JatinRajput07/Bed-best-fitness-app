@@ -314,8 +314,9 @@ exports.getNutritions = async (req, res, next) => {
 
 exports.getMeals = async (req, res, next) => {
     try {
+        const userId = req.user.id
         const mealsByCategory = await Meal.aggregate([
-            { $match: { active: true } },
+            { $match: { active: true, userId: new mongoose.Types.ObjectId(userId)} },
             {
                 $group: {
                     _id: '$category',

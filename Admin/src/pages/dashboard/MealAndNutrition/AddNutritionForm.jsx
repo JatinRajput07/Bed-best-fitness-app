@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 
-const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel }) => {
-  const [selectedUser, setSelectedUser] = useState("");
-  const [selectedMealTime, setSelectedMealTime] = useState("");
-  const [description, setDescription] = useState("");
-  const [quantity, setQuantity] = useState("");
+const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel, editData }) => {
+  const [selectedUser, setSelectedUser] = useState(editData?.userId || "");
+  const [selectedMealTime, setSelectedMealTime] = useState(editData?.mealTime || "");
+  const [description, setDescription] = useState(editData?.description || "");
+  const [quantity, setQuantity] = useState(editData?.quantity || "");
 
   const [errors, setErrors] = useState({
     selectedUser: "",
@@ -15,9 +15,18 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
     quantity: "",
   });
 
+  useEffect(() => {
+    if (editData) {
+      console.log(editData,'==d==d==d')
+      setSelectedUser(editData.userId);
+      setSelectedMealTime(editData.mealTime);
+      setDescription(editData.description);
+      setQuantity(editData.quantity);
+    }
+  }, [editData]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-
     let validationErrors = {};
     if (!selectedUser) validationErrors.selectedUser = "User selection is required.";
     if (!selectedMealTime) validationErrors.selectedMealTime = "Meal time selection is required.";
@@ -26,6 +35,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
 
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
+
     const nutrition = {
       userId: selectedUser,
       mealTime: selectedMealTime,
@@ -33,18 +43,32 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
       quantity,
     };
 
-    Axios.post("/admin/nutrition", nutrition)
-      .then((response) => {
-        if (response.data.status === "success") {
-          onAddNutrition(response.data.data);
-          handleReset();
-        }
-      })
-      .catch((error) => {
-        console.log(error.response.data.message,'==========================e=r=rr=r===================')
-        toast.error(error?.response?.data?.message)
-        console.error("Error submitting nutrition:", error);
-      });
+    if (editData?._id) {
+      Axios.put(`/admin/nutrition/${editData._id}`, nutrition)
+        .then((response) => {
+          if (response.data.status === "success") {
+            // console.log(response.data.data,)
+            onAddNutrition(response.data.data);
+            handleReset();
+            toast.success("Nutrition plan updated successfully.");
+          }
+        })
+        .catch((error) => {
+          toast.error(error?.response?.data?.message || "Failed to update nutrition plan.");
+        });
+    } else {
+      Axios.post("/admin/nutrition", nutrition)
+        .then((response) => {
+          if (response.data.status === "success") {
+            onAddNutrition(response.data.data);
+            handleReset();
+            toast.success("Nutrition plan added successfully.");
+          }
+        })
+        .catch((error) => {
+          toast.error(error?.response?.data?.message || "Failed to add nutrition plan.");
+        });
+    }
   };
 
   const handleReset = () => {
@@ -53,11 +77,12 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
     setDescription("");
     setQuantity("");
     setErrors({});
+    handleCancel();
   };
 
   return (
     <div className="w-full p-6 border rounded-lg shadow-lg bg-white">
-      <h2 className="text-lg font-bold mb-4">Add Nutrition Plan</h2>
+      <h2 className="text-lg font-bold mb-4">{editData ? "Edit Nutrition Plan" : "Add Nutrition Plan"}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="userSelect" className="block text-sm font-medium text-gray-700">
@@ -135,7 +160,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
           <button
             type="button"
             className="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600"
-            onClick={handleCancel}
+            onClick={handleReset}
           >
             Cancel
           </button>
@@ -143,7 +168,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel 
             type="submit"
             className="px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
           >
-            Submit
+            {editData ? "Update" : "Submit"}
           </button>
         </div>
       </form>

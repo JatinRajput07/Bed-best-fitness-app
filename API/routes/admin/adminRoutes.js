@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const Auth = require('../../middleware/Auth');
 const router = express.Router();
@@ -40,9 +40,14 @@ router.delete('/assign/:id', deleteassign)
 
 router.post('/nutrition', Auth, createNutrition); // Create a new nutrition
 
-router.post('/meal', createMeal);
-router.get('/meal', getMeals);
+router.post('/meal', Auth,createMeal);
+router.get('/meal',Auth, getMeals);
+router.put('/meal/:mealId',Auth, updateMeal);
+router.delete('/meal/:mealId',Auth, deleteMeal);
+
 router.get('/nutrition', Auth, getNutritions);
+router.put('/nutrition/:id', Auth, updateNutrition);
+router.delete('/nutrition/:id', Auth, deleteNutrition);
 
 
 router.get('/user-daily-report/:userId', getUserRoutine);
