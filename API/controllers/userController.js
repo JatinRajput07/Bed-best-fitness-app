@@ -85,7 +85,7 @@ exports.resendOtp = catchAsync(async (req, res, next) => {
     }
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    await new Email(user, resetToken).sendOTP();
+    await new Email(user, resetToken).welcome();
     return res.status(200).json({
         status: 'success',
         message: 'OTP has been resent to your email!',
