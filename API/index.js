@@ -12,7 +12,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const http = require('http');
 const initSocket = require('./socket');
-// require("./reminderScheduler")
+require("./reminderScheduler")
 const PORT = process.env.PORT || 3000;
 
 // DATABASE Connection

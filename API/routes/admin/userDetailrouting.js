@@ -16,7 +16,9 @@ router.get("/getWorkoutData/:userId/getWorkoutData", getWorkoutData)
 
 
 router.get("/getHealthHabits/:userId/getHealthHabits", getHealthHabits)
+
 router.get("/getHygieneData/:userId/getHygieneData", getHygieneData)
+
 router.get("/getHolisticWellness/:userId/getHolisticWellness", getHolisticWellness)
 router.get("/getWhatNewToday/:userId/getWhatNewToday", getWhatNewToday)
 
