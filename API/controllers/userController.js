@@ -1433,7 +1433,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         let waterReminder = await WaterReminder.findOne({ userId });
         if (waterReminder) {
             waterReminder.reminderOn = water.reminderOn !== undefined ? water.reminderOn : waterReminder.reminderOn;
-            waterReminder.reminderType = reminderType || waterReminder.reminderType;
+            waterReminder.reminderType = water.reminderType || waterReminder.reminderType;
             waterReminder.reminderTime = water.reminderTime || waterReminder.reminderTime;
             waterReminder.startTime = water.startTime || waterReminder.startTime;
             waterReminder.endTime = water.endTime || waterReminder.endTime;
@@ -1444,7 +1444,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
             waterReminder = new WaterReminder({
                 userId,
                 reminderOn: water.reminderOn || false,
-                reminderType: reminderType || 'once',
+                reminderType: water.reminderType || 'once',
                 reminderTime: water.reminderTime || '',
                 startTime: water.startTime || '',
                 endTime: water.endTime || '',
