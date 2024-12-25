@@ -46,7 +46,8 @@ const {
     deleteAccount,
     get_asign_users_details,
     getNotification,
-    createOrUpdateHealtyHabitRoutine
+    createOrUpdateHealtyHabitRoutine,
+    resendOtp
 } = require('../../controllers/userController');
 
 const {
@@ -70,6 +71,7 @@ router.post('/social_login', socialLogin); // Social login
 router.post('/forgotPassword', forgotPassword); // Forgot password
 router.post('/verify_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
+router.post('/resend_otp', resendOtp);
 
 // Recommendations Management
 router.get('/recommendation', getUserRecommendations); // Get user recommendations

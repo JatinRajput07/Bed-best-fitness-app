@@ -74,6 +74,26 @@ exports.register = catchAsync(async (req, res, next) => {
 });
 
 
+exports.resendOtp = catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+    if (!email) {
+        return next(new AppError('Email is required to resend OTP.', 400));
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+        return next(new AppError('User not found with this email.', 404));
+    }
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+    await new Email(user, resetToken).sendOTP();
+    return res.status(200).json({
+        status: 'success',
+        message: 'OTP has been resent to your email!',
+    });
+});
+
+
+
 exports.verifyAccount = catchAsync(async (req, res, next) => {
     const { otp, email } = req.body;
     const user = await User.findOne({
@@ -726,8 +746,9 @@ exports.Home = catchAsync(async (req, res, next) => {
 
     return res.status(200).json({
         status: "success",
-        data: { today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners
-    },
+        data: {
+            today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners
+        },
     });
 });
 
