@@ -132,7 +132,11 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     if (!user.isVerified) {
-        return next(new AppError('Account is not verified', 401));
+        return res.status(400).json({
+            status: 'fail',
+            message: 'Account is not verified',
+            isVerified: false
+        })
     }
 
     const token = signToken(user._id);
