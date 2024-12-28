@@ -4,6 +4,18 @@ import React, { useEffect, useState } from "react";
 const WaterTracker = ({userId}) => {
   const [data, setData] = useState(null);
 
+  const convertQtyToGlasses = (qty) => {
+    if (qty && typeof qty === "string") {
+      const numericValue = parseFloat(qty.replace(/[^\d.-]/g, ""));
+      if (!isNaN(numericValue)) {
+        const qtyInMl = numericValue * 1000;
+        const qtyInGlasses = qtyInMl / 250;
+        return qtyInGlasses;
+      }
+    }
+    return 0;
+  };
+
   useEffect(() => {
     const fetchStepTracking = async () => {
       try {
@@ -65,17 +77,17 @@ const WaterTracker = ({userId}) => {
                     {record.date}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record?.value?.qty}
+                  {record.value.qty} ( {convertQtyToGlasses(record.value.qty)} Glass )
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
                       className={`${
-                        record.glasses >= waterGoal
+                        convertQtyToGlasses(record.value.qty) >= waterGoal
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
-                      {record.glasses >= waterGoal
+                      {convertQtyToGlasses(record.value.qty) >= waterGoal
                         ? "Goal Achieved"
                         : "Goal Not Achieved"}
                     </span>

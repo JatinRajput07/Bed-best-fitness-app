@@ -64,14 +64,15 @@ exports.adminLogin = catchAsync(async (req, res, next) => {
 
 exports.getUserList = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, search = "", role = "", limit = 10 } = req.query;
 
-    const limitValue = +limit;
-    const pageValue = +page;
+    const limitValue = parseInt(limit, 10);
+    const pageValue = parseInt(page, 10);
     const skipValue = (pageValue - 1) * limitValue;
-    let query = { role: { $ne: 'admin' } };
 
-    if (req.user.role === 'host') {
+    let query = { role: { $ne: "admin" } };
+
+    if (req.user.role === "host") {
         const assignedUsers = await Asign_User.findOne({ host: userId });
 
         if (assignedUsers) {
@@ -83,27 +84,37 @@ exports.getUserList = catchAsync(async (req, res, next) => {
 
     if (search) {
         query.$or = [
-            { name: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } }
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
         ];
     }
 
+    if (role) {
+        query.role = role;
+    }
+
     const users = await User.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skipValue)
+        .limit(limitValue);
 
     const totalRecords = await User.countDocuments(query);
     const totalPages = Math.ceil(totalRecords / limitValue);
 
     return res.status(200).json({
-        status: 'success',
-        users,
-        pagination: {
-            totalRecords,
-            totalPages,
-            currentPage: pageValue,
-            limit: limitValue
-        }
+        status: "success",
+        data: {
+            users,
+            pagination: {
+                totalRecords,
+                totalPages,
+                currentPage: pageValue,
+                limit: limitValue,
+            },
+        },
     });
 });
+
 
 
 exports.deleteUser = catchAsync(async (req, res, next) => {

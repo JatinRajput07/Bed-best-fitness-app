@@ -17,7 +17,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
 
   useEffect(() => {
     if (editData) {
-      console.log(editData,'==d==d==d')
+      console.log(editData, '==d==d==d')
       setSelectedUser(editData.userId);
       setSelectedMealTime(editData.mealTime);
       setDescription(editData.description);
@@ -89,6 +89,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
             Select User
           </label>
           <select
+            disabled={!!editData} 
             id="userSelect"
             className="mt-1 h-8 px-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             value={selectedUser}
@@ -107,6 +108,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
               ))
             )}
           </select>
+
           {errors.selectedUser && <p className="text-red-500 text-xs mt-1">{errors.selectedUser}</p>}
         </div>
 

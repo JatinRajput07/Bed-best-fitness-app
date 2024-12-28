@@ -59,11 +59,11 @@ cron.schedule("* * * * *", async () => {
 const checkMealReminders = async (user, meals) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
-    console.log(`${hours}:${minutes}`);
+    // console.log(`${hours}:${minutes}`);
 
     for (let mealType in meals) {
         const meal = meals[mealType];
-        console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
+        // console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
         if (meal.enabled && meal.time ===  `${hours}:${minutes}`) {
             await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
         }
@@ -73,20 +73,20 @@ const checkMealReminders = async (user, meals) => {
 const checkWaterReminders = async (user, reminder) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
-    console.log(`${hours}:${minutes}`);
+    // console.log(`${hours}:${minutes}`);
 
     const currentMinute = new Date().getMinutes();
 
-    console.log(reminder.reminderTime, '=============currentTime========', `${hours}:${minutes}`)
+    // console.log(reminder.reminderTime, '=============currentTime========', `${hours}:${minutes}`)
 
     if (reminder.reminderType === "once" && reminder.reminderTime === `${hours}:${minutes}`) {
-        console.log('water reminder...')
+        // console.log('water reminder...')
         await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
     } else if (!reminder.reminderType && reminder.startTime <= `${hours}:${minutes}` && reminder.endTime >= `${hours}:${minutes}`) {
         const intervalSent = currentMinute % reminder.intervalMinutes === 0;
         const maxTimesReached = reminder.customTimes <= 0;
 
-        console.log(intervalSent && !maxTimesReached,'============intervalSent && !maxTimesReached=========')
+        // console.log(intervalSent && !maxTimesReached,'============intervalSent && !maxTimesReached=========')
 
         if (intervalSent && !maxTimesReached) {
             await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");

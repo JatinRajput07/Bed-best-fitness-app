@@ -26,13 +26,11 @@ const StepsTracker = ({ userId }) => {
         Steps Tracker
       </h2>
 
-      {/* Step Goal */}
       <div className="text-center mb-6">
         <p className="text-gray-600 font-medium">Daily Step Goal</p>
         <p className="text-3xl font-bold text-blue-600">{stepGoal} steps</p>
       </div>
 
-      {/* Steps Records */}
       <div>
         <p className="text-gray-600 font-medium mb-4">Steps History</p>
         <div className="overflow-x-auto">
@@ -77,12 +75,12 @@ const StepsTracker = ({ userId }) => {
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
-                      className={`${record.steps >= stepGoal
+                      className={`${record.value.steps >= stepGoal
                         ? "text-green-600"
                         : "text-red-600"
                         }`}
                     >
-                      {record.steps >= stepGoal
+                      {record.value.steps >= stepGoal
                         ? "Goal Achieved"
                         : "Goal Not Achieved"}
                     </span>

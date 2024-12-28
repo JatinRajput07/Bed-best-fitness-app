@@ -2,20 +2,24 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import Axios from '@/configs/Axios';
 
 // Fetch Users
-export const fetchUsers = createAsyncThunk('/admin/user-list', async ({ }, { rejectWithValue }) => {
-    try {
-        const response = await Axios.get('/admin/user-list', {
-            params: {
-                // page,
-                // pageSize: 10,
-                // search: searchQuery,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        return rejectWithValue(error.message);
+export const fetchUsers = createAsyncThunk(
+    '/admin/user-list',
+    async ({ page = 1, search = '', role = '' }, { rejectWithValue }) => {
+        try {
+            const response = await Axios.get('/admin/user-list', {
+                params: {
+                    page,
+                    pageSize: 10,
+                    search,
+                    role,
+                },
+            });
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
     }
-});
+);
 
 
 // Fetch User Details
@@ -77,14 +81,14 @@ const userSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            // Fetch Users
             .addCase(fetchUsers.pending, (state) => {
                 state.loading = true;
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
+                console.log(action.payload, '=================action======================')
                 state.loading = false;
                 state.users = action.payload.users;
-                state.totalUsers = action.payload.totalRecords;
+                state.totalUsers = action?.payload?.pagination?.totalRecords;
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.loading = false;
