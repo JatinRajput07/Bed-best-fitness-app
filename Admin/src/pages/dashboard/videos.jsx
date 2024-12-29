@@ -19,6 +19,7 @@ import { toast } from "react-hot-toast";
 import { TrashIcon, StarIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
 import CategoryVideos from "./CategoryVideos";
+import Axios from "@/configs/Axios";
 
 export function Videos() {
   const dispatch = useDispatch();
@@ -40,8 +41,8 @@ export function Videos() {
   if (videoError || userError) return <div>Error: {videoError || userError}</div>;
 
   const handleDeleteVideo = (videoId) => {
-    axios
-      .delete(`http://43.204.2.84:7200/admin/video-list/${videoId}`)
+    Axios
+      .delete(`/admin/video-list/${videoId}`)
       .then(() => {
         toast.success("Video deleted successfully!");
         dispatch(fetchVideos());
@@ -51,7 +52,7 @@ export function Videos() {
 
   const handleRecommendVideo = () => {
     const recommendationPromises = selectedUsers.map((userId) =>
-      axios.post(`http://43.204.2.84:7200/api/recommendation`, {
+      Axios.post(`/api/recommendation`, {
         videoId: selectedVideo,
         userId,
       })
@@ -84,7 +85,7 @@ export function Videos() {
             onChange={() => handleToggleUserSelection(user._id)}
           />
           <Typography variant="small" color="blue-gray">
-            {user.name}
+            {user.name ? user.name : user.email}  
           </Typography>
         </div>
       ));
@@ -146,13 +147,6 @@ export function Videos() {
             </Typography>
           </CardHeader>
           <CardBody className="p-4">
-            {/* Search Bar for User List */}
-            <Input
-              label="Search Users"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-4 w-full"
-            />
             {Object.keys(videos).map((category) => {
               const categoryVideos = videos[category];
               return (

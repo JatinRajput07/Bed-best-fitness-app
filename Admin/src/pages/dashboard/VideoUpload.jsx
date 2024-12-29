@@ -12,6 +12,7 @@ import {
   Button,
   Progress,
 } from "@material-tailwind/react";
+import Axios from "@/configs/Axios";
 
 const UploadVideo = () => {
   const navigate = useNavigate();
@@ -19,118 +20,44 @@ const UploadVideo = () => {
   const { progress, error: uploadError } = useSelector((state) => state.videos);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
   const [file, setFile] = useState(null);
   const [audioThumbnail, setAudioThumbnail] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const categoryOptions = [
-    { value: "workout-video", label: "Workout Video" },
-    { value: "recipe-video", label: "Recipe Video" },
-    { value: "knowledge-video", label: "Knowledge Video" },
-    { value: "story-podcast-recognition-video", label: "Story/Podcast/Recognition Video" },
-    { value: "wallpaper", label: "Wallpaper" },
-    { value: "quotes", label: "Quotes" },
-    { value: "audio-clips", label: "Audio Clips" },
-    { value: "music", label: "Music" },
-    { value: "podcast", label: "Podcast" },
-    { value: "audio-book", label: "Audio Book" },
-  ];
+  useEffect(() => {
+    // Fetch categories from the API
+    const fetchCategories = async () => {
+      try {
+        const response = await Axios.get("/admin/categories");
+        const data = response.data.data.map((cat) => ({
+          value: cat._id,
+          label: cat.name,
+          subcategories: cat.subcategories.map((sub) => ({
+            value: sub._id,
+            label: sub.name,
+          })),
+        }));
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        utilService.showErrorToast("Failed to load categories.");
+      }
+    };
 
-  const subcategoryOptions = {
-    "workout-video": [
-      { value: "body", label: "Body" },
-      { value: "neck-pain", label: "Neck Pain" },
-      { value: "upper-body", label: "Upper Body" },
-      { value: "lower-body", label: "Lower Body" },
-    ],
-    "recipe-video": [
-      { value: "breakfast", label: "Breakfast" },
-      { value: "lunch", label: "Lunch" },
-      { value: "dinner", label: "Dinner" },
-    ],
-    "knowledge-video": [
-      { value: "nutrition-diet", label: "Nutrition Diet" },
-      { value: "skin-care", label: "Skin Care" },
-      { value: "sleep", label: "Sleep" },
-    ],
-    "story-podcast-recognition-video": [
-      { value: "story", label: "Story" },
-      { value: "podcast", label: "Podcast" },
-    ],
-    wallpaper: [
-      { value: "nature", label: "Nature" },
-      { value: "motivation", label: "Motivation" },
-      { value: "god", label: "God" },
-    ],
-    quotes: [
-      { value: "friendship", label: "Friendship" },
-      { value: "motivation", label: "Motivation" },
-      { value: "success", label: "Success" },
-    ],
-    "audio-clips": [
-      { value: "new", label: "New" },
-      { value: "tophits", label: "Top Hits" },
-      { value: "trending", label: "Trending" },
-    ],
-    music: [
-      { value: "new", label: "New" },
-      { value: "tophits", label: "Top Hits" },
-      { value: "trending", label: "Trending" },
-    ],
-    podcast: [
-      { value: "new", label: "New" },
-      { value: "motivation", label: "Motivation" },
-      { value: "educational", label: "Educational" },
-    ],
-    "audio-book": [
-      { value: "new", label: "New" },
-      { value: "popular", label: "Most Popular" },
-      { value: "health_wellness", label: "Health & Wellness" },
-    ],
-  };
+    fetchCategories();
+  }, []);
 
-  const allowedFileTypes = {
-    "workout-video": ["video/mp4", "video/avi", "video/mov"],
-    "recipe-video": ["video/mp4", "video/avi", "video/mov"],
-    "knowledge-video": ["video/mp4", "video/avi", "video/mov"],
-    "story-podcast-recognition-video": ["video/mp4", "audio/mpeg"],
-    wallpaper: ["image/jpeg", "image/png", "image/jpg"],
-    quotes: ["image/jpeg", "image/png", "image/jpg"],
-    "audio-clips": ["audio/mpeg", "audio/wav"],
-    music: ["audio/mpeg", "audio/wav"],
-    podcast: ["audio/mpeg", "audio/wav"],
-    "audio-book": ["audio/mpeg", "audio/wav"],
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && allowedFileTypes[category.value].includes(selectedFile.type)) {
-      setFile(selectedFile);
-      setErrors((prevErrors) => ({ ...prevErrors, file: null })); // Clear file error
-    } else {
-      setFile(null);
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        file: `Invalid file type. Only ${allowedFileTypes[category.value].join(", ")} files are allowed.`,
-      }));
-    }
-  };
-
-  const handleAudioThumbnailChange = (e) => {
-    const selectedThumbnail = e.target.files[0];
-    if (selectedThumbnail && selectedThumbnail.type.startsWith("image/")) {
-      setAudioThumbnail(selectedThumbnail);
-      setErrors((prevErrors) => ({ ...prevErrors, audioThumbnail: null }));
-    } else {
-      setAudioThumbnail(null);
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        audioThumbnail: "Invalid image type for audio thumbnail.",
-      }));
-    }
+  const handleCategoryChange = (selected) => {
+    setCategory(selected);
+    setSubcategories([]);
+    setSubcategoryOptions(selected?.subcategories || []);
+    setFile(null);
+    setAudioThumbnail(null);
   };
 
   const validateForm = () => {
@@ -138,7 +65,7 @@ const UploadVideo = () => {
     if (!title) formErrors.title = "Title is required.";
     if (!category) formErrors.category = "Category is required.";
     if (!file) formErrors.file = "File is required.";
-    if (category?.value?.includes("audio") && !audioThumbnail) {
+    if (category?.label?.toLowerCase().includes("audio") && !audioThumbnail) {
       formErrors.audioThumbnail = "Audio thumbnail image is required for audio files.";
     }
     setErrors(formErrors);
@@ -156,7 +83,7 @@ const UploadVideo = () => {
           title,
           file,
           category: category.value,
-          subcategories,
+          subcategories: subcategories.map((sub) => sub.value),
           description,
           audioThumbnail,
         })
@@ -164,29 +91,34 @@ const UploadVideo = () => {
         if (res.meta.requestStatus === "fulfilled") {
           utilService.showSuccessToast("File uploaded successfully!");
           navigate("/dashboard/videos");
-          dispatch(fetchVideos())
-          setTitle("");
-          setDescription("");
-          setCategory(null);
-          setSubcategories([]);
-          setFile(null);
-          setAudioThumbnail(null);
-          setIsSubmitting(false);
-          dispatch(resetProgress());
+          dispatch(fetchVideos());
+          resetForm();
         }
       });
     } catch (err) {
       console.error(err);
       utilService.showErrorToast("Failed to upload video.");
+    } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setCategory(null);
+    setSubcategories([]);
+    setFile(null);
+    setAudioThumbnail(null);
+    setErrors({});
+    dispatch(resetProgress());
   };
 
   const isSubmitDisabled =
     !title ||
     !category ||
     !file ||
-    (category?.value?.includes("audio") && !audioThumbnail) ||
+    (category?.label?.toLowerCase().includes("audio") && !audioThumbnail) ||
     isSubmitting ||
     (progress > 0 && progress < 100);
 
@@ -215,13 +147,8 @@ const UploadVideo = () => {
             </label>
             <Select
               value={category}
-              onChange={(selected) => {
-                setCategory(selected);
-                setSubcategories([]);
-                setFile(null);
-                setAudioThumbnail(null); 
-              }}
-              options={categoryOptions}
+              onChange={handleCategoryChange}
+              options={categories}
               placeholder="Select a category"
               isClearable
               className="focus:ring focus:ring-indigo-500"
@@ -234,7 +161,7 @@ const UploadVideo = () => {
           </div>
 
           {/* Subcategories */}
-          {category && (
+          {subcategoryOptions.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subcategories
@@ -242,7 +169,8 @@ const UploadVideo = () => {
               <Select
                 value={subcategories}
                 onChange={(selected) => setSubcategories(selected || [])}
-                options={subcategoryOptions[category.value]}
+                options={subcategoryOptions}
+                isMulti
                 placeholder="Select subcategories"
                 className="focus:ring focus:ring-indigo-500"
               />
@@ -288,8 +216,7 @@ const UploadVideo = () => {
             </label>
             <input
               type="file"
-              onChange={handleFileChange}
-              accept={allowedFileTypes[category?.value]?.join(", ")}
+              onChange={(e) => setFile(e.target.files[0])}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
             />
             {errors.file && (
@@ -298,33 +225,6 @@ const UploadVideo = () => {
               </Typography>
             )}
           </div>
-
-          {/* Audio Thumbnail (if audio-related category) */}
-          {["audio", "music", "podcast", "story"].some(item => category?.value?.includes(item)) && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Audio Thumbnail (Image)
-              </label>
-              <input
-                type="file"
-                onChange={handleAudioThumbnailChange}
-                accept="image/*"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
-              />
-              {errors.audioThumbnail && (
-                <Typography color="red" className="text-sm mt-1">
-                  {errors.audioThumbnail}
-                </Typography>
-              )}
-            </div>
-          )}
-
-          {/* Progress Bar */}
-          {progress > 0 && (
-            <div>
-              <Progress value={progress} color="indigo" />
-            </div>
-          )}
 
           {/* Submit Button */}
           <Button
