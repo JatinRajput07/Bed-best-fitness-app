@@ -64,7 +64,7 @@ exports.adminLogin = catchAsync(async (req, res, next) => {
 
 exports.getUserList = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
-    const { page = 1, search = "", role = "", limit = 10 } = req.query;
+    const { page = 1, search = "", role = "", limit } = req.query;
 
     const limitValue = parseInt(limit, 10);
     const pageValue = parseInt(page, 10);

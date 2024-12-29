@@ -4,7 +4,7 @@ import Axios from '@/configs/Axios';
 // Fetch Users
 export const fetchUsers = createAsyncThunk(
     '/admin/user-list',
-    async ({ page = 1, search = '', role = '' }, { rejectWithValue }) => {
+    async ({ page = 1, search = '', role = '', limit = '' }, { rejectWithValue }) => {
         try {
             const response = await Axios.get('/admin/user-list', {
                 params: {
@@ -12,6 +12,7 @@ export const fetchUsers = createAsyncThunk(
                     pageSize: 10,
                     search,
                     role,
+                    limit
                 },
             });
             return response.data.data;

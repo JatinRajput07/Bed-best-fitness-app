@@ -35,6 +35,7 @@ export function UserList() {
         page: currentPage,
         search: searchTerm,
         role: filterRole,
+        limit:10
       })
     );
   }, [dispatch, currentPage, debouncedSearchTerm, filterRole]);
