@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardBody, Typography, Button } from "@material-tailwind/react";
+import { Card, CardHeader, CardBody, Typography, Button, Input } from "@material-tailwind/react";
 import { ChevronDownIcon, ChevronUpIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useSelector, useDispatch } from "react-redux";
 import Axios from "@/configs/Axios";
@@ -9,11 +9,15 @@ import toast from "react-hot-toast";
 
 const Nutrition = () => {
   const [nutritionData, setNutritionData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [expandedUserId, setExpandedUserId] = useState(null);
   const [editNutrition, setEditNutrition] = useState(null);
   const [deleteNutritionId, setDeleteNutritionId] = useState(null);
-  const { users, loading, error } = useSelector((state) => state.users);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // Number of items per page
+  const { users, loading } = useSelector((state) => state.users);
   const [isLoading, setIsLoading] = useState(false); // Local loading state
   const dispatch = useDispatch();
 
@@ -32,6 +36,7 @@ const Nutrition = () => {
       .then((response) => {
         if (response.data.status === "success") {
           setNutritionData(response.data.data);
+          setFilteredData(response.data.data);
         }
       })
       .catch((error) => {
@@ -44,7 +49,6 @@ const Nutrition = () => {
 
   useEffect(() => {
     dispatch(fetchUsers({}));
-    setIsLoading(true);
     fetchNutritionData();
   }, [dispatch]);
 
@@ -60,11 +64,16 @@ const Nutrition = () => {
       }
       return [...prevState, newNutrition];
     });
+    setFilteredData((prevState) => {
+      if (editNutrition) {
+        return prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item));
+      }
+      return [...prevState, newNutrition];
+    });
     setShowForm(false);
     setEditNutrition(null);
     fetchNutritionData();
   };
-
 
   const handleDelete = () => {
     if (!deleteNutritionId) return;
@@ -73,6 +82,7 @@ const Nutrition = () => {
       .then((response) => {
         if (response.data.status === "success") {
           setNutritionData((prevState) => prevState.filter((item) => item._id !== deleteNutritionId));
+          setFilteredData((prevState) => prevState.filter((item) => item._id !== deleteNutritionId));
           toast.success("Nutrition plan deleted successfully.");
         }
       })
@@ -81,9 +91,31 @@ const Nutrition = () => {
         toast.error("Failed to delete nutrition plan.");
       })
       .finally(() => setDeleteNutritionId(null));
-      fetchNutritionData();
   };
 
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    setFilteredData(
+      nutritionData.filter((user) =>
+        user?.userDetails?.name.toLowerCase().includes(query)
+      )
+    );
+    setCurrentPage(1); // Reset to the first page
+  };
+
+  // Pagination helpers
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <div className="mt-12 mb-8 flex flex-col items-center">
@@ -101,13 +133,23 @@ const Nutrition = () => {
         </CardHeader>
         {!showForm ? (
           <CardBody className="p-6 space-y-6">
+            {/* Search Bar */}
+            <div className="flex justify-between items-center mb-4">
+              <Input
+                type="text"
+                placeholder="Search by user name"
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-1/2"
+              />
+            </div>
             {/* Display loader when data is being fetched */}
             {loading || isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="loader border-t-4 border-b-4 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
               </div>
             ) : (
-              nutritionData.map((user) => (
+              paginatedData.map((user) => (
                 <div key={user.userId} className="border-b pb-4 mb-4">
                   <div
                     className="flex justify-between items-center cursor-pointer p-4 bg-gray-100 rounded-lg"
@@ -124,6 +166,7 @@ const Nutrition = () => {
                   </div>
                   {expandedUserId === user.userId && (
                     <div className="mt-4">
+                      {/* Table Headers */}
                       <div className="grid grid-cols-7 gap-4 text-gray-700 font-semibold bg-gray-200 p-3 rounded-t-lg">
                         <div>Meal Time</div>
                         <div>Description</div>
@@ -172,22 +215,37 @@ const Nutrition = () => {
                 </div>
               ))
             )}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-6 space-x-4">
+                <Button
+                  color="gray"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <Typography>{`${currentPage} / ${totalPages}`}</Typography>
+                <Button
+                  color="gray"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </CardBody>
         ) : (
           <AddNutritionForm
             onAddNutrition={handleAddNutrition}
             users={users}
             loading={loading}
-            error={error}
             handleCancel={handleCancel}
             editData={editNutrition}
           />
         )}
       </Card>
-
-      {/* Delete confirmation dialog */}
-
-      {/* {console.log(deleteNutritionId, '=================deleteNutritionId============')} */}
       {deleteNutritionId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -195,16 +253,10 @@ const Nutrition = () => {
               Are you sure you want to delete this nutrition plan?
             </Typography>
             <div className="flex justify-end space-x-4">
-              <Button
-                color="red"
-                onClick={() => setDeleteNutritionId(null)}
-              >
+              <Button color="red" onClick={() => setDeleteNutritionId(null)}>
                 Cancel
               </Button>
-              <Button
-                color="green"
-                onClick={handleDelete}
-              >
+              <Button color="green" onClick={handleDelete}>
                 Confirm
               </Button>
             </div>
