@@ -12,9 +12,13 @@ import {
   ArchiveBoxIcon,
   FilmIcon,
 } from "@heroicons/react/24/solid";
-import ReactApexChart from "react-apexcharts"; // Import react-apexcharts
+import ReactApexChart from "react-apexcharts";
+import Axios from "@/configs/Axios";
+import { useSelector } from "react-redux";
 
 export function Home() {
+  const { role } = useSelector((state) => state.auth);
+  const [loading, setLoading] = useState(true);
   const [statisticsCardsData, setStatisticsCardsData] = useState([]);
   const [goalData, setGoalData] = useState({
     categories: [],
@@ -39,7 +43,7 @@ export function Home() {
         enabled: false,
       },
       xaxis: {
-        categories: [], // Empty initially, will be updated with API data
+        categories: [],
       },
       yaxis: {
         title: {
@@ -52,32 +56,44 @@ export function Home() {
     },
   });
 
+  const shimmerCard = (count) => {
+    return Array.from({ length: count }).map((_, index) => (
+      <div
+        key={index}
+        className="h-24 w-full bg-gray-300 animate-pulse rounded-md"
+      ></div>
+    ));
+  };
+
   useEffect(() => {
-    // Fetching dashboard data
     const fetchData = async () => {
       try {
-        const response = await fetch("http://43.204.2.84:7200/admin/dashboard");
-        const data = await response.json();
+        const response = await Axios.get("/admin/dashboard");
+        const data = await response.data;
         if (data.status === "success") {
           const apiData = [
             {
               color: "gray",
               icon: UsersIcon,
               title: "Users",
-              value: data.data.users,
+              value: role === "host" ? data.data.assignedUserCount : data.data.users,
               footer: {
                 color: "text-green-500",
               },
             },
-            {
-              color: "gray",
-              icon: UserPlusIcon,
-              title: "Coaches",
-              value: data.data.coach,
-              footer: {
-                color: "text-green-500",
-              },
-            },
+            ...(role === "admin"
+              ? [
+                {
+                  color: "gray",
+                  icon: UserPlusIcon,
+                  title: "Coaches",
+                  value: data.data.coach,
+                  footer: {
+                    color: "text-green-500",
+                  },
+                },
+              ]
+              : []),
             {
               color: "gray",
               icon: ArchiveBoxIcon,
@@ -100,13 +116,15 @@ export function Home() {
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
+      finally {
+        setLoading(false);
+      }
     };
 
-    // Fetch goal analytics data
     const fetchGoalData = async () => {
       try {
-        const response = await fetch("http://43.204.2.84:7200/admin/getGoalAnalytics");
-        const data = await response.json();
+        const response = await Axios.get("/admin/getGoalAnalytics");
+        const data = await response.data;
         if (data.status === "success") {
           const { categories, series } = data.data;
           setGoalData({ categories, series });
@@ -116,11 +134,10 @@ export function Home() {
       }
     };
 
-    // Fetch user & coach statistics data for the bar chart
     const fetchUserAndCoachStats = async () => {
       try {
-        const response = await fetch("http://43.204.2.84:7200/admin/getuserAndCoachStats");
-        const data = await response.json();
+        const response = await Axios.get("/admin/getuserAndCoachStats");
+        const data = await response.data;
         if (data.status === "success") {
           const { categories, series } = data.data;
 
@@ -129,7 +146,7 @@ export function Home() {
             options: {
               ...barChartData.options,
               xaxis: {
-                categories: categories, // Set categories dynamically from API
+                categories: categories,
               },
             },
           });
@@ -165,7 +182,7 @@ export function Home() {
         align: "left",
       },
       xaxis: {
-        categories: goalData.categories.length > 0 ? goalData.categories : ["2024-12-04", "2024-12-05", "2024-12-06"], // Default categories
+        categories: goalData.categories.length > 0 ? goalData.categories : ["2024-12-04", "2024-12-05", "2024-12-06"],
       },
       yaxis: {
         title: {
@@ -177,23 +194,22 @@ export function Home() {
 
   return (
     <div className="mt-12">
-      <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        {statisticsCardsData.map(({ icon, title, footer, ...rest }) => (
-          <StatisticsCard
-            key={title}
-            {...rest}
-            title={title}
-            icon={React.createElement(icon, {
-              className: "w-6 h-6 text-white",
-            })}
-            footer={
-              <Typography className="font-normal text-blue-gray-600">
-                <strong className={footer.color}>{footer.value}</strong>
-                &nbsp;{footer.label}
-              </Typography>
-            }
-          />
-        ))}
+      <div
+        className={`mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-${role === "host" ? 3 : 4
+          }`}
+      >
+        {loading
+          ? shimmerCard(role === "host" ? 3 : 4)
+          : statisticsCardsData.map(({ icon, title, footer, ...rest }) => (
+            <StatisticsCard
+              key={title}
+              {...rest}
+              title={title}
+              icon={React.createElement(icon, {
+                className: "w-6 h-6 text-white",
+              })}
+            />
+          ))}
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-0">

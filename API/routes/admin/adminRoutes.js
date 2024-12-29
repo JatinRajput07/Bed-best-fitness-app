@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/login', adminLogin)
 
-router.get('/dashboard', dashboard)
+router.get('/dashboard', Auth, dashboard)
 router.get('/getGoalAnalytics', getGoalAnalytics)
 router.get('/getuserAndCoachStats', getuserAndCoachStats)
 getuserAndCoachStats
@@ -40,10 +40,10 @@ router.delete('/assign/:id', deleteassign)
 
 router.post('/nutrition', Auth, createNutrition); // Create a new nutrition
 
-router.post('/meal', Auth,createMeal);
-router.get('/meal',Auth, getMeals);
-router.put('/meal/:mealId',Auth, updateMeal);
-router.delete('/meal/:mealId',Auth, deleteMeal);
+router.post('/meal', Auth, createMeal);
+router.get('/meal', Auth, getMeals);
+router.put('/meal/:mealId', Auth, updateMeal);
+router.delete('/meal/:mealId', Auth, deleteMeal);
 
 router.get('/nutrition', Auth, getNutritions);
 router.put('/nutrition/:id', Auth, updateNutrition);

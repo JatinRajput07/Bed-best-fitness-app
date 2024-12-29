@@ -416,22 +416,43 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
 
 
 exports.dashboard = catchAsync(async (req, res, next) => {
+    const userId = new mongoose.Types.ObjectId(req.user.id)
+    const userRole = req.user.role
+
+
+    let assignedUserCount
+    if (userRole === 'host') {
+        assignedUserCount = await Asign_User.countDocuments({ host: userId });
+    }
+
+    let mealQuery = {}
+    if (userRole === 'host') {
+        mealQuery.coachId = userId
+    }
+
+    let nuteQuery = {}
+    if (userRole === 'host') {
+        nuteQuery.coachId = userId
+    }
+
     const [videoCount, userCount, coach, meal, nutrition] = await Promise.all([
         Video.countDocuments().exec(),
         User.countDocuments({ "role": "user" }).exec(),
         User.countDocuments({ "role": "host" }).exec(),
-        Meal.countDocuments().exec(),
-        Nutrition.countDocuments().exec()
+        Meal.countDocuments(mealQuery).exec(),
+        Nutrition.countDocuments(nuteQuery).exec()
     ]);
+
     return res.status(200).json({
         status: 'success',
         data: {
-            videos: videoCount,
-            users: userCount,
-            coach: coach,
-            meal: meal,
-            nutrition: nutrition
-        },
+            videos: videoCount || 0,
+            users: userCount || 0,
+            coach: coach || 0,
+            meal: meal || 0,
+            nutrition: nutrition || 0,
+            assignedUserCount: assignedUserCount || 0
+        },  
     });
 });
 
