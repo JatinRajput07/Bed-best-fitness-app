@@ -75,12 +75,9 @@ export function Videos() {
     );
   };
 
-
-  console.log(users,'===============users==========================')
-
   const renderUsers = () =>
     users
-      .filter((user) => user.role === "user") // Filter users based on search query
+      .filter((user) => user.role === "user" && user.name.toLowerCase().includes(searchQuery.toLowerCase())) // Filter users based on search query
       .map((user) => (
         <div key={user._id} className="flex items-center gap-4 py-2">
           <Checkbox
