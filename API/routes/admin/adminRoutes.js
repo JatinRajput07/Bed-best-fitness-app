@@ -66,7 +66,6 @@ router
     .patch(updateCategory)
     .delete(deleteCategory);
 
-// SubCategory Routes
 router
     .route("/subcategories")
     .post(createSubCategory);

@@ -19,6 +19,7 @@ import { TrashIcon, StarIcon, ArrowLeftIcon } from "@heroicons/react/24/outline"
 import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVideos } from "@/redux/videoSlice";
+import Axios from "@/configs/Axios";
 
 const CategoryVideos = ({ category_name, onGoBack }) => {
     const dispatch = useDispatch();
@@ -31,8 +32,8 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
     const { users, loading: userLoading, error: userError } = useSelector((state) => state.users);
 
     useEffect(() => {
-        axios
-            .get(`http://43.204.2.84:7200/admin/video-list-byCategory/${category_name}`)
+        Axios
+            .get(`/admin/video-list-byCategory/${category_name}`)
             .then((response) => {
                 if (response.data.status === "success") {
                     setCategoryData(response.data.data);
@@ -84,7 +85,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
         }
     };
 
-   
+
 
     const handleDeleteVideo = (videoId) => {
 
@@ -103,7 +104,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                     return updatedData;
                 });
             })
-            .catch((err) => console.log(err,"d=f=ff=ff=fff"));
+            .catch((err) => console.log(err, "d=f=ff=ff=fff"));
     };
 
     const handleRecommendVideo = () => {
@@ -147,7 +148,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
             ));
 
     const isRecommendedCategory = (category) =>
-        ["workout-video", "recipe-video", "knowledge-video", "story-podcast-recognition-video"].includes(category);
+        ["Workout Video", "Recipe Video", "Knowledge Video", "Story/Podcast/Recognition"].includes(category);
 
     return (
         <div className="mt-12 mb-8 flex flex-col gap-12">
@@ -208,6 +209,18 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                                             </Typography>
                                         )}
                                         <div className="flex justify-between items-center mt-4">
+                                            {isRecommendedCategory(category_name) && (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedVideo(media?.id);
+                                                        setRecommendationDialogOpen(true);
+                                                    }}
+                                                    className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                                                    type="button"
+                                                >
+                                                    Assign to User
+                                                </button>
+                                            )}
                                             <IconButton
                                                 style={{
                                                     height: "25px",
@@ -218,17 +231,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                                             >
                                                 <TrashIcon className="h-4 w-4" />
                                             </IconButton>
-                                            {isRecommendedCategory(category_name) && (
-                                                <IconButton
-                                                    color="yellow"
-                                                    onClick={() => {
-                                                        setSelectedVideo(media._id);
-                                                        setRecommendationDialogOpen(true);
-                                                    }}
-                                                >
-                                                    <StarIcon className="h-5 w-5" />
-                                                </IconButton>
-                                            )}
+
                                         </div>
                                     </CardBody>
                                 </Card>

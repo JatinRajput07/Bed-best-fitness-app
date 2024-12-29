@@ -131,7 +131,7 @@ export function Videos() {
   const handleViewAll = (category) => setSelectedCategory(category);
 
   const isRecommendedCategory = (category) =>
-    ["workout-video", "recipe-video", "knowledge-video", "story-podcast-recognition-video"].includes(category);
+    ["Workout Video", "Recipe Video", "Knowledge Video", "Story/Podcast/Recognition"].includes(category);
 
   const handleGoBack = () => setSelectedCategory(null);
 
@@ -161,7 +161,9 @@ export function Videos() {
                   </div>
                   <div className="grid grid-cols-1 gap-8 mt-6 md:grid-cols-2 xl:grid-cols-4">
                     {categoryVideos.map((media) => (
+                      
                       <Card key={media._id} className="shadow-lg rounded-lg">
+                        {console.log(media,'=====media====')}
                         <CardHeader floated={false} className="mx-0 mt-0 mb-4 h-48">
                           {renderMediaPreview(media)}
                         </CardHeader>

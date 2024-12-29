@@ -22,6 +22,7 @@ const Banner = require("../models/Banner");
 const Notification = require("../models/Notification");
 const Meal = require("../models/Meal");
 const Nutrition = require("../models/Nutrition");
+const Category = require("../models/Category");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -691,48 +692,86 @@ exports.Home = catchAsync(async (req, res, next) => {
     const [videos, recommendationVideosList, banners] = await Promise.all([
         Video.aggregate([
             {
+                $addFields: {
+                    isValidCategory: {
+                        $regexMatch: { input: "$category", regex: /^[a-f\d]{24}$/i },
+                    },
+                    isValidSubcategory: {
+                        $regexMatch: { input: "$subcategories", regex: /^[a-f\d]{24}$/i },
+                    },
+                },
+            },
+            {
                 $match: {
-                    category: {
-                        $in: [
-                            "workout-video",
-                            "recipe-video",
-                            "knowledge-video",
-                            "story-podcast-recognition-video"
-                        ]
-                    }
-                }
+                    isValidCategory: true,
+                    isValidSubcategory: true,
+                },
+            },
+            {
+                $addFields: {
+                    categoryId: { $toObjectId: "$category" },
+                    subcategoryId: { $toObjectId: "$subcategories" },
+                },
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "categoryId",
+                    foreignField: "_id",
+                    as: "categoryDetails",
+                },
+            },
+            {
+                $lookup: {
+                    from: "subcategories",
+                    localField: "subcategoryId",
+                    foreignField: "_id",
+                    as: "subcategoryDetails",
+                },
+            },
+            {
+                $sort: { createdAt: -1 },
             },
             {
                 $group: {
-                    _id: "$category",
+                    _id: "$categoryId",
+                    categoryName: { $first: { $arrayElemAt: ["$categoryDetails.name", 0] } },
                     videos: {
                         $push: {
-                            _id: "$_id",
-                            title: "$title",
+                            id: "$_id",
                             path: "$path",
+                            filetype: "$filetype",
+                            description: "$description",
+                            title: "$title",
+                            subcategoryName: {
+                                $arrayElemAt: ["$subcategoryDetails.name", 0],
+                            },
+                            thumbnail: "$thumbnail",
+                            audioThumbnail: "$audioThumbnail",
+                            views: "$views",
+                            likes: "$likes",
                             createdAt: "$createdAt",
-                            updatedAt: "$updatedAt",
-                            category: "$category",
-                            thumbnail: "$thumbnail"
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             {
                 $project: {
-                    category: "$_id",
-                    videos: { $slice: ["$videos", 10] }
-                }
+                    _id: 0,
+                    category: "$categoryName",
+                    videos: {
+                        $slice: ["$videos", 8],
+                    },
+                },
             },
-            {
-                $sort: { "category": -1 }
-            }
         ]),
 
         Recommendation.find({ user_id: userId })
-            .populate("video_id", { path: 1, title: 1, category: 1, filetype: 1, thumbnail: 1 })
+            .populate("video_id", { path: 1, title: 1, category: 1, filetype: 1, thumbnail: 1, audioThumbnail: 1 })
             .sort({ recommended_at: -1 })
             .exec(),
+
+
         Banner.find({ isActive: true }, ('imageUrl -_id'))
             .sort({ createdAt: -1 })
             .exec(),
@@ -756,25 +795,43 @@ exports.Home = catchAsync(async (req, res, next) => {
     });
 });
 
-
 exports.getVideosByCategory = catchAsync(async (req, res, next) => {
     const { category } = req.params;
-    const { subcategory } = req.query;
 
-    let query = { category };
+    const categoryDoc = await Category.findOne({ name: category });
+    if (!categoryDoc) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `Category with name "${category}" not found.`,
+        });
+    }
 
-    const videos = await Video.find(query)
+    const categoryId = categoryDoc._id.toString();
+
+    const videos = await Video.find({ category: categoryId })
         .select("_id title path createdAt updatedAt category subcategories")
+        .populate({
+            path: "subcategories",
+            select: "name",
+        })
         .exec();
-
     const videosBySubcategory = {};
 
-    videos.forEach(video => {
-        const subcategoryValue = video.subcategories;
-        if (!videosBySubcategory[subcategoryValue]) {
-            videosBySubcategory[subcategoryValue] = [];
-        }
-        videosBySubcategory[subcategoryValue].push(video);
+    videos.forEach((video) => {
+        video.subcategories.forEach((subcat) => {
+            const subcategoryName = subcat.name;
+
+            if (!videosBySubcategory[subcategoryName]) {
+                videosBySubcategory[subcategoryName] = [];
+            }
+            videosBySubcategory[subcategoryName].push({
+                id: video._id,
+                title: video.title,
+                path: video.path,
+                createdAt: video.createdAt,
+                updatedAt: video.updatedAt,
+            });
+        });
     });
 
     return res.status(200).json({
@@ -782,6 +839,7 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
         data: { videos: videosBySubcategory },
     });
 });
+
 
 
 exports.likeVideo = catchAsync(async (req, res, next) => {

@@ -20,44 +20,58 @@ const UploadVideo = () => {
   const { progress, error: uploadError } = useSelector((state) => state.videos);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState(null);
-  const [subcategories, setSubcategories] = useState([]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
+  const [subcategories, setSubcategories] = useState();
   const [file, setFile] = useState(null);
   const [audioThumbnail, setAudioThumbnail] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch categories from the API
     const fetchCategories = async () => {
-      try {
-        const response = await Axios.get("/admin/categories");
-        const data = response.data.data.map((cat) => ({
-          value: cat._id,
-          label: cat.name,
-          subcategories: cat.subcategories.map((sub) => ({
-            value: sub._id,
-            label: sub.name,
-          })),
-        }));
-        setCategories(data);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-        utilService.showErrorToast("Failed to load categories.");
-      }
+      const categories = await Axios.get('/admin/categories');
+      setCategories(categories.data.data);
     };
-
     fetchCategories();
   }, []);
 
-  const handleCategoryChange = (selected) => {
-    setCategory(selected);
-    setSubcategories([]);
-    setSubcategoryOptions(selected?.subcategories || []);
-    setFile(null);
-    setAudioThumbnail(null);
+  const [categories, setCategories] = useState([]);
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // Dynamically validate based on the category
+      const isValidFile = category?.value === "audio"
+        ? selectedFile.type.startsWith("audio/")
+        : category?.value === "video"
+          ? selectedFile.type.startsWith("video/")
+          : true;
+
+      if (isValidFile) {
+        setFile(selectedFile);
+        setErrors((prevErrors) => ({ ...prevErrors, file: null })); // Clear file error
+      } else {
+        setFile(null);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          file: `Invalid file type. Please select a ${category?.value === "audio" ? "audio" : "video"} file.`,
+        }));
+      }
+    }
+  };
+
+  const handleAudioThumbnailChange = (e) => {
+    const selectedThumbnail = e.target.files[0];
+    if (selectedThumbnail && selectedThumbnail.type.startsWith("image/")) {
+      setAudioThumbnail(selectedThumbnail);
+      setErrors((prevErrors) => ({ ...prevErrors, audioThumbnail: null }));
+    } else {
+      setAudioThumbnail(null);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        audioThumbnail: "Invalid image type for audio thumbnail.",
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -65,7 +79,7 @@ const UploadVideo = () => {
     if (!title) formErrors.title = "Title is required.";
     if (!category) formErrors.category = "Category is required.";
     if (!file) formErrors.file = "File is required.";
-    if (category?.label?.toLowerCase().includes("audio") && !audioThumbnail) {
+    if (category?.value === "audio" && !audioThumbnail) {
       formErrors.audioThumbnail = "Audio thumbnail image is required for audio files.";
     }
     setErrors(formErrors);
@@ -83,7 +97,7 @@ const UploadVideo = () => {
           title,
           file,
           category: category.value,
-          subcategories: subcategories.map((sub) => sub.value),
+          subcategories,
           description,
           audioThumbnail,
         })
@@ -92,33 +106,29 @@ const UploadVideo = () => {
           utilService.showSuccessToast("File uploaded successfully!");
           navigate("/dashboard/videos");
           dispatch(fetchVideos());
-          resetForm();
+          setTitle("");
+          setDescription("");
+          setCategory(null);
+          setSubcategories();
+          setFile(null);
+          setAudioThumbnail(null);
+          setIsSubmitting(false);
+          dispatch(resetProgress());
         }
       });
     } catch (err) {
       console.error(err);
       utilService.showErrorToast("Failed to upload video.");
-    } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setCategory(null);
-    setSubcategories([]);
-    setFile(null);
-    setAudioThumbnail(null);
-    setErrors({});
-    dispatch(resetProgress());
   };
 
   const isSubmitDisabled =
     !title ||
     !category ||
     !file ||
-    (category?.label?.toLowerCase().includes("audio") && !audioThumbnail) ||
+    (category?.value === "audio" && !audioThumbnail) ||
+    !subcategories ||
     isSubmitting ||
     (progress > 0 && progress < 100);
 
@@ -147,8 +157,13 @@ const UploadVideo = () => {
             </label>
             <Select
               value={category}
-              onChange={handleCategoryChange}
-              options={categories}
+              onChange={(selected) => {
+                setCategory(selected);
+                setSubcategories();
+                setFile(null);
+                setAudioThumbnail(null);
+              }}
+              options={categories.map(cat => ({ value: cat._id, label: cat.name, type: cat.type, subcategories: cat.subcategories }))}
               placeholder="Select a category"
               isClearable
               className="focus:ring focus:ring-indigo-500"
@@ -161,16 +176,15 @@ const UploadVideo = () => {
           </div>
 
           {/* Subcategories */}
-          {subcategoryOptions.length > 0 && (
+          {category && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subcategories
               </label>
               <Select
                 value={subcategories}
-                onChange={(selected) => setSubcategories(selected || [])}
-                options={subcategoryOptions}
-                isMulti
+                onChange={(selected) => setSubcategories(selected)}
+                options={category.subcategories?.map(sub => ({ value: sub._id, label: sub.name }))}
                 placeholder="Select subcategories"
                 className="focus:ring focus:ring-indigo-500"
               />
@@ -214,9 +228,12 @@ const UploadVideo = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               File
             </label>
+
+            {console.log(category, '====category==')}
             <input
               type="file"
-              onChange={(e) => setFile(e.target.files[0])}
+              onChange={handleFileChange}
+              accept={category?.type === "audio" ? "audio/*" : category?.type === "image" ? "image/*" : "video/*"}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
             />
             {errors.file && (
@@ -225,6 +242,33 @@ const UploadVideo = () => {
               </Typography>
             )}
           </div>
+
+          {/* Audio Thumbnail (if audio-related category) */}
+          {file?.type.startsWith("audio") && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Audio Thumbnail (Image)
+              </label>
+              <input
+                type="file"
+                onChange={handleAudioThumbnailChange}
+                accept="image/jpeg"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              />
+              {errors.audioThumbnail && (
+                <Typography color="red" className="text-sm mt-1">
+                  {errors.audioThumbnail}
+                </Typography>
+              )}
+            </div>
+          )}
+
+          {/* Progress Bar */}
+          {progress > 0 && (
+            <div>
+              <Progress value={progress} color="indigo" />
+            </div>
+          )}
 
           {/* Submit Button */}
           <Button

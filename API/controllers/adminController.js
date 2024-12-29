@@ -300,12 +300,53 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
 });
 
 
-
 exports.getVideos = catchAsync(async (req, res, next) => {
     const videosByCategory = await Video.aggregate([
         {
+            $addFields: {
+                isValidCategory: {
+                    $regexMatch: { input: "$category", regex: /^[a-f\d]{24}$/i },
+                },
+                isValidSubcategory: {
+                    $regexMatch: { input: "$subcategories", regex: /^[a-f\d]{24}$/i },
+                },
+            },
+        },
+        {
+            $match: {
+                isValidCategory: true,
+                isValidSubcategory: true,
+            },
+        },
+        {
+            $addFields: {
+                categoryId: { $toObjectId: "$category" },
+                subcategoryId: { $toObjectId: "$subcategories" },
+            },
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "categoryId",
+                foreignField: "_id",
+                as: "categoryDetails",
+            },
+        },
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "subcategoryId",
+                foreignField: "_id",
+                as: "subcategoryDetails",
+            },
+        },
+        {
+            $sort: { createdAt: -1 }, 
+        },
+        {
             $group: {
-                _id: "$category",
+                _id: "$categoryId",
+                categoryName: { $first: { $arrayElemAt: ["$categoryDetails.name", 0] } },
                 videos: {
                     $push: {
                         id: "$_id",
@@ -313,62 +354,65 @@ exports.getVideos = catchAsync(async (req, res, next) => {
                         filetype: "$filetype",
                         description: "$description",
                         title: "$title",
-                        subcategories: "$subcategories",
+                        subcategoryName: {
+                            $arrayElemAt: ["$subcategoryDetails.name", 0],
+                        },
                         thumbnail: "$thumbnail",
                         audioThumbnail: "$audioThumbnail",
                         views: "$views",
                         likes: "$likes",
-                        createdAt: "$createdAt"
-                    }
-                }
-            }
+                        createdAt: "$createdAt",
+                    },
+                },
+            },
         },
         {
             $project: {
                 _id: 0,
-                category: "$_id",
-                videos: 1
-            }
-        },
-        {
-            $addFields: {
+                category: "$categoryName",
                 videos: {
-                    $slice: [
-                        { $reverseArray: "$videos" },
-                        8
-                    ]
-                }
-            }
-        }
+                    $slice: ["$videos", 8],
+                },
+            },
+        },
     ]);
 
     if (videosByCategory.length === 0) {
         return res.status(404).json({
-            status: 'fail',
-            message: 'No videos found'
+            status: "fail",
+            message: "No videos found",
         });
     }
+
     const formattedResponse = {};
     videosByCategory.forEach((categoryData) => {
         formattedResponse[categoryData.category] = categoryData.videos;
     });
 
     return res.status(200).json({
-        status: 'success',
-        data: formattedResponse
+        status: "success",
+        data: formattedResponse,
     });
 });
 
 
 exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) => {
     const { category } = req.params;
+    const categoryDoc = await Category.findOne({ name: category });
 
+    if (!categoryDoc) {
+        return res.status(404).json({
+            status: 'fail',
+            message: `Category with name "${category}" not found.`,
+        });
+    }
+    const categoryId = categoryDoc._id.toString();
     const videosByCategoryAndSubcategory = await Video.aggregate([
         {
-            $match: { category: category }
+            $match: { category: categoryId }, 
         },
         {
-            $sort: { createdAt: -1 }
+            $sort: { createdAt: -1 },
         },
         {
             $group: {
@@ -382,26 +426,28 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                         likes: "$likes",
                         thumbnail: "$thumbnail",
                         audioThumbnail: "$audioThumbnail",
-                        createdAt: "$createdAt"
-                    }
-                }
-            }
+                        createdAt: "$createdAt",
+                    },
+                },
+            },
         },
         {
             $project: {
                 _id: 0,
                 subcategory: "$_id",
-                videos: 1
-            }
-        }
+                videos: 1,
+            },
+        },
     ]);
 
     if (videosByCategoryAndSubcategory.length === 0) {
         return res.status(404).json({
             status: 'fail',
-            message: `No videos found for category ${category}`
+            message: `No videos found for category "${category}"`,
         });
     }
+
+    // Format the response
     const formattedResponse = {};
     videosByCategoryAndSubcategory.forEach((subcatData) => {
         formattedResponse[subcatData.subcategory] = subcatData.videos;
@@ -409,9 +455,10 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
 
     return res.status(200).json({
         status: 'success',
-        data: formattedResponse
+        data: formattedResponse,
     });
 });
+
 
 
 
@@ -935,7 +982,7 @@ exports.createCategory = catchAsync(async (req, res, next) => {
         return next(new AppError("Category name is required", 400));
     }
 
-    const category = await Category.create({ name });
+    const category = await Category.create(req.body);
 
     res.status(201).json({
         status: "success",
@@ -956,7 +1003,7 @@ exports.getCategories = catchAsync(async (req, res, next) => {
 
 // Update Category
 exports.updateCategory = catchAsync(async (req, res, next) => {
-    const { name } = req.body;
+    const { name, type } = req.body;
 
     if (!name) {
         return next(new AppError("Category name is required", 400));
@@ -964,7 +1011,7 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
 
     const updatedCategory = await Category.findByIdAndUpdate(
         req.params.id,
-        { name },
+        { name, type },
         { new: true, runValidators: true }
     );
 
@@ -1010,7 +1057,6 @@ exports.createSubCategory = catchAsync(async (req, res, next) => {
 
     const subCategory = await SubCategory.create({ name, category: categoryId });
 
-    // Link SubCategory to Category
     category.subcategories.push(subCategory._id);
     await category.save();
 

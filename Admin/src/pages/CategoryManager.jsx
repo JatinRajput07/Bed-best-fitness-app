@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Card, CardHeader, CardBody, Input, Typography, Dialog, DialogBody, DialogFooter } from "@material-tailwind/react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import Axios from "@/configs/Axios";
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -11,14 +12,15 @@ const CategoryManager = () => {
   const [subCategoryName, setSubCategoryName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [editCategoryId, setEditCategoryId] = useState(null);
+  const [categoryType, setCategoryType] = useState(""); // New state for category type
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = () => {
-    axios
-      .get("http://43.204.2.84:7200/admin/categories")
+    Axios
+      .get("/admin/categories")
       .then((response) => {
         if (response.data.status === "success") {
           setCategories(response.data.data);
@@ -32,8 +34,8 @@ const CategoryManager = () => {
   };
 
   const handleAddOrUpdate = () => {
-    if (dialogMode === "add-category" && !categoryName) {
-      toast.error("Category name is required.");
+    if (dialogMode === "add-category" && (!categoryName || !categoryType)) {
+      toast.error("Category name and type are required.");
       return;
     }
 
@@ -44,30 +46,29 @@ const CategoryManager = () => {
 
     const endpoint =
       dialogMode === "add-category"
-        ? "http://43.204.2.84:7200/admin/categories"
+        ? "/admin/categories"
         : dialogMode === "add-subcategory"
-        ? "http://43.204.2.84:7200/admin/subcategories"
-        : dialogMode === "edit-category"
-        ? `http://43.204.2.84:7200/admin/categories/${editCategoryId}`
-        : `http://43.204.2.84:7200/admin/subcategories/${editCategoryId}`;
+          ? "/admin/subcategories"
+          : dialogMode === "edit-category"
+            ? `/admin/categories/${editCategoryId}`
+            : `/admin/subcategories/${editCategoryId}`;
 
     const payload =
       dialogMode === "add-category" || dialogMode === "edit-category"
-        ? { name: categoryName }
+        ? { name: categoryName, type: categoryType }
         : { name: subCategoryName, categoryId: selectedCategoryId };
 
     const method = dialogMode.startsWith("add") ? "post" : "patch";
 
-    axios[method](endpoint, payload)
+    Axios[method](endpoint, payload)
       .then((response) => {
         if (response.data.status === "success") {
           toast.success(
-            `${
-              dialogMode.startsWith("add")
-                ? dialogMode === "add-category"
-                  ? "Category"
-                  : "Subcategory"
-                : dialogMode === "edit-category"
+            `${dialogMode.startsWith("add")
+              ? dialogMode === "add-category"
+                ? "Category"
+                : "Subcategory"
+              : dialogMode === "edit-category"
                 ? "Category"
                 : "Subcategory"
             } ${dialogMode.startsWith("add") ? "added" : "updated"} successfully.`
@@ -85,10 +86,10 @@ const CategoryManager = () => {
 
   const handleDelete = (id, isCategory = true) => {
     const endpoint = isCategory
-      ? `http://43.204.2.84:7200/admin/categories/${id}`
-      : `http://43.204.2.84:7200/admin/subcategories/${id}`;
+      ? `/admin/categories/${id}`
+      : `/admin/subcategories/${id}`;
 
-    axios
+    Axios
       .delete(endpoint)
       .then((response) => {
         if (response.data.status === "success") {
@@ -108,6 +109,7 @@ const CategoryManager = () => {
     setCategoryName("");
     setSubCategoryName("");
     setSelectedCategoryId("");
+    setCategoryType(""); // Reset category type
     setDialogMode("");
     setEditCategoryId(null);
   };
@@ -143,7 +145,7 @@ const CategoryManager = () => {
               Add Subcategory
             </Button>
           </div>
-          
+
           {/* Category Table */}
           <table className="min-w-full table-auto">
             <thead>
@@ -158,7 +160,7 @@ const CategoryManager = () => {
               {categories.map((category, i) => (
                 <tr key={category._id} className="border-t">
                   <td className="px-6 py-2">{i + 1}</td>
-                  <td className="px-6 py-2">{category.name}</td>
+                  <td className="px-6 py-2">{category.name} </td>
                   <td className="px-6 py-2">
                     {category.subcategories.length > 0 ? (
                       <ul>
@@ -204,6 +206,7 @@ const CategoryManager = () => {
                         setDialogMode("edit-category");
                         setEditCategoryId(category._id);
                         setCategoryName(category.name);
+                        setCategoryType(category.type);
                         setOpenDialog(true);
                       }}
                     >
@@ -230,18 +233,30 @@ const CategoryManager = () => {
                 ? "Add New Category"
                 : "Edit Category"
               : dialogMode === "add-subcategory"
-              ? "Add New Subcategory"
-              : "Edit Subcategory"}
+                ? "Add New Subcategory"
+                : "Edit Subcategory"}
           </Typography>
-          
+
           {/* Input Fields with Spacing */}
           {dialogMode === "add-category" || dialogMode === "edit-category" ? (
-            <Input
-              label="Category Name"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              className="mb-4" // Added margin for spacing
-            />
+            <>
+              <Input
+                label="Category Name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="mb-4" // Added margin for spacing
+              />
+              <select
+                className="border rounded mt-4 p-2 w-full mb-4" // Added margin for spacing
+                value={categoryType}
+                onChange={(e) => setCategoryType(e.target.value)}
+              >
+                <option value="">Select Category Type</option>
+                <option value="audio">Audio</option>
+                <option value="video">Video</option>
+                <option value="image">Image</option>
+              </select>
+            </>
           ) : (
             <>
               <Input
