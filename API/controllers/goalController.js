@@ -8,6 +8,7 @@ const videos = require("../models/videos");
 const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
 const moment = require('moment');
+const Category = require("../models/Category");
 
 const getLocalDate = () => {
     const now = new Date();
@@ -190,16 +191,10 @@ exports.getMetricData = catchAsync(async (req, res, next) => {
 
 
 exports.getMindnessfull = catchAsync(async (req, res, next) => {
-    const allowedCategories = ["wallpaper", "quotes", "audio-clips", "music", "podcast", "audio-book"];
     const videosByCategory = await videos.aggregate([
         {
-            $match: {
-                category: { $in: allowedCategories }
-            }
-        },
-        {
             $group: {
-                _id: "$category",
+                _id: { $toObjectId: "$category" }, // Convert `category` string to ObjectId
                 videos: {
                     $push: {
                         path: "$path",
@@ -207,20 +202,28 @@ exports.getMindnessfull = catchAsync(async (req, res, next) => {
                         subcategories: "$subcategories",
                         views: "$views",
                         likes: "$likes",
+                        thumbnail: "$thumbnail",
+                        audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt"
                     }
                 }
             }
         },
         {
-            $project: {
-                _id: 0,
-                category: "$_id",
-                videos: 1
+            $lookup: {
+                from: "categories", // Your categories collection
+                localField: "_id",
+                foreignField: "_id",
+                as: "categoryInfo"
             }
         },
         {
-            $addFields: {
+            $unwind: "$categoryInfo" // Convert array to object
+        },
+        {
+            $project: {
+                _id: 0,
+                category: "$categoryInfo.name", // Replace ID with category name
                 videos: {
                     $slice: [
                         { $reverseArray: "$videos" },
@@ -233,8 +236,8 @@ exports.getMindnessfull = catchAsync(async (req, res, next) => {
 
     if (videosByCategory.length === 0) {
         return res.status(404).json({
-            status: 'fail',
-            message: 'No data found'
+            status: "fail",
+            message: "No data found"
         });
     }
 
@@ -244,60 +247,100 @@ exports.getMindnessfull = catchAsync(async (req, res, next) => {
     });
 
     return res.status(200).json({
-        status: 'success',
+        status: "success",
         data: formattedResponse
     });
 });
 
 
+
 exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
     const { category } = req.params;
+
+    const categoryDoc = await Category.findOne({ name: category });
+    if (!categoryDoc) {
+        return res.status(404).json({
+            status: "fail",
+            message: `Category with name "${category}" not found.`,
+        });
+    }
+
+    const categoryId = categoryDoc._id.toString();
+
     const videosByCategoryAndSubcategory = await videos.aggregate([
         {
-            $match: { category: category }
+            $match: { category: categoryId },
         },
         {
-            $sort: { createdAt: -1 }
+            $addFields: {
+                subcategories: {
+                    $convert: {
+                        input: "$subcategories",
+                        to: "objectId", // Convert subcategories field from string to ObjectId
+                        onError: null,
+                        onNull: null,
+                    },
+                },
+            },
+        },
+        {
+            $sort: { createdAt: -1 },
         },
         {
             $group: {
                 _id: "$subcategories",
                 videos: {
                     $push: {
+                        id: "$_id",
                         path: "$path",
                         title: "$title",
                         views: "$views",
                         likes: "$likes",
-                        createdAt: "$createdAt"
-                    }
-                }
-            }
+                        thumbnail: "$thumbnail",
+                        audioThumbnail: "$audioThumbnail",
+                        createdAt: "$createdAt",
+                    },
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: "subcategories", // Replace with your subcategories collection name
+                localField: "_id",    // Match subcategories ID
+                foreignField: "_id",  // Subcategories ID in the collection
+                as: "subcategoryInfo",
+            },
+        },
+        {
+            $unwind: "$subcategoryInfo", // Unwind the lookup array
         },
         {
             $project: {
                 _id: 0,
-                subcategory: "$_id",
-                videos: 1
-            }
-        }
+                subcategory: "$subcategoryInfo.name", // Get the subcategory name
+                videos: 1,
+            },
+        },
     ]);
 
     if (videosByCategoryAndSubcategory.length === 0) {
         return res.status(404).json({
-            status: 'fail',
-            message: `No videos found for category ${category}`
+            status: "fail",
+            message: `No videos found for category ${category}`,
         });
     }
+
     const formattedResponse = {};
     videosByCategoryAndSubcategory.forEach((subcatData) => {
         formattedResponse[subcatData.subcategory] = subcatData.videos;
     });
 
     return res.status(200).json({
-        status: 'success',
-        data: formattedResponse
+        status: "success",
+        data: formattedResponse,
     });
-})
+});
+
 
 exports.getNutritions = async (req, res, next) => {
     try {
@@ -316,7 +359,7 @@ exports.getMeals = async (req, res, next) => {
     try {
         const userId = req.user.id
         const mealsByCategory = await Meal.aggregate([
-            { $match: { active: true, userId: new mongoose.Types.ObjectId(userId)} },
+            { $match: { active: true, userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $group: {
                     _id: '$category',

@@ -402,14 +402,28 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
 
     if (!categoryDoc) {
         return res.status(404).json({
-            status: 'fail',
+            status: "fail",
             message: `Category with name "${category}" not found.`,
         });
     }
+
     const categoryId = categoryDoc._id.toString();
+
     const videosByCategoryAndSubcategory = await Video.aggregate([
         {
-            $match: { category: categoryId }, 
+            $match: { category: categoryId },
+        },
+        {
+            $addFields: {
+                subcategories: {
+                    $convert: {
+                        input: "$subcategories",
+                        to: "objectId", // Convert subcategories from string to ObjectId
+                        onError: null,  // Handle invalid conversions gracefully
+                        onNull: null,
+                    },
+                },
+            },
         },
         {
             $sort: { createdAt: -1 },
@@ -432,9 +446,20 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
             },
         },
         {
+            $lookup: {
+                from: "subcategories", // Subcategories collection name
+                localField: "_id",    // Subcategory ObjectId in the Video collection
+                foreignField: "_id",  // Subcategory ObjectId in the Subcategories collection
+                as: "subcategoryInfo",
+            },
+        },
+        {
+            $unwind: "$subcategoryInfo", // Convert array to object
+        },
+        {
             $project: {
                 _id: 0,
-                subcategory: "$_id",
+                subcategory: "$subcategoryInfo.name", // Use subcategory name
                 videos: 1,
             },
         },
@@ -442,7 +467,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
 
     if (videosByCategoryAndSubcategory.length === 0) {
         return res.status(404).json({
-            status: 'fail',
+            status: "fail",
             message: `No videos found for category "${category}"`,
         });
     }
@@ -454,10 +479,11 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
     });
 
     return res.status(200).json({
-        status: 'success',
+        status: "success",
         data: formattedResponse,
     });
 });
+
 
 
 
