@@ -6,17 +6,16 @@ import toast, { Toaster } from "react-hot-toast";
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState("add"); // "add" or "edit"
+  const [dialogMode, setDialogMode] = useState(""); // "add-category", "edit-category", "add-subcategory", "edit-subcategory"
   const [categoryName, setCategoryName] = useState("");
   const [subCategoryName, setSubCategoryName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [editCategoryId, setEditCategoryId] = useState(null); // For editing categories or subcategories
+  const [editCategoryId, setEditCategoryId] = useState(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Fetch all categories and subcategories
   const fetchCategories = () => {
     axios
       .get("http://43.204.2.84:7200/admin/categories")
@@ -32,90 +31,58 @@ const CategoryManager = () => {
       });
   };
 
-  // Add a new category
-  const handleAddCategory = () => {
-    if (!categoryName) {
+  const handleAddOrUpdate = () => {
+    if (dialogMode === "add-category" && !categoryName) {
       toast.error("Category name is required.");
       return;
     }
-    axios
-      .post("http://43.204.2.84:7200/admin/categories", { name: categoryName })
-      .then((response) => {
-        if (response.data.status === "success") {
-          toast.success("Category added successfully.");
-          fetchCategories();
-          resetDialog();
-        } else {
-          toast.error("Failed to add category.");
-        }
-      })
-      .catch(() => {
-        toast.error("Error adding category.");
-      });
-  };
 
-  // Add a new subcategory
-  const handleAddSubCategory = () => {
-    if (!subCategoryName || !selectedCategoryId) {
-      toast.error("Subcategory name and parent category are required.");
-      return;
-    }
-    axios
-      .post("http://43.204.2.84:7200/admin/subcategories", {
-        name: subCategoryName,
-        categoryId: selectedCategoryId,
-      })
-      .then((response) => {
-        if (response.data.status === "success") {
-          toast.success("Subcategory added successfully.");
-          fetchCategories();
-          resetDialog();
-        } else {
-          toast.error("Failed to add subcategory.");
-        }
-      })
-      .catch(() => {
-        toast.error("Error adding subcategory.");
-      });
-  };
-
-  // Update a category or subcategory
-  const handleUpdate = () => {
-    if (dialogMode === "edit-category" && !categoryName) {
-      toast.error("Category name is required.");
-      return;
-    }
-    if (dialogMode === "edit-subcategory" && (!subCategoryName || !selectedCategoryId)) {
+    if (dialogMode === "add-subcategory" && (!subCategoryName || !selectedCategoryId)) {
       toast.error("Subcategory name and parent category are required.");
       return;
     }
 
     const endpoint =
-      dialogMode === "edit-category"
+      dialogMode === "add-category"
+        ? "http://43.204.2.84:7200/admin/categories"
+        : dialogMode === "add-subcategory"
+        ? "http://43.204.2.84:7200/admin/subcategories"
+        : dialogMode === "edit-category"
         ? `http://43.204.2.84:7200/admin/categories/${editCategoryId}`
         : `http://43.204.2.84:7200/admin/subcategories/${editCategoryId}`;
+
     const payload =
-      dialogMode === "edit-category"
+      dialogMode === "add-category" || dialogMode === "edit-category"
         ? { name: categoryName }
         : { name: subCategoryName, categoryId: selectedCategoryId };
 
-    axios
-      .patch(endpoint, payload)
+    const method = dialogMode.startsWith("add") ? "post" : "patch";
+
+    axios[method](endpoint, payload)
       .then((response) => {
         if (response.data.status === "success") {
-          toast.success(`${dialogMode === "edit-category" ? "Category" : "Subcategory"} updated successfully.`);
+          toast.success(
+            `${
+              dialogMode.startsWith("add")
+                ? dialogMode === "add-category"
+                  ? "Category"
+                  : "Subcategory"
+                : dialogMode === "edit-category"
+                ? "Category"
+                : "Subcategory"
+            } ${dialogMode.startsWith("add") ? "added" : "updated"} successfully.`
+          );
           fetchCategories();
           resetDialog();
         } else {
-          toast.error("Failed to update.");
+          toast.error("Failed to save changes.");
         }
       })
       .catch(() => {
-        toast.error("Error updating.");
+        toast.error("Error saving changes.");
       });
   };
 
-  // Delete a category or subcategory
   const handleDelete = (id, isCategory = true) => {
     const endpoint = isCategory
       ? `http://43.204.2.84:7200/admin/categories/${id}`
@@ -136,54 +103,103 @@ const CategoryManager = () => {
       });
   };
 
-  // Reset dialog inputs
   const resetDialog = () => {
     setOpenDialog(false);
     setCategoryName("");
     setSubCategoryName("");
     setSelectedCategoryId("");
-    setDialogMode("add");
+    setDialogMode("");
     setEditCategoryId(null);
   };
 
   return (
     <div className="mt-12 mb-8 flex justify-center">
-
       <Card className="w-full max-w-6xl shadow-lg">
-        <CardHeader
-          variant="gradient"
-          className="bg-gradient-to-r from-green-600 to-blue-600 p-6 rounded-t-lg flex justify-between items-center"
-        >
+        <CardHeader className="bg-gradient-to-r from-green-600 to-blue-600 p-6 rounded-t-lg flex justify-between items-center">
           <Typography variant="h5" color="white">
             Category Manager
           </Typography>
-          <Button color="lightBlue" onClick={() => setOpenDialog(true)}>
-            Add Category/SubCategory
-          </Button>
         </CardHeader>
         <CardBody>
+          <div className="flex space-x-4 mb-4">
+            {/* Add Category Button */}
+            <Button
+              color="lightBlue"
+              onClick={() => {
+                setDialogMode("add-category");
+                setOpenDialog(true);
+              }}
+            >
+              Add Category
+            </Button>
+            {/* Add Subcategory Button */}
+            <Button
+              color="lightGreen"
+              onClick={() => {
+                setDialogMode("add-subcategory");
+                setOpenDialog(true);
+              }}
+            >
+              Add Subcategory
+            </Button>
+          </div>
+          
+          {/* Category Table */}
           <table className="min-w-full table-auto">
             <thead>
               <tr className="bg-gray-200">
-              <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">S.No</th>
-                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Category</th>
-                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">SubCategories</th>
-                <th className="px-6 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+                <th className="px-6 py-2">S.No</th>
+                <th className="px-6 py-2">Category</th>
+                <th className="px-6 py-2">Subcategories</th>
+                <th className="px-6 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {categories.map((category,i) => (
+              {categories.map((category, i) => (
                 <tr key={category._id} className="border-t">
-                     <td className="px-6 py-2 text-sm text-gray-600">{i + 1}</td>
-                  <td className="px-6 py-2 text-sm text-gray-600">{category.name}</td>
-                  <td className="px-6 py-2 text-sm text-gray-600">
-                    {category.subcategories.length > 0
-                      ? category.subcategories.map((sub) => sub.name).join(", ")
-                      : "No subcategories"}
+                  <td className="px-6 py-2">{i + 1}</td>
+                  <td className="px-6 py-2">{category.name}</td>
+                  <td className="px-6 py-2">
+                    {category.subcategories.length > 0 ? (
+                      <ul>
+                        {category.subcategories.map((sub) => (
+                          <li key={sub._id} className="flex justify-between">
+                            {sub.name}
+                            <div className="flex space-x-1 mb-1">
+                              <Button
+                                size="sm"
+                                color="green"
+                                className="p-1"
+                                onClick={() => {
+                                  setDialogMode("edit-subcategory");
+                                  setEditCategoryId(sub._id);
+                                  setSubCategoryName(sub.name);
+                                  setSelectedCategoryId(category._id);
+                                  setOpenDialog(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="p-1"
+                                color="red"
+                                onClick={() => handleDelete(sub._id, false)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No subcategories"
+                    )}
                   </td>
-                  <td className="px-6 py-2 text-sm text-gray-600">
-                    {/* <Button
+                  <td className="px-6 py-2">
+                    <Button
                       color="green"
+                      className="p-2 mr-1"
                       onClick={() => {
                         setDialogMode("edit-category");
                         setEditCategoryId(category._id);
@@ -192,8 +208,8 @@ const CategoryManager = () => {
                       }}
                     >
                       Edit
-                    </Button> */}
-                    <Button color="red" onClick={() => handleDelete(category._id)}>
+                    </Button>
+                    <Button className="p-2" color="red" onClick={() => handleDelete(category._id)}>
                       Delete
                     </Button>
                   </td>
@@ -204,46 +220,57 @@ const CategoryManager = () => {
         </CardBody>
       </Card>
 
-      {/* Dialog for Adding or Editing Categories/Subcategories */}
+      {/* Dialog for Adding/Editing Category/Subcategory */}
       <Dialog open={openDialog} handler={resetDialog}>
         <DialogBody>
-          <div className="space-y-4">
+          {/* Dialog Heading */}
+          <Typography variant="h6" className="mb-4 text-center">
+            {dialogMode === "add-category" || dialogMode === "edit-category"
+              ? dialogMode === "add-category"
+                ? "Add New Category"
+                : "Edit Category"
+              : dialogMode === "add-subcategory"
+              ? "Add New Subcategory"
+              : "Edit Subcategory"}
+          </Typography>
+          
+          {/* Input Fields with Spacing */}
+          {dialogMode === "add-category" || dialogMode === "edit-category" ? (
             <Input
               label="Category Name"
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
-              disabled={dialogMode === "edit-subcategory"}
+              className="mb-4" // Added margin for spacing
             />
-            <Input
-              label="SubCategory Name"
-              value={subCategoryName}
-              onChange={(e) => setSubCategoryName(e.target.value)}
-              disabled={dialogMode === "edit-category"}
-            />
-            <select
-              className="border rounded p-2 w-full"
-              value={selectedCategoryId}
-              onChange={(e) => setSelectedCategoryId(e.target.value)}
-              disabled={dialogMode === "edit-category"}
-            >
-              <option value="">Select Parent Category</option>
-              {categories.map((category) => (
-                <option key={category._id} value={category._id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          ) : (
+            <>
+              <Input
+                label="Subcategory Name"
+                value={subCategoryName}
+                onChange={(e) => setSubCategoryName(e.target.value)}
+                className="mb-4" // Added margin for spacing
+              />
+              <select
+                className="border rounded mt-4 p-2 w-full mb-4" // Added margin for spacing
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+              >
+                <option value="">Select Parent Category</option>
+                {categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </DialogBody>
-        <DialogFooter>
-          <Button color="red" onClick={resetDialog}>
+        <DialogFooter className="gap-2">
+          <Button className="" color="red" onClick={resetDialog}>
             Cancel
           </Button>
-          <Button
-            color="green"
-            onClick={dialogMode.startsWith("edit") ? handleUpdate : categoryName ? handleAddCategory : handleAddSubCategory}
-          >
-            {dialogMode.startsWith("edit") ? "Update" : categoryName ? "Add Category" : "Add SubCategory"}
+          <Button color="green" onClick={handleAddOrUpdate}>
+            {dialogMode.startsWith("add") ? "Add" : "Update"}
           </Button>
         </DialogFooter>
       </Dialog>

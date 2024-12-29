@@ -2,21 +2,25 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAssignments, deleteAssignment } from "../../../redux/assignUserSlice";
 import { Button, Card, CardHeader, CardBody, Typography } from "@material-tailwind/react";
+import toast from "react-hot-toast";
 
 const AdminAssignments = () => {
     const dispatch = useDispatch();
     const { assignments, loading, error } = useSelector((state) => state.assignments);
 
-
-    // console.log(assignments,'=======assignments=====')
-
     useEffect(() => {
         dispatch(fetchAssignments());
     }, [dispatch]);
 
-    const handleDelete = (id) => {
-        if (window.confirm("Are you sure you want to delete this assignment?")) {
-            dispatch(deleteAssignment(id));
+    const handleDelete = (id, type, userId) => {
+        if (window.confirm("Are you sure you want to proceed?")) {
+            dispatch(deleteAssignment({ id, type, userId }))
+            .then(res => {
+                if (res.meta.requestStatus === "fulfilled") {
+                    dispatch(fetchAssignments());
+                    toast.success('Success')
+                }
+            });
         }
     };
 
@@ -63,16 +67,26 @@ const AdminAssignments = () => {
                                         {/* Assigned Users */}
                                         <td className="border border-gray-300 px-4 py-2">
                                             {assignedUsers.map(({ userId, name, email, assignedAt }) => (
-                                                <div key={userId} className="mb-2">
-                                                    <Typography className="text-gray-800">
-                                                        {name} <span className="text-gray-500">({email})</span>
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="small"
-                                                        className="text-gray-400"
+                                                <div key={userId} className="mb-2 flex items-center justify-between">
+                                                    <div>
+                                                        <Typography className="text-gray-800">
+                                                            {name} <span className="text-gray-500">({email})</span>
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="small"
+                                                            className="text-gray-400"
+                                                        >
+                                                            Assigned At: {new Date(assignedAt).toLocaleString()}
+                                                        </Typography>
+                                                    </div>
+                                                    <Button
+                                                        color="red"
+                                                        onClick={() => handleDelete(_id, "user", userId)}
+                                                        size="sm"
+                                                        className="ml-4 p-1"
                                                     >
-                                                        Assigned At: {new Date(assignedAt).toLocaleString()}
-                                                    </Typography>
+                                                        Remove
+                                                    </Button>
                                                 </div>
                                             ))}
                                         </td>
@@ -81,7 +95,7 @@ const AdminAssignments = () => {
                                         <td className="border border-gray-300 px-4 py-2 text-center">
                                             <Button
                                                 color="red"
-                                                onClick={() => handleDelete(_id)}
+                                                onClick={() => handleDelete(_id, "assignment")}
                                                 size="sm"
                                             >
                                                 Delete

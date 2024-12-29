@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal, updateMeeting, deleteMeeting } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const Auth = require('../../middleware/Auth');
 const router = express.Router();
@@ -84,6 +84,8 @@ router.get('/getHealthHabits/:id', getHealthOtherdata)
 
 router.post('/createMeeting', createMeeting)
 router.get('/getMeeting', getMeeting)
+router.put('/updateMeeting/:id', updateMeeting);
+router.delete('/deleteMeeting/:id', deleteMeeting);
 
 
 

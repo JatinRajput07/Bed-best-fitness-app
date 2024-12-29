@@ -167,7 +167,7 @@ const Meal = () => {
                             <option>Select User</option>
                             {users.filter(e => e.role === 'user').map((user) => (
                                 <option key={user._id} value={user._id}>
-                                    {user.name}
+                                    {user.name ? user.name : user.email}
                                 </option>
                             ))}
                         </select>

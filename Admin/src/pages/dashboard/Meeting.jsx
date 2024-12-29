@@ -8,6 +8,8 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TablePagination from "@mui/material/TablePagination";
+import Axios from "@/configs/Axios";
+import toast from "react-hot-toast";
 
 const Meeting = () => {
     const [image, setImage] = useState(null);
@@ -21,6 +23,7 @@ const Meeting = () => {
     const [meetings, setMeetings] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [editingMeeting, setEditingMeeting] = useState(null);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -35,7 +38,25 @@ const Meeting = () => {
         );
     };
 
-    const handleOpenDialog = () => setOpenDialog(true);
+    const handleOpenDialog = (meeting = null) => {
+        if (meeting) {
+            setEditingMeeting(meeting);
+            setGoogleMeetLink(meeting.googleMeetLink);
+            setSelectedRole(meeting.roles[0].split(','));
+            setMeetingDate(meeting.meetingDate);
+            setMeetingTime(meeting.meetingTime);
+            setImagePreview(meeting.image);
+        } else {
+            setEditingMeeting(null);
+            setGoogleMeetLink("");
+            setSelectedRole([]);
+            setMeetingDate("");
+            setMeetingTime("");
+            setImagePreview(null);
+        }
+        setOpenDialog(true);
+    };
+
     const handleCloseDialog = () => {
         setImage(null);
         setGoogleMeetLink("");
@@ -44,6 +65,7 @@ const Meeting = () => {
         setMeetingTime("");
         setImagePreview(null);
         setOpenDialog(false);
+        setEditingMeeting(null);
     };
 
     const handleSubmit = () => {
@@ -59,7 +81,10 @@ const Meeting = () => {
             formData.append("image", image);
         }
 
-        axios.post("http://43.204.2.84:7200/admin/createMeeting", formData)
+        const url = editingMeeting ? `/admin/updateMeeting/${editingMeeting._id}` : "/admin/createMeeting";
+        const method = editingMeeting ? "put" : "post";
+
+        Axios[method](url, formData)
             .then((response) => {
                 if (response.data.status === "success") {
                     fetchMeetings();
@@ -73,7 +98,7 @@ const Meeting = () => {
     };
 
     const fetchMeetings = () => {
-        axios.get("http://43.204.2.84:7200/admin/getMeeting")
+        Axios.get("/admin/getMeeting")
             .then((response) => {
                 if (response.data.status === "success") {
                     setMeetings(response.data.meeting);
@@ -87,6 +112,19 @@ const Meeting = () => {
     useEffect(() => {
         fetchMeetings();
     }, []);
+
+    const handleDelete = (meetingId) => {
+        Axios.delete(`/admin/deleteMeeting/${meetingId}`)
+            .then((response) => {
+                if (response.data.status === "success") {
+                    fetchMeetings();
+                    toast.success('Meeting Deleted!')
+                }
+            })
+            .catch((error) => {
+                console.error("Error deleting meeting:", error);
+            });
+    };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -102,7 +140,7 @@ const Meeting = () => {
             <Card className="w-full max-w-6xl shadow-lg">
                 <CardHeader variant="gradient" className="bg-gradient-to-r from-blue-800 to-indigo-600 p-6 rounded-t-lg flex justify-between items-center">
                     <Typography variant="h5" color="white">Meeting</Typography>
-                    <Button color="lightBlue" onClick={handleOpenDialog}>Add Meeting</Button>
+                    <Button color="lightBlue" onClick={() => handleOpenDialog()}>Add Meeting</Button>
                 </CardHeader>
                 <CardBody className="p-6 space-y-6">
                     {/* Meeting Data Table */}
@@ -116,6 +154,7 @@ const Meeting = () => {
                                     <TableCell>Date</TableCell>
                                     <TableCell>Time</TableCell>
                                     <TableCell>Roles</TableCell>
+                                    <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -129,6 +168,23 @@ const Meeting = () => {
                                         <TableCell>{new Date(meeting.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell>{new Date(meeting.createdAt).toLocaleTimeString()}</TableCell>
                                         <TableCell>{meeting.roles.join(", ")}</TableCell>
+                                        <TableCell>
+                                            <Button
+                                                size="sm"
+                                                color="green"
+                                                className="mr-1"
+                                                onClick={() => handleOpenDialog(meeting)}
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                color="red"
+                                                onClick={() => handleDelete(meeting._id)}
+                                            >
+                                                Delete
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -146,10 +202,13 @@ const Meeting = () => {
                 </CardBody>
             </Card>
 
-            {/* Add Meeting Dialog */}
+            {/* Add/Edit Meeting Dialog */}
             <Dialog open={openDialog} handler={handleCloseDialog} size="lg">
                 <DialogBody>
                     <div className="space-y-4">
+                        <Typography variant="h6" className="text-center mb-4">
+                            {editingMeeting ? "Edit Meeting" : "Add Meeting"}
+                        </Typography>
                         <Input
                             label="Google Meet Link"
                             value={googleMeetLink}
@@ -169,15 +228,18 @@ const Meeting = () => {
                         )}
                         <div>
                             <Typography variant="h6" className="text-gray-700">Select Roles</Typography>
+                            {console.log(selectedRole,selectedRole.includes('user'))} 
+
                             <Checkbox
                                 label="User"
-                                checked={selectedRole.includes("user")}
-                                onChange={() => handleRoleChange("user")}
+                                checked={selectedRole.includes('user')}
+                                onChange={() => handleRoleChange('user')}
                             />
+
                             <Checkbox
                                 label="Coach"
-                                checked={selectedRole.includes("coach")}
-                                onChange={() => handleRoleChange("coach")}
+                                checked={selectedRole.includes('coach')}
+                                onChange={() => handleRoleChange('coach')}
                             />
                         </div>
                         <div>
@@ -186,7 +248,7 @@ const Meeting = () => {
                                 <Input
                                     type="date"
                                     label="Date"
-                                    value={meetingDate}
+                                    value={meetingDate?.split('T')[0]}
                                     onChange={(e) => setMeetingDate(e.target.value)}
                                     required
                                 />
@@ -203,7 +265,7 @@ const Meeting = () => {
                 </DialogBody>
                 <DialogFooter>
                     <Button color="red" onClick={handleCloseDialog}>Cancel</Button>
-                    <Button color="green" onClick={handleSubmit} disabled={loading}>
+                    <Button color=" " onClick={handleSubmit} disabled={loading}>
                         {loading ? "Please wait..." : "Submit"}
                     </Button>
                 </DialogFooter>

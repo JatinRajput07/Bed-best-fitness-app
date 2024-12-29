@@ -452,7 +452,7 @@ exports.dashboard = catchAsync(async (req, res, next) => {
             meal: meal || 0,
             nutrition: nutrition || 0,
             assignedUserCount: assignedUserCount || 0
-        },  
+        },
     });
 });
 
@@ -568,7 +568,7 @@ exports.getassign = catchAsync(async (req, res, next) => {
         },
         {
             $sort: {
-                'assignedUsers.assignedAt': -1, // Sorting by assignedAt in descending order
+                'assignedUsers.assignedAt': -1,
             },
         },
     ]);
@@ -604,17 +604,26 @@ exports.editassign = catchAsync(async (req, res, next) => {
 
 
 exports.deleteassign = catchAsync(async (req, res, next) => {
+    console.log('dhjfh')
     const { id } = req.params;
+    let deletedAssignment
+    if (req.query.type === 'assignment') {
+        deletedAssignment = await Asign_User.deleteMany({ host: id });
+    }
 
-    const deletedAssignment = await Asign_User.findByIdAndDelete(id);
+    if (req.query.type === 'user') {
+        deletedAssignment = await Asign_User.findOneAndDelete({ host: id, asign_user: req.query.userId });
+    }
 
     if (!deletedAssignment) {
         return res.status(404).json({ message: "Assignment not found." });
     }
 
+    let message = req.query.type === 'user' ? "User remove successfully." : "Assignment deleted successfully."
+
     res.status(204).json({
         status: 'success',
-        message: "Assignment deleted successfully.",
+        message
     });
 });
 
@@ -1419,4 +1428,86 @@ exports.getMeeting = catchAsync(async (req, res, next) => {
             meeting
         });
     }
+});
+
+
+exports.updateMeeting = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        const meetingId = req.params.id;
+        const { googleMeetLink, roles, meetingDate, meetingTime } = req.body;
+
+        if (!googleMeetLink || !roles || roles.length === 0) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Google Meet link and roles are required.',
+            });
+        }
+
+        let updatedData = {
+            googleMeetLink,
+            roles,
+            meetingDate,
+            meetingTime,
+        };
+
+        if (req.files && req.files.length > 0) {
+            const uploadedFiles = await Promise.all(
+                req.files.map(async (file) => {
+                    const fileType = file.mimetype.split('/')[0];
+                    const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+                    return {
+                        fileName: file.filename,
+                        path: filePath,
+                        mimeType: fileType,
+                    };
+                })
+            );
+            updatedData.image = uploadedFiles[0].path;
+        }
+
+        const updatedMeeting = await Meeting.findByIdAndUpdate(meetingId, updatedData, {
+            new: true,
+            runValidators: true,
+        });
+
+        if (updatedMeeting) {
+            return res.status(200).json({
+                status: 'success',
+                message: 'Meeting updated successfully.',
+                meeting: updatedMeeting,
+            });
+        } else {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Meeting not found.',
+            });
+        }
+    });
+});
+
+
+exports.deleteMeeting = catchAsync(async (req, res, next) => {
+    const meetingId = req.params.id;
+
+    const meeting = await Meeting.findById(meetingId);
+
+    if (!meeting) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'Meeting not found.',
+        });
+    }
+
+    await Meeting.findByIdAndDelete(meetingId);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Meeting deleted successfully.',
+    });
 });

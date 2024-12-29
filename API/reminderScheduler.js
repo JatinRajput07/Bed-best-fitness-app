@@ -6,7 +6,7 @@ const MealReminder = require("./models/MealReminder");
 const WaterReminder = require("./models/WaterReminder");
 
 cron.schedule("* * * * *", async () => {
-    console.log("Checking reminders...");
+    // console.log("Checking reminders...");
     try {
         const users = await User.find({});
 
@@ -100,7 +100,7 @@ const checkWaterReminders = async (user, reminder) => {
 const checkOtherReminders = async (user, reminder) => {
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
-    console.log(`${hours}:${minutes}`);
+    // console.log(`${hours}:${minutes}`);
     const currentDay = new Date().toLocaleString("en-US", { weekday: "long" }).toLowerCase();
 
     let reminderMessage = "";

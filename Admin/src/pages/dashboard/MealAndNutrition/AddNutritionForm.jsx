@@ -103,7 +103,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
             ) : (
               users.filter(e => e.role === 'user').map((user) => (
                 <option key={user.id} value={user._id}>
-                  {user.name}
+                  {user.name ? user.name : user.email}
                 </option>
               ))
             )}

@@ -17,8 +17,8 @@ export const editAssignment = createAsyncThunk('assignUser/editAssignment', asyn
     return response.data.data;
 });
 
-export const deleteAssignment = createAsyncThunk('assignUser/deleteAssignment', async (id) => {
-    await Axios.delete(`/admin/assign/${id}`);
+export const deleteAssignment = createAsyncThunk('assignUser/deleteAssignment', async ({id, type, userId}) => {
+    await Axios.delete(`/admin/assign/${id}?type=${type}&userId=${userId || ''}`);
     return id;
 });
 
