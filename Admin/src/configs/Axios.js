@@ -10,7 +10,7 @@ const Axios = axios.create({
 
 Axios.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("authToken") || Cookies.get('jwt');
+        const token = sessionStorage.getItem("authToken")
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }

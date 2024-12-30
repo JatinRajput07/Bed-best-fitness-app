@@ -84,37 +84,50 @@ export const routes = () => {
       ],
     },
     {
-      icon: <ListBulletIcon {...icon} />,
-      name: "Categories",
-      path: "/categories",
-      element: (
-        <Suspense fallback={<div>Loading...</div>}>
-          <CategoryManager />
-        </Suspense>
-      ),
+      icon: <VideoCameraIcon {...icon} />,
+      name: "Videos",
+      dropdown: [
+        {
+          name: "Video List",
+          path: "/videos",
+          element: (
+            <Suspense fallback={<div>Loading...</div>}>
+              <Videos />
+            </Suspense>
+          ),
+        },
+        {
+          name: "Upload Video",
+          path: "/video-upload",
+          element: (
+            <Suspense fallback={<div>Loading...</div>}>
+              <VideoUpload />
+            </Suspense>
+          ),
+        },
+      ],
     },
-    {
-      icon: <CameraIcon {...icon} />,
-      name: "Meeting",
-      path: "/meeting",
-      element: (
-        <Suspense fallback={<div>Loading...</div>}>
-          <Meeting />
-        </Suspense>
-      ),
-    },
-    {
-      icon: <ArrowLeftIcon {...icon} />,
-      name: "Banners",
-      path: "/banner",
-      element: (
-        <Suspense fallback={<div>Loading...</div>}>
-          <BannerManagement />
-        </Suspense>
-      ),
-    },
-    // Conditionally include these routes if the role is not "host"
     ...(role !== "host" ? [
+      {
+        icon: <ArrowLeftIcon {...icon} />,
+        name: "Banners",
+        path: "/banner",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <BannerManagement />
+          </Suspense>
+        ),
+      },
+      {
+        icon: <CameraIcon {...icon} />,
+        name: "Meeting",
+        path: "/meeting",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Meeting />
+          </Suspense>
+        ),
+      },
       {
         icon: <UserIcon {...icon} />,
         name: "Assign Users To Host",
@@ -139,29 +152,16 @@ export const routes = () => {
           },
         ],
       },
+      
       {
-        icon: <VideoCameraIcon {...icon} />,
-        name: "Videos",
-        dropdown: [
-          {
-            name: "Video List",
-            path: "/videos",
-            element: (
-              <Suspense fallback={<div>Loading...</div>}>
-                <Videos />
-              </Suspense>
-            ),
-          },
-          {
-            name: "Upload Video",
-            path: "/video-upload",
-            element: (
-              <Suspense fallback={<div>Loading...</div>}>
-                <VideoUpload />
-              </Suspense>
-            ),
-          },
-        ],
+        icon: <ListBulletIcon {...icon} />,
+        name: "Categories",
+        path: "/categories",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <CategoryManager />
+          </Suspense>
+        ),
       },
       {
         icon: <DocumentTextIcon {...icon} />,

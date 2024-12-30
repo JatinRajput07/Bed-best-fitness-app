@@ -34,7 +34,7 @@ export function SignIn() {
       const data = await response.json();
       if (response.ok) {
         // console.log(data,'==============data===========================')
-        Cookies.set('jwt', data.data.token, { expires: 7, path: '' });
+        // Cookies.set('jwt', data.data.token, { expires: 7, path: '' });
         dispatch(login(data));
         utilService.showSuccessToast("Login successfully!");
         navigate("/dashboard/home");
