@@ -73,10 +73,11 @@ exports.getUserList = catchAsync(async (req, res, next) => {
     let query = { role: { $ne: "admin" } };
 
     if (req.user.role === "host") {
-        const assignedUsers = await Asign_User.findOne({ host: userId });
+        const assignedUsers = await Asign_User.find({ host: userId });
 
-        if (assignedUsers) {
-            query._id = { $in: assignedUsers.asign_user };
+        if (assignedUsers.length > 0) {
+            const assignedUserIds = assignedUsers.map(user => user.asign_user).flat();
+            query._id = { $in: assignedUserIds };
         } else {
             query._id = { $in: [] };
         }
@@ -89,15 +90,18 @@ exports.getUserList = catchAsync(async (req, res, next) => {
         ];
     }
 
+    // Apply role filter
     if (role) {
         query.role = role;
     }
 
+    // Get users matching the query
     const users = await User.find(query)
         .sort({ createdAt: -1 })
         .skip(skipValue)
         .limit(limitValue);
 
+    // Get total number of users matching the query
     const totalRecords = await User.countDocuments(query);
     const totalPages = Math.ceil(totalRecords / limitValue);
 
