@@ -36,6 +36,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
             .get(`/admin/video-list-byCategory/${category_name}`)
             .then((response) => {
                 if (response.data.status === "success") {
+                    console.log(response.data.data,'==========response.data.data========')
                     setCategoryData(response.data.data);
                 }
             })
@@ -62,6 +63,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
     ];
 
     const renderMediaPreview = (file) => {
+        console.log(file,'=====d=d==f==f=f=f=f=f=f=f=f=f=')
         const { filetype, path, thumbnail, audioThumbnail } = file; // Assuming 'thumbnail' and 'audioThumbnail' are available
       
         if (filetype === "video") {

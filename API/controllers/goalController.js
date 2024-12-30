@@ -204,7 +204,8 @@ exports.getMindnessfull = catchAsync(async (req, res, next) => {
                         likes: "$likes",
                         thumbnail: "$thumbnail",
                         audioThumbnail: "$audioThumbnail",
-                        createdAt: "$createdAt"
+                        createdAt: "$createdAt",
+                        filetype:"$filetype"
                     }
                 }
             }
@@ -297,6 +298,7 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
                         views: "$views",
                         likes: "$likes",
                         thumbnail: "$thumbnail",
+                        filetype:"$filetype",
                         audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt",
                     },
