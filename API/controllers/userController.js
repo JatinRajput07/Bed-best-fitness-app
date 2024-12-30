@@ -23,6 +23,7 @@ const Notification = require("../models/Notification");
 const Meal = require("../models/Meal");
 const Nutrition = require("../models/Nutrition");
 const Category = require("../models/Category");
+const SubCategory = require("../models/SubCategory");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -808,19 +809,24 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
 
     const categoryId = categoryDoc._id.toString();
 
-    const videos = await Video.find({ category: categoryId })
-        .select("_id title path createdAt updatedAt category subcategories")
-        .populate({
-            path: "subcategories",
-            select: "name",
-        })
-        .exec();
+    const videos = await Video.find({ category: categoryId }).exec();
+
+    const subcategoryNames = await SubCategory.find({
+        _id: { $in: videos.map((video) => video.subcategories) },
+    }).select("_id name");
+
+    const subcategoryMap = subcategoryNames.reduce((acc, subcat) => {
+        acc[subcat._id] = subcat.name;
+        return acc;
+    }, {});
+
     const videosBySubcategory = {};
 
     videos.forEach((video) => {
-        video.subcategories.forEach((subcat) => {
-            const subcategoryName = subcat.name;
+        const subcategoryId = video.subcategories;
+        const subcategoryName = subcategoryMap[subcategoryId];
 
+        if (subcategoryName) {
             if (!videosBySubcategory[subcategoryName]) {
                 videosBySubcategory[subcategoryName] = [];
             }
@@ -828,12 +834,14 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
                 id: video._id,
                 title: video.title,
                 path: video.path,
+                thumbnail:video.thumbnail,
+                audioThumbnail:video.audioThumbnail,
+                fileType:video.filetype,
                 createdAt: video.createdAt,
                 updatedAt: video.updatedAt,
             });
-        });
+        }
     });
-
     return res.status(200).json({
         status: "success",
         data: { videos: videosBySubcategory },
