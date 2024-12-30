@@ -58,32 +58,48 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
 
     const subcategories = [
         "All",
-        ...new Set(Object.keys(categoryData)) // Get unique keys from categoryData
+        ...new Set(Object.keys(categoryData))
     ];
 
-    const renderMediaPreview = (path) => {
-        const fileExtension = path.split('.').pop().toLowerCase();
-        if (fileExtension === "mp4") {
-            return (
-                <video className="w-full h-48 object-cover rounded-t-lg" src={path} type="video/mp4" controls>
-                    Your browser does not support the video tag.
-                </video>
-            );
-        } else if (fileExtension === "mp3" || fileExtension === "wav") {
-            return (
-                <audio className="w-full h-48 object-cover rounded-t-lg" controls>
-                    <source src={path} type={`audio/${fileExtension}`} />
-                    Your browser does not support the audio element.
-                </audio>
-            );
-        } else if (fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "png" || fileExtension === "gif") {
-            return (
-                <img className="w-full h-48 object-cover rounded-t-lg" src={path} alt="media preview" />
-            );
+    const renderMediaPreview = (file) => {
+        const { filetype, path, thumbnail, audioThumbnail } = file; // Assuming 'thumbnail' and 'audioThumbnail' are available
+      
+        if (filetype === "video") {
+          return (
+            <div className="w-full h-48 relative">
+              <img
+                src={thumbnail || 'http://43.204.2.84:7200/uploads/images/1735548006312-film-596009_640.jpg'} // Default video thumbnail if not available
+                alt="video thumbnail"
+                className="w-full h-48 object-cover rounded-t-lg"
+              />
+              <video className="absolute top-0 left-0 w-full h-full object-cover rounded-t-lg opacity-0 hover:opacity-100 transition-opacity duration-200" src={path} controls>
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          );
+        } else if (filetype === "audio") {
+          return (
+            <div className="w-full h-48 relative">
+              <img
+                src={audioThumbnail || 'http://43.204.2.84:7200/uploads/images/1735547802817-vinyl-4808792_640.jpg'} 
+                alt="audio thumbnail"
+                className="w-full h-48 object-cover rounded-t-lg"
+              />
+              <audio className="absolute top-0 left-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-200" controls>
+                <source src={path} type={`audio/${fileExtension}`} />
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+          );
+        } else if (filetype === "image") {
+          return (
+            <img className="w-full h-48 object-cover rounded-t-lg" src={path} alt="media preview" />
+          );
         } else {
-            return null;
+          return null;
         }
-    };
+      };
+      
 
 
 
@@ -196,7 +212,7 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                                         color="gray"
                                         className="mx-0 mt-0 mb-4 h-48 xl:h-40"
                                     >
-                                        {renderMediaPreview(media.path)}
+                                        {renderMediaPreview(media)}
                                     </CardHeader>
 
                                     <CardBody className="p-4 bg-white">

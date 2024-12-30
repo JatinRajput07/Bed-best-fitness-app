@@ -91,14 +91,14 @@ export function Videos() {
       ));
 
   const renderMediaPreview = (file) => {
-    const { filetype, path, thumbnail } = file; // Assuming 'thumbnail' is a property that contains the path for the thumbnail image
+    const { filetype, path, thumbnail ,audioThumbnail} = file; // Assuming 'thumbnail' is a property that contains the path for the thumbnail image
 
     switch (filetype) {
       case "video":
         return (
           <div className="w-full h-48 relative">
             <img
-              src={thumbnail || '/path/to/default-video-thumbnail.jpg'} // Default video thumbnail if not available
+              src={thumbnail || 'http://43.204.2.84:7200/uploads/images/1735548006312-film-596009_640.jpg'} // Default video thumbnail if not available
               alt="video thumbnail"
               className="w-full h-48 object-cover rounded-t-lg"
             />
@@ -109,7 +109,7 @@ export function Videos() {
         return (
           <div className="w-full h-48 relative">
             <img
-              src={thumbnail || '/path/to/default-audio-thumbnail.jpg'} // Default audio thumbnail if not available
+              src={audioThumbnail || 'http://43.204.2.84:7200/uploads/images/1735547802817-vinyl-4808792_640.jpg'} // Default audio thumbnail if not available
               alt="audio thumbnail"
               className="w-full h-48 object-cover rounded-t-lg"
             />
