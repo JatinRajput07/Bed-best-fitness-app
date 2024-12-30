@@ -6,6 +6,7 @@ const NutritionTracker = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(null);
   const recordsPerPage = 5;
 
   useEffect(() => {
@@ -52,6 +53,25 @@ const NutritionTracker = ({ userId }) => {
     }
   };
 
+  const handleDateChange = (event) => {
+    const selectedDate = event.target.value;
+    setSelectedDate(selectedDate);
+
+    // Find the index of the selected date in the nutrition plan
+    const dateIndex = nutritionPlan.findIndex((day) => day.date === selectedDate);
+    if (dateIndex !== -1) {
+      // Determine which page contains the selected date
+      const page = Math.floor(dateIndex / recordsPerPage) + 1; // 0-indexed, so add 1 for page number
+      setCurrentPage(page);
+
+      // Calculate the relative index of the selected date in the new page
+      const relativeIndex = dateIndex - (page - 1) * recordsPerPage;
+
+      // Open the accordion for the selected date (set open state to the relative index)
+      setOpen(relativeIndex);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -63,6 +83,26 @@ const NutritionTracker = ({ userId }) => {
   return (
     <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Nutrition Tracker</h2>
+
+      {/* Dropdown for selecting date */}
+      <div className="mb-6">
+        <label htmlFor="nutrition-date" className="block text-lg font-semibold text-gray-700">
+          Select a Date:
+        </label>
+        <select
+          id="nutrition-date"
+          className="mt-2 p-2 w-full border border-gray-300 rounded-md"
+          value={selectedDate || ""}
+          onChange={handleDateChange}
+        >
+          <option value="">-- Select a Date --</option>
+          {nutritionPlan.map((day, index) => (
+            <option key={index} value={day.date}>
+              {day.date}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="space-y-6">
         {currentRecords.length > 0 ? (

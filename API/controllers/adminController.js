@@ -212,7 +212,6 @@ exports.getContactUsList = catchAsync(async (req, res, next) => {
 
     res.json({ contacts, totalRecords: totalContacts });
 
-
     return res.status(200).json({
         status: 'success',
         contacts,

@@ -1,14 +1,15 @@
 import Axios from "@/configs/Axios";
 import React, { useEffect, useState } from "react";
 
-const DEFAULT_IMAGE_URL = "https://via.placeholder.com/150"; 
+const DEFAULT_IMAGE_URL = "https://via.placeholder.com/150";
 
 const MealTracker = ({ userId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
   const [currentPage, setCurrentPage] = useState(1); // Track the current page
-  const recordsPerPage = 5; // Show 10 records per page
+  const [selectedDate, setSelectedDate] = useState(null); // Track the selected date
+  const recordsPerPage = 5; // Show 5 records per page
 
   useEffect(() => {
     const fetchMealsData = async () => {
@@ -54,6 +55,25 @@ const MealTracker = ({ userId }) => {
     }
   };
 
+  const handleDateChange = (event) => {
+    const selectedDate = event.target.value;
+    setSelectedDate(selectedDate);
+
+    // Find the index of the selected date in the meal plan
+    const dateIndex = mealPlan.findIndex((day) => day.date === selectedDate);
+    if (dateIndex !== -1) {
+      // Determine which page contains the selected date
+      const page = Math.floor(dateIndex / recordsPerPage) + 1; // 0-indexed, so add 1 for page number
+      setCurrentPage(page);
+
+      // Calculate the relative index of the selected date in the new page
+      const relativeIndex = dateIndex - (page - 1) * recordsPerPage;
+
+      // Open the accordion for the selected date (set open state to the relative index)
+      setOpen(relativeIndex);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -65,6 +85,26 @@ const MealTracker = ({ userId }) => {
   return (
     <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Meal Tracker</h2>
+
+      {/* Dropdown for selecting date */}
+      <div className="mb-6">
+        <label htmlFor="meal-date" className="block text-lg font-semibold text-gray-700">
+          Select a Date:
+        </label>
+        <select
+          id="meal-date"
+          className="mt-2 p-2 w-full border border-gray-300 rounded-md"
+          value={selectedDate || ""}
+          onChange={handleDateChange}
+        >
+          <option value="">-- Select a Date --</option>
+          {mealPlan.map((day, index) => (
+            <option key={index} value={day.date}>
+              {day.date}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="space-y-6">
         {currentRecords.length > 0 ? (
