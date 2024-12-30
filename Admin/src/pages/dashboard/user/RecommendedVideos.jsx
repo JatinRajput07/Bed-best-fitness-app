@@ -75,7 +75,7 @@ function RecommendedVideos({ userId }) {
               className="mx-0 mt-0 mb-4 h-64 xl:h-40"
             >
               <img
-                src="https://via.placeholder.com/300x200.png?text=Thumbnail"
+                src={video_id?.thumbnail ? video_id?.thumbnail : `https://via.placeholder.com/300x200.png?text=Thumbnail`}
                 alt={video_id?.title}
                 className="h-full w-full object-cover"
               />

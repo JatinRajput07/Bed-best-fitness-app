@@ -85,22 +85,38 @@ export function Videos() {
             onChange={() => handleToggleUserSelection(user._id)}
           />
           <Typography variant="small" color="blue-gray">
-            {user.name ? user.name : user.email}  
-          </Typography>
+            {user.name ? user.name : user.email}
+          </Typography> 
         </div>
       ));
 
   const renderMediaPreview = (file) => {
-    const { filetype, path } = file;
+    const { filetype, path, thumbnail } = file; // Assuming 'thumbnail' is a property that contains the path for the thumbnail image
 
     switch (filetype) {
       case "video":
-        return <video src={path} controls className="w-full h-48 object-cover rounded-t-lg" />;
+        return (
+          <div className="w-full h-48 relative">
+            <img
+              src={thumbnail || '/path/to/default-video-thumbnail.jpg'} // Default video thumbnail if not available
+              alt="video thumbnail"
+              className="w-full h-48 object-cover rounded-t-lg"
+            />
+            <video src={path} controls className="absolute top-0 left-0 w-full h-full object-cover rounded-t-lg opacity-0 hover:opacity-100 transition-opacity duration-200" />
+          </div>
+        );
       case "audio":
         return (
-          <audio controls className="w-full h-48 object-cover rounded-t-lg">
-            <source src={path} />
-          </audio>
+          <div className="w-full h-48 relative">
+            <img
+              src={thumbnail || '/path/to/default-audio-thumbnail.jpg'} // Default audio thumbnail if not available
+              alt="audio thumbnail"
+              className="w-full h-48 object-cover rounded-t-lg"
+            />
+            <audio controls className="absolute top-0 left-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <source src={path} />
+            </audio>
+          </div>
         );
       case "image":
         return <img src={path} alt="media" className="w-full h-48 object-cover rounded-t-lg" />;
@@ -127,6 +143,7 @@ export function Videos() {
         );
     }
   };
+
 
   const handleViewAll = (category) => setSelectedCategory(category);
 
@@ -161,9 +178,9 @@ export function Videos() {
                   </div>
                   <div className="grid grid-cols-1 gap-8 mt-6 md:grid-cols-2 xl:grid-cols-4">
                     {categoryVideos.map((media) => (
-                      
+
                       <Card key={media._id} className="shadow-lg rounded-lg">
-                        {console.log(media,'=====media====')}
+                        {console.log(media, '=====media====')}
                         <CardHeader floated={false} className="mx-0 mt-0 mb-4 h-48">
                           {renderMediaPreview(media)}
                         </CardHeader>
@@ -188,11 +205,11 @@ export function Videos() {
                                 Assign to User
                               </button>
                             )}
-                             <IconButton
-                             style={{
-                              height:"25px",
-                              width:"25px"
-                             }}
+                            <IconButton
+                              style={{
+                                height: "25px",
+                                width: "25px"
+                              }}
                               color="red"
                               onClick={() => handleDeleteVideo(media.id)}
                             >

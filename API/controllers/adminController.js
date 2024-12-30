@@ -261,7 +261,7 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
                 if (fileType === 'audio') {
                     const thumbnailFile = req.files.find(f => f.fieldname === 'audioThumbnail');
                     if (thumbnailFile) {
-                        fileData.audioThumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(thumbnailFile.filename)}`;
+                        fileData.audioThumbnail = `http://43.204.2.84:7200/uploads/images/${path.basename(thumbnailFile.filename)}`;
                     }
                 }
 
