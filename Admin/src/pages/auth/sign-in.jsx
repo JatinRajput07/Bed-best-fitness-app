@@ -17,8 +17,8 @@ export function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); 
-    
+    setError("");
+
     try {
       const response = await fetch("http://43.204.2.84:7200/admin/login", {
         method: "POST",
@@ -51,20 +51,40 @@ export function SignIn() {
 
   return (
     <section className="m-8 flex gap-4">
-      <div className="w-full lg:w-3/5 mt-24">
+      <div className="w-full mt-4">
         <div className="text-center">
-          <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
-          <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email and password to Sign In.</Typography>
+          {/* Logo */}
+          <img
+            src="/free-logo.png"
+            alt="Logo"
+            className="mx-auto mb-4 h-48"
+          />
+          <Typography variant="h2" className="mb-4">
+            Sign In
+          </Typography>
+          <Typography
+            variant="paragraph"
+            color="blue-gray"
+            className="text-sm font-normal"
+          >
+            Enter your email and password to Sign In.
+          </Typography>
         </div>
 
-        {/* Display Error if any */}
         {error && (
           <div className="text-red-600 text-center mb-4">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/3"
+        >
           <div className="mb-1 flex flex-col gap-6">
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="-mb-3 font-medium"
+            >
               Your email
             </Typography>
             <Input
@@ -77,7 +97,11 @@ export function SignIn() {
                 className: "before:content-none after:content-none",
               }}
             />
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="-mb-3 font-medium"
+            >
               Password
             </Typography>
             <Input
@@ -93,18 +117,24 @@ export function SignIn() {
             />
           </div>
 
-          <Button className="mt-6" fullWidth type="submit" disabled={loading}>
+          <Button
+            className="mt-6"
+            fullWidth
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Signing In..." : "Sign In"}
           </Button>
         </form>
       </div>
-      <div className="w-2/5 h-full hidden lg:block">
-        <img
-          src="/img/pattern.png"
-          className="h-full w-full object-cover rounded-3xl"
-        />
-      </div>
+      {/* <div className="w-2/5 h-full hidden lg:block">
+    <img
+      src="/img/pattern.png"
+      className="h-full w-full object-cover rounded-3xl"
+    />
+  </div> */}
     </section>
+
   );
 }
 

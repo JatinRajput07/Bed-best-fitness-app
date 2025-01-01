@@ -31,6 +31,7 @@ export function Videos() {
 
   const { videos, loading: videoLoading, error: videoError } = useSelector((state) => state.videos);
   const { users, loading: userLoading, error: userError } = useSelector((state) => state.users);
+  const { role } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchVideos());
@@ -86,12 +87,12 @@ export function Videos() {
           />
           <Typography variant="small" color="blue-gray">
             {user.name ? user.name : user.email}
-          </Typography> 
+          </Typography>
         </div>
       ));
 
   const renderMediaPreview = (file) => {
-    const { filetype, path, thumbnail ,audioThumbnail} = file; // Assuming 'thumbnail' is a property that contains the path for the thumbnail image
+    const { filetype, path, thumbnail, audioThumbnail } = file; // Assuming 'thumbnail' is a property that contains the path for the thumbnail image
 
     switch (filetype) {
       case "video":
@@ -179,45 +180,48 @@ export function Videos() {
                   <div className="grid grid-cols-1 gap-8 mt-6 md:grid-cols-2 xl:grid-cols-4">
                     {categoryVideos.map((media) => (
 
-                      <Card key={media._id} className="shadow-lg rounded-lg">
-                        {console.log(media, '=====media====')}
+                      <Card key={media._id} className="shadow-lg rounded-lg relative">
+                        {console.log(media, "=====media====")}
                         <CardHeader floated={false} className="mx-0 mt-0 mb-4 h-48">
                           {renderMediaPreview(media)}
                         </CardHeader>
-                        <CardBody>
+                        <CardBody className="pb-16"> {/* Added padding to prevent overlap */}
                           <Typography variant="h6" className="text-sm mb-1">
                             {media.title}
                           </Typography>
                           <Typography variant="small" color="gray" className="mb-2">
                             {media.description || "No description available."}
                           </Typography>
-                          <div className="flex justify-between items-center">
-
-                            {isRecommendedCategory(category) && (
-                              <button
-                                onClick={() => {
-                                  setSelectedVideo(media?.id);
-                                  setRecommendationDialogOpen(true);
-                                }}
-                                className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                type="button"
-                              >
-                                Assign to User
-                              </button>
-                            )}
+                        </CardBody>
+                        <div className="absolute bottom-5 left-0 right-0 flex justify-between items-center px-4">
+                          {isRecommendedCategory(category) && (
+                            <button
+                              onClick={() => {
+                                setSelectedVideo(media?.id);
+                                setRecommendationDialogOpen(true);
+                              }}
+                              className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150"
+                              type="button"
+                            >
+                              Assign to User
+                            </button>
+                          )}
+                          {role === "admin" && (
                             <IconButton
                               style={{
                                 height: "25px",
-                                width: "25px"
+                                width: "25px",
                               }}
                               color="red"
                               onClick={() => handleDeleteVideo(media.id)}
                             >
                               <TrashIcon className="h-4 w-4" />
                             </IconButton>
-                          </div>
-                        </CardBody>
+                          )}
+                        </div>
                       </Card>
+
+
                     ))}
                   </div>
                 </div>

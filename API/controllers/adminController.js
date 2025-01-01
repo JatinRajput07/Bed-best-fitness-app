@@ -442,6 +442,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                         views: "$views",
                         likes: "$likes",
                         thumbnail: "$thumbnail",
+                        description: "$description",
                         filetype:"$filetype",
                         audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt",

@@ -62,7 +62,7 @@ aside::-webkit-scrollbar {
           className="absolute right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
           onClick={() => setOpenSidenav(dispatch, false)}
         >
-          <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
+          <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white " />
         </IconButton>
       </div>
       <div className="m-4">
@@ -85,10 +85,11 @@ aside::-webkit-scrollbar {
                   <div>
                     <button
                       onClick={() => handleDropdownToggle(name)}
-                      className="flex w-full items-center px-4 py-2 capitalize text-left hover:bg-blue-gray-200"
+                      className="flex font-medium gap-4 hover:bg-blue-gray-500/10 hover:shadow-none items-center px-4 py-3 rounded-lg select-none shadow-none text-dark text-center transition-all w-full"
+                     
                     >
                       {icon}
-                      <span className="ml-3">{name}</span>
+                      <span className="">{name}</span>
                     </button>
                     {openDropdown === name && (
                       <ul className="ml-6 mt-1 space-y-1">
@@ -98,7 +99,7 @@ aside::-webkit-scrollbar {
                               {({ isActive }) => (
                                 <Button
                                   variant={isActive ? "gradient" : "text"}
-                                  color={isActive ? sidenavColor : "blue-gray"}
+                                  color={isActive ? sidenavColor : "dark"}
                                   className="flex items-center px-4 capitalize"
                                   fullWidth
                                 >
@@ -121,9 +122,10 @@ aside::-webkit-scrollbar {
                     {({ isActive }) => (
                       <Button
                         variant={isActive ? "gradient" : "text"}
-                        color={isActive ? sidenavColor : "blue-gray"}
+                        color={isActive ? sidenavColor : "dark"}
                         className="flex items-center gap-4 px-4 capitalize"
                         fullWidth
+                        onClick={() => handleDropdownToggle(name)}
                       >
                         {icon}
                         <Typography

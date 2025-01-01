@@ -7,7 +7,8 @@ import {
   DocumentTextIcon,
   ListBulletIcon,
   ArchiveBoxIcon,
-  CameraIcon
+  CameraIcon,
+  StopIcon
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
@@ -109,7 +110,7 @@ export const routes = () => {
     },
     ...(role !== "host" ? [
       {
-        icon: <ArrowLeftIcon {...icon} />,
+        icon: <StopIcon {...icon} />,
         name: "Banners",
         path: "/banner",
         element: (

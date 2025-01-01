@@ -30,13 +30,14 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const { users, loading: userLoading, error: userError } = useSelector((state) => state.users);
+    const { role } = useSelector((state) => state.auth);
 
     useEffect(() => {
         Axios
             .get(`/admin/video-list-byCategory/${category_name}`)
             .then((response) => {
                 if (response.data.status === "success") {
-                    console.log(response.data.data,'==========response.data.data========')
+                    console.log(response.data.data, '==========response.data.data========')
                     setCategoryData(response.data.data);
                 }
             })
@@ -63,45 +64,45 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
     ];
 
     const renderMediaPreview = (file) => {
-        console.log(file,'=====d=d==f==f=f=f=f=f=f=f=f=f=')
+        console.log(file, '=====d=d==f==f=f=f=f=f=f=f=f=f=')
         const { filetype, path, thumbnail, audioThumbnail } = file; // Assuming 'thumbnail' and 'audioThumbnail' are available
-      
+
         if (filetype === "video") {
-          return (
-            <div className="w-full h-48 relative">
-              <img
-                src={thumbnail || 'http://43.204.2.84:7200/uploads/images/1735548006312-film-596009_640.jpg'} // Default video thumbnail if not available
-                alt="video thumbnail"
-                className="w-full h-48 object-cover rounded-t-lg"
-              />
-              <video className="absolute top-0 left-0 w-full h-full object-cover rounded-t-lg opacity-0 hover:opacity-100 transition-opacity duration-200" src={path} controls>
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          );
+            return (
+                <div className="w-full h-48 relative">
+                    <img
+                        src={thumbnail || 'http://43.204.2.84:7200/uploads/images/1735548006312-film-596009_640.jpg'} // Default video thumbnail if not available
+                        alt="video thumbnail"
+                        className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <video className="absolute top-0 left-0 w-full h-full object-cover rounded-t-lg opacity-0 hover:opacity-100 transition-opacity duration-200" src={path} controls>
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            );
         } else if (filetype === "audio") {
-          return (
-            <div className="w-full h-48 relative">
-              <img
-                src={audioThumbnail || 'http://43.204.2.84:7200/uploads/images/1735547802817-vinyl-4808792_640.jpg'} 
-                alt="audio thumbnail"
-                className="w-full h-48 object-cover rounded-t-lg"
-              />
-              <audio className="absolute top-0 left-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-200" controls>
-                <source src={path} type={`audio/${fileExtension}`} />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          );
+            return (
+                <div className="w-full h-48 relative">
+                    <img
+                        src={audioThumbnail || 'http://43.204.2.84:7200/uploads/images/1735547802817-vinyl-4808792_640.jpg'}
+                        alt="audio thumbnail"
+                        className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <audio className="absolute top-0 left-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-200" controls>
+                        <source src={path} type={`audio/${fileExtension}`} />
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            );
         } else if (filetype === "image") {
-          return (
-            <img className="w-full h-48 object-cover rounded-t-lg" src={path} alt="media preview" />
-          );
+            return (
+                <img className="w-full h-48 object-cover rounded-t-lg" src={path} alt="media preview" />
+            );
         } else {
-          return null;
+            return null;
         }
-      };
-      
+    };
+
 
 
 
@@ -208,51 +209,47 @@ const CategoryVideos = ({ category_name, onGoBack }) => {
                     {filteredVideos.length > 0 ? (
                         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
                             {filteredVideos.map((media) => (
-                                <Card key={media._id || media.title} className="shadow-lg rounded-lg">
-                                    <CardHeader
-                                        floated={false}
-                                        color="gray"
-                                        className="mx-0 mt-0 mb-4 h-48 xl:h-40"
-                                    >
+                                <Card key={media._id} className="shadow-lg rounded-lg relative">
+                                    {console.log(media, "=====media====")}
+                                    <CardHeader floated={false} className="mx-0 mt-0 mb-4 h-48">
                                         {renderMediaPreview(media)}
                                     </CardHeader>
-
-                                    <CardBody className="p-4 bg-white">
-                                        <Typography variant="h6" className="text-sm mb-2 font-semibold">
+                                    <CardBody className="pb-16"> {/* Added padding to prevent overlap */}
+                                        <Typography variant="h6" className="text-sm mb-1">
                                             {media.title}
                                         </Typography>
-                                        {media.subcategories && (
-                                            <Typography variant="small" className="text-gray-600">
-                                                {media.subcategories.join(", ")}
-                                            </Typography>
+                                        <Typography variant="small" color="gray" className="mb-2">
+                                            {media.description || "No description available."}
+                                        </Typography>
+                                    </CardBody>
+                                    <div className="absolute bottom-10 left-0 right-0 flex justify-between items-center px-4">
+                                        {isRecommendedCategory(category_name) && (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedVideo(media?.id);
+                                                    setRecommendationDialogOpen(true);
+                                                }}
+                                                className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none ease-linear transition-all duration-150"
+                                                type="button"
+                                            >
+                                                Assign to User
+                                            </button>
                                         )}
-                                        <div className="flex justify-between items-center mt-4">
-                                            {isRecommendedCategory(category_name) && (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedVideo(media?.id);
-                                                        setRecommendationDialogOpen(true);
-                                                    }}
-                                                    className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                                                    type="button"
-                                                >
-                                                    Assign to User
-                                                </button>
-                                            )}
+                                        {role === "admin" && (
                                             <IconButton
                                                 style={{
                                                     height: "25px",
-                                                    width: "25px"
+                                                    width: "25px",
                                                 }}
                                                 color="red"
                                                 onClick={() => handleDeleteVideo(media.id)}
                                             >
                                                 <TrashIcon className="h-4 w-4" />
                                             </IconButton>
-
-                                        </div>
-                                    </CardBody>
+                                        )}
+                                    </div>
                                 </Card>
+
                             ))}
                         </div>
                     ) : (
