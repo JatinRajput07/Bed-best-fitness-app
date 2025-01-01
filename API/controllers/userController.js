@@ -164,7 +164,12 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
         });
     }
 
-    let user = await User.findOne({ socialId, socialType });
+    let user = await User.findOne({
+        $or: [
+            { socialId },
+            { email }
+        ]
+    });
     if (!user) {
         if (!email) {
             return res.status(400).json({
@@ -834,9 +839,9 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
                 id: video._id,
                 title: video.title,
                 path: video.path,
-                thumbnail:video.thumbnail,
-                audioThumbnail:video.audioThumbnail,
-                fileType:video.filetype,
+                thumbnail: video.thumbnail,
+                audioThumbnail: video.audioThumbnail,
+                fileType: video.filetype,
                 createdAt: video.createdAt,
                 updatedAt: video.updatedAt,
             });
