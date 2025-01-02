@@ -4,7 +4,7 @@ const crypto = require('crypto-js');
 
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
-    name: { type: String ,default:"" },
+    name: { type: String, default: "" },
     phone: { type: String, required: true },
     socialId: String,
     socialType: String,   // google , facebook
@@ -46,8 +46,8 @@ const userSchema = new mongoose.Schema({
     socketId: String,
     isOnline: String,
     isVerified: { type: Boolean, default: false },
-    device_token:String,
-    device_type:String,    // 'android'  , 'iso'
+    device_token: String,
+    device_type: String,    // 'android'  , 'iso'
     permissions: {
         type: Object,
         default: {}, // Structure: { sectionName: { permission: true/false } }
@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema({
 
 
 userSchema.pre('save', async function (next) {
+    if (!this.name) {
+        this.name = this.email;
+    }
+
     if (!this.isModified('password')) return next();
     console.log(this.password, '==-dd=d=d=d==d=d')
     this.password = await bcrypt.hash(this.password, 12);

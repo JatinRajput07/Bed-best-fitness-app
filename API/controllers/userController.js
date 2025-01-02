@@ -360,14 +360,17 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
             { model: Recommendation, field: "user_id" },
             { model: UserFiles, field: "userId" },
         ];
-        await Promise.all(
-            collections.map(async ({ model, field }) => {
-                await model.deleteMany({ [field]: userId }).session(session);
-            })
-        );
+
+        for (const { model, field } of collections) {
+            const filter = { [field]: userId };
+            const recordExists = await model.exists(filter).session(session);
+            if (recordExists) {
+                await model.deleteMany(filter).session(session);
+            }
+        }
 
         await User.findByIdAndDelete(userId).session(session);
-
+        
         await session.commitTransaction();
         session.endSession();
 
@@ -381,6 +384,7 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
         return next(error);
     }
 });
+
 
 
 

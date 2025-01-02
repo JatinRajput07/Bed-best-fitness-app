@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardBody, Typography, Button, Input, Dialog, DialogBody, DialogFooter } from "@material-tailwind/react";
+import { Card, CardHeader, CardBody, Typography, Button, Input, Dialog, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react";
 import { ChevronDownIcon, ChevronUpIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useSelector, useDispatch } from "react-redux";
 import Axios from "@/configs/Axios";
@@ -248,16 +248,28 @@ const Nutrition = () => {
       </Card>
       {/* Confirmation Dialog */}
       <Dialog open={Boolean(deleteNutritionId)} handler={() => setDeleteNutritionId(null)}>
-        <DialogBody>
-          <Typography variant="h6" className="text-center">
+        <DialogHeader className="bg-gray-100 text-center py-4">
+          <Typography variant="h5" color="blue-gray" className="font-semibold">
+            Confirm Deletion
+          </Typography>
+        </DialogHeader>
+        <DialogBody className="flex flex-col items-center gap-6 p-6">
+          <div className="p-4 rounded-full bg-red-100 flex justify-center items-center">
+            <TrashIcon className="h-10 w-10 text-red-500" />
+          </div>
+          <Typography className="text-center text-base font-medium text-blue-gray-600">
             Are you sure you want to delete this nutrition plan?
           </Typography>
         </DialogBody>
-        <DialogFooter className="flex justify-center gap-4">
-          <Button color="red" onClick={() => setDeleteNutritionId(null)}>
+        <DialogFooter className="bg-gray-50 flex justify-center gap-4 py-4">
+          <Button variant="outlined"
+            color="blue-gray"
+            className="w-24" onClick={() => setDeleteNutritionId(null)}>
             Cancel
           </Button>
-          <Button color="green" onClick={handleDelete}>
+          <Button variant="gradient"
+            color="red"
+            className="w-24" onClick={handleDelete}>
             Confirm
           </Button>
         </DialogFooter>

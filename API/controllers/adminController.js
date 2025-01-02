@@ -137,20 +137,28 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
             });
         }
 
-        await Promise.all([
-            Routine.deleteMany({ userId }).session(session),
-            Meal.deleteMany({ userId }).session(session),
-            Reminder.deleteMany({ userId }).session(session),
-            MealReminder.deleteMany({ userId }).session(session),
-            WaterReminder.deleteMany({ userId }).session(session),
-            Nutrition.deleteMany({ userId }).session(session),
-            Goal.deleteMany({ userId }).session(session),
-            Notification.deleteMany({ userId }).session(session),
-            Recommendation.deleteMany({ user_id: userId }).session(session),
-            UserFiles.deleteMany({ userId }).session(session),
-        ]);
+        const collections = [
+            { model: Routine, key: "userId" },
+            { model: Meal, key: "userId" },
+            { model: Reminder, key: "userId" },
+            { model: MealReminder, key: "userId" },
+            { model: WaterReminder, key: "userId" },
+            { model: Nutrition, key: "userId" },
+            { model: Goal, key: "userId" },
+            { model: Notification, key: "userId" },
+            { model: Recommendation, key: "user_id" },
+            { model: UserFiles, key: "userId" },
+        ];
 
-        await User.findByIdAndDelete(userId).session(session);  
+        for (const { model, key } of collections) {
+            const filter = { [key]: userId };
+            const recordExists = await model.exists(filter).session(session);
+            if (recordExists) {
+                await model.deleteMany(filter).session(session);
+            }
+        }
+
+        await User.findByIdAndDelete(userId).session(session);
 
         await session.commitTransaction();
         session.endSession();
@@ -165,6 +173,8 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
         return next(error);
     }
 });
+
+
 
 
 

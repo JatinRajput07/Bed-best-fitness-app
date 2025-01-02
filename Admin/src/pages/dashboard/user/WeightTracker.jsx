@@ -5,13 +5,37 @@ const WeightTracker = ({ startWeight, targetWeight, currentWeight }) => {
 
   const weightDifference = targetWeight - startWeight;
   const isGain = weightDifference > 0;
-  const progress = Math.min(
-    ((currentWeight - startWeight) / (targetWeight - startWeight)) * 100,
-    100
-  );
+  const isLoss = weightDifference < 0;
+
+  // Progress calculation
+  const progress = isGain
+    ? Math.min(((currentWeight - startWeight) / (targetWeight - startWeight)) * 100, 100)
+    : Math.min(((startWeight - currentWeight) / (startWeight - targetWeight)) * 100, 100);
 
   const weightProgress = currentWeight - startWeight;
-  const remainingWeight = targetWeight - currentWeight;
+  const remainingWeight = isGain ? targetWeight - currentWeight : currentWeight - targetWeight;
+
+  // Messages based on progress and weight goal
+  let message = '';
+  if (isGain) {
+    if (currentWeight >= targetWeight) {
+      message = `Target Reached! You've gained ${Math.abs(weightProgress).toFixed(1)} kg.`;
+    } else if (currentWeight > startWeight) {
+      message = `You gained ${Math.abs(weightProgress).toFixed(1)} kg.`;
+    }
+    if (currentWeight > targetWeight) {
+      message = `You've exceeded your target weight by ${Math.abs(currentWeight - targetWeight).toFixed(1)} kg.`;
+    }
+  } else if (isLoss) {
+    if (currentWeight <= targetWeight) {
+      message = `Target Reached! You've lost ${Math.abs(weightProgress).toFixed(1)} kg.`;
+    } else if (currentWeight < startWeight) {
+      message = `You lost ${Math.abs(weightProgress).toFixed(1)} kg.`;
+    }
+    if (currentWeight < targetWeight) {
+      message = `You've exceeded your target weight loss and gained ${Math.abs(currentWeight - targetWeight).toFixed(1)} kg.`;
+    }
+  }
 
   return (
     <Card className="max-w-full mx-auto shadow-lg">
@@ -79,6 +103,14 @@ const WeightTracker = ({ startWeight, targetWeight, currentWeight }) => {
           </Typography>
           <Progress value={progress} color="blue" className="w-full" />
         </div>
+
+        {message && (
+          <div className="mt-4">
+            <Typography variant="small" className="font-medium text-gray-600">
+              {message}
+            </Typography>
+          </div>
+        )}
       </CardBody>
     </Card>
   );
