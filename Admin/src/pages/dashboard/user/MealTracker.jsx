@@ -11,6 +11,13 @@ const MealTracker = ({ userId }) => {
   const [selectedDate, setSelectedDate] = useState(null); // Track the selected date
   const recordsPerPage = 5; // Show 5 records per page
 
+  function formatMealName(input) {
+    return input
+      .trim()
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
+  }
+
   useEffect(() => {
     const fetchMealsData = async () => {
       try {
@@ -136,7 +143,7 @@ const MealTracker = ({ userId }) => {
 
                         {/* Meal Details */}
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-800 capitalize">{mealType}</h3>
+                          <h3 className="text-lg font-bold text-gray-800 capitalize">{formatMealName(mealType)}</h3>
                           <p className="text-sm text-gray-600">
                             <span className="font-semibold">Status:</span>{" "}
                             <span

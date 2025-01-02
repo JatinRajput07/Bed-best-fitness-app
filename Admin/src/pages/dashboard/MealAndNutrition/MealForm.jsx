@@ -62,6 +62,13 @@ const Meal = () => {
         setCurrentPage(page);
     };
 
+    function formatMealName(input) {
+        return input
+          .trim()
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, char => char.toUpperCase());
+      }
+
     const handleOpenDialog = () => setOpenDialog(true);
     const handleCloseDialog = () => {
         setCategory("");
@@ -174,7 +181,7 @@ const Meal = () => {
                                                 {Object.keys(userMeals.meals).map((categoryKey) =>
                                                     userMeals.meals[categoryKey].map((meal) => (
                                                         <tr key={meal.itemId} className="border-t">
-                                                            <td className="px-6 py-2 text-sm text-gray-600">{categoryKey}</td>
+                                                            <td className="px-6 py-2 text-sm text-gray-600">{formatMealName(categoryKey)}</td>
                                                             <td className="px-6 py-2 text-sm text-gray-600">{meal.itemName}</td>
                                                             <td className="px-6 py-2 text-sm text-gray-600 flex space-x-2">
                                                                 <PencilIcon

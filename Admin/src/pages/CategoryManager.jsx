@@ -12,7 +12,9 @@ const CategoryManager = () => {
   const [subCategoryName, setSubCategoryName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [editCategoryId, setEditCategoryId] = useState(null);
-  const [categoryType, setCategoryType] = useState(""); // New state for category type
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [categoryType, setCategoryType] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState({ id: null, isCategory: true });
 
   useEffect(() => {
     fetchCategories();
@@ -84,7 +86,12 @@ const CategoryManager = () => {
       });
   };
 
-  const handleDelete = (id, isCategory = true) => {
+
+  const handleDelete = () => {
+    const { id, isCategory } = deleteTarget;
+
+    if (!id) return;
+
     const endpoint = isCategory
       ? `/admin/categories/${id}`
       : `/admin/subcategories/${id}`;
@@ -98,12 +105,18 @@ const CategoryManager = () => {
         } else {
           toast.error("Failed to delete.");
         }
+        setDeleteDialog(false);
       })
       .catch(() => {
         toast.error("Error deleting.");
+        setDeleteDialog(false);
       });
   };
 
+  const openDeleteConfirmation = (id, isCategory = true) => {
+    setDeleteTarget({ id, isCategory });
+    setDeleteDialog(true);
+  };
   const resetDialog = () => {
     setOpenDialog(false);
     setCategoryName("");
@@ -186,7 +199,8 @@ const CategoryManager = () => {
                                 size="sm"
                                 className="p-1"
                                 color="red"
-                                onClick={() => handleDelete(sub._id, false)}
+                                onClick={() => openDeleteConfirmation(sub._id, false)}
+                                // onClick={() => handleDelete(sub._id, false)}
                               >
                                 Delete
                               </Button>
@@ -212,7 +226,8 @@ const CategoryManager = () => {
                     >
                       Edit
                     </Button>
-                    <Button className="p-2" color="red" onClick={() => handleDelete(category._id)}>
+                    
+                    <Button className="p-2" color="red" onClick={() => openDeleteConfirmation(category._id)}>
                       Delete
                     </Button>
                   </td>
@@ -286,6 +301,23 @@ const CategoryManager = () => {
           </Button>
           <Button color="green" onClick={handleAddOrUpdate}>
             {dialogMode.startsWith("add") ? "Add" : "Update"}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog} handler={() => setDeleteDialog(false)}>
+        <DialogBody>
+          <Typography variant="h6" className="mb-4 text-center">
+            Are you sure you want to delete this {deleteTarget.isCategory ? "category" : "subcategory"}?
+          </Typography>
+        </DialogBody>
+        <DialogFooter className="gap-2 justify-center">
+          <Button color="red" onClick={() => setDeleteDialog(false)}>
+            Cancel
+          </Button>
+          <Button color="green" onClick={handleDelete}>
+            Confirm
           </Button>
         </DialogFooter>
       </Dialog>

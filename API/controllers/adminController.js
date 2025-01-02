@@ -344,7 +344,7 @@ exports.getVideos = catchAsync(async (req, res, next) => {
             },
         },
         {
-            $sort: { createdAt: -1 }, 
+            $sort: { createdAt: -1 },
         },
         {
             $group: {
@@ -443,7 +443,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(async (req, res, next) =>
                         likes: "$likes",
                         thumbnail: "$thumbnail",
                         description: "$description",
-                        filetype:"$filetype",
+                        filetype: "$filetype",
                         audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt",
                     },
@@ -837,7 +837,11 @@ exports.deleteMeal = async (req, res, next) => {
         const { mealId } = req.params;
         const coachId = req.user.id;
 
-        const meal = await Meal.findOneAndDelete({ _id: mealId, coachId: coachId });
+        let query = { _id: mealId }
+        if (req.user.role === 'host') query.coachId = coachId
+
+
+        const meal = await Meal.findOneAndDelete(query);
 
         if (!meal) {
             return res.status(404).json({
