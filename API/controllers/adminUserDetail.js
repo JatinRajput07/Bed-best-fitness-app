@@ -18,7 +18,6 @@ exports.getWaterTracking = catchAsync(async (req, res, next) => {
 });
 
 
-
 exports.getStepTracking = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const goalData = await Goal.findOne({ userId }, 'dailyStepsGoal -_id');

@@ -20,10 +20,14 @@ const getLocalDate = () => {
 exports.createGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const { weightGoal, nutritionGoals, dailyWaterGoal, dailyStepsGoal } = req.body;
+
     let existingGoal = await Goal.findOne({ userId });
 
     if (existingGoal) {
         if (weightGoal) {
+            if (existingGoal.weightGoal.startsWeight === 0 && weightGoal.currentWeight) {
+                existingGoal.weightGoal.startsWeight = weightGoal.currentWeight;
+            }
             existingGoal.weightGoal = { ...existingGoal.weightGoal, ...weightGoal };
         }
         if (nutritionGoals) {
@@ -47,7 +51,8 @@ exports.createGoal = catchAsync(async (req, res, next) => {
         });
     }
 
-    weightGoal.startsWeight = weightGoal.currentWeight
+    // नया लक्ष्य बनाएं
+    weightGoal.startsWeight = weightGoal?.currentWeight || 0;
     const newGoal = await Goal.create({
         userId,
         weightGoal,
@@ -61,7 +66,8 @@ exports.createGoal = catchAsync(async (req, res, next) => {
         message: 'Goal created successfully.',
         goal: newGoal
     });
-})
+});
+
 
 exports.getUserGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id
@@ -205,7 +211,7 @@ exports.getMindnessfull = catchAsync(async (req, res, next) => {
                         thumbnail: "$thumbnail",
                         audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt",
-                        filetype:"$filetype"
+                        filetype: "$filetype"
                     }
                 }
             }
@@ -298,7 +304,7 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
                         views: "$views",
                         likes: "$likes",
                         thumbnail: "$thumbnail",
-                        filetype:"$filetype",
+                        filetype: "$filetype",
                         audioThumbnail: "$audioThumbnail",
                         createdAt: "$createdAt",
                     },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardBody, Typography, Button, Input } from "@material-tailwind/react";
+import { Card, CardHeader, CardBody, Typography, Button, Input, Dialog, DialogBody, DialogFooter } from "@material-tailwind/react";
 import { ChevronDownIcon, ChevronUpIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useSelector, useDispatch } from "react-redux";
 import Axios from "@/configs/Axios";
@@ -16,7 +16,7 @@ const Nutrition = () => {
   const [editNutrition, setEditNutrition] = useState(null);
   const [deleteNutritionId, setDeleteNutritionId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // Number of items per page
+  const [pageSize, setPageSize] = useState(5); // Items per page
   const { users, loading } = useSelector((state) => state.users);
   const [isLoading, setIsLoading] = useState(false); // Local loading state
   const dispatch = useDispatch();
@@ -143,7 +143,7 @@ const Nutrition = () => {
                 className="w-1/2"
               />
             </div>
-            {/* Display loader when data is being fetched */}
+            {/* Loader */}
             {loading || isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="loader border-t-4 border-b-4 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
@@ -156,7 +156,7 @@ const Nutrition = () => {
                     onClick={() => toggleAccordion(user.userId)}
                   >
                     <Typography variant="h6" className="text-gray-700">
-                      {user?.userDetails?.name}
+                      {user?.userDetails?.name || user?.userDetails?.email}
                     </Typography>
                     {expandedUserId === user.userId ? (
                       <ChevronUpIcon className="h-5 w-5 text-gray-500" />
@@ -215,7 +215,7 @@ const Nutrition = () => {
                 </div>
               ))
             )}
-            {/* Pagination Controls */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-6 space-x-4">
                 <Button
@@ -246,23 +246,22 @@ const Nutrition = () => {
           />
         )}
       </Card>
-      {deleteNutritionId && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <Typography variant="h6" className="mb-4">
-              Are you sure you want to delete this nutrition plan?
-            </Typography>
-            <div className="flex justify-end space-x-4">
-              <Button color="red" onClick={() => setDeleteNutritionId(null)}>
-                Cancel
-              </Button>
-              <Button color="green" onClick={handleDelete}>
-                Confirm
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirmation Dialog */}
+      <Dialog open={Boolean(deleteNutritionId)} handler={() => setDeleteNutritionId(null)}>
+        <DialogBody>
+          <Typography variant="h6" className="text-center">
+            Are you sure you want to delete this nutrition plan?
+          </Typography>
+        </DialogBody>
+        <DialogFooter className="flex justify-center gap-4">
+          <Button color="red" onClick={() => setDeleteNutritionId(null)}>
+            Cancel
+          </Button>
+          <Button color="green" onClick={handleDelete}>
+            Confirm
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };

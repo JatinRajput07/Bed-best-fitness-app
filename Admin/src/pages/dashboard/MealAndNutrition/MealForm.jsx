@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Card, CardHeader, CardBody, Typography, Dialog, DialogBody, DialogFooter, Input, Select, Option, CircularProgress, Accordion, AccordionHeader, AccordionBody } from "@material-tailwind/react";
+import { Button, Card, CardHeader, CardBody, Typography, Dialog, DialogBody, DialogFooter, Input, Select, Option, CircularProgress, Accordion, AccordionHeader, AccordionBody, DialogHeader } from "@material-tailwind/react";
 import Axios from "@/configs/Axios";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchUsers } from "@/redux/userSlice";
@@ -18,6 +18,18 @@ const Meal = () => {
     const [searchQuery, setSearchQuery] = useState(""); // Search query
     const [currentPage, setCurrentPage] = useState(1); // Current page
     const [pageSize, setPageSize] = useState(5); // Number of items per page
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteMealId, setDeleteMealId] = useState(null);
+
+    const handleOpenDeleteDialog = (mealId) => {
+        setDeleteMealId(mealId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setDeleteMealId(null);
+    };
 
     const { users, loading, error } = useSelector((state) => state.users);
     const dispatch = useDispatch();
@@ -64,10 +76,10 @@ const Meal = () => {
 
     function formatMealName(input) {
         return input
-          .trim()
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, char => char.toUpperCase());
-      }
+            .trim()
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, char => char.toUpperCase());
+    }
 
     const handleOpenDialog = () => setOpenDialog(true);
     const handleCloseDialog = () => {
@@ -110,20 +122,24 @@ const Meal = () => {
         }
     };
 
-    const handleDelete = (mealId) => {
-        Axios.delete(`/admin/meal/${mealId}`)
-            .then((response) => {
-                if (response.data.status === "success") {
-                    fetchMealData();
-                    toast.success("Meal deleted successfully.");
-                }
-            })
-            .catch((error) => {
-                console.error("Error deleting meal:", error);
-                toast.error("Error deleting meal.");
-            });
+    const confirmDelete = () => {
+        if (deleteMealId) {
+            Axios.delete(`/admin/meal/${deleteMealId}`)
+                .then((response) => {
+                    if (response.data.status === "success") {
+                        fetchMealData();
+                        toast.success("Meal deleted successfully.");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error deleting meal:", error);
+                    toast.error("Error deleting meal.");
+                })
+                .finally(() => {
+                    handleCloseDeleteDialog();
+                });
+        }
     };
-
     const handleAccordionToggle = (userId) => {
         setOpenAccordions((prevState) => ({
             ...prevState,
@@ -142,20 +158,20 @@ const Meal = () => {
             <Card className="w-full max-w-6xl shadow-lg">
                 <CardHeader variant="gradient" className="bg-gradient-to-r from-red-800 to-indigo-600 p-6 rounded-t-lg flex justify-between items-center">
                     <Typography variant="h5" color="white">Meal</Typography>
-                    
-                        
-                        <Button color="lightBlue" onClick={handleOpenDialog}>Add Meal</Button>
-                    
+
+
+                    <Button color="lightBlue" onClick={handleOpenDialog}>Add Meal</Button>
+
                 </CardHeader>
                 <div className="flex justify-between items-center mb-4 mt-3 px-4">
-                <Input
-                            placeholder="Search by user name..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                           className="w-1/2"
-                        />
+                    <Input
+                        placeholder="Search by user name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-1/2"
+                    />
                 </div>
-              
+
                 <CardBody className="p-6 space-y-6">
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
@@ -196,7 +212,7 @@ const Meal = () => {
                                                                 />
                                                                 <TrashIcon
                                                                     className="h-5 w-5 text-red-500 cursor-pointer"
-                                                                    onClick={() => handleDelete(meal.itemId)}
+                                                                    onClick={() => handleOpenDeleteDialog(meal.itemId)}
                                                                 />
                                                             </td>
                                                         </tr>
@@ -258,6 +274,41 @@ const Meal = () => {
                     </Button>
                 </DialogFooter>
             </Dialog>
+
+            <Dialog open={deleteDialogOpen} handler={handleCloseDeleteDialog} size="sm">
+                <DialogHeader className="bg-gray-100 text-center py-4">
+                    <Typography variant="h5" color="blue-gray" className="font-semibold">
+                        Confirm Deletion
+                    </Typography>
+                </DialogHeader>
+                <DialogBody className="flex flex-col items-center gap-6 p-6">
+                    <div className="p-4 rounded-full bg-red-100 flex justify-center items-center">
+                        <TrashIcon className="h-10 w-10 text-red-500" />
+                    </div>
+                    <Typography className="text-center text-base font-medium text-blue-gray-600">
+                        Are you sure you want to delete this meal? This action cannot be undone.
+                    </Typography>
+                </DialogBody>
+                <DialogFooter className="bg-gray-50 flex justify-center gap-4 py-4">
+                    <Button
+                        variant="outlined"
+                        color="blue-gray"
+                        className="w-24"
+                        onClick={handleCloseDeleteDialog}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="gradient"
+                        color="red"
+                        className="w-24"
+                        onClick={confirmDelete}
+                    >
+                        Delete
+                    </Button>
+                </DialogFooter>
+            </Dialog>
+
         </div>
     );
 };

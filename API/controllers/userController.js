@@ -338,25 +338,50 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 
 
 exports.deleteAccount = catchAsync(async (req, res, next) => {
-    const userId = req.user.id;
-    const user = await User.findByIdAndDelete(userId);
-    if (!user) {
-        return next(new AppError("User not found.", 404));
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        if (!user) {
+            await session.abortTransaction();
+            session.endSession();
+            return next(new AppError("User not found.", 404));
+        }
+
+        const collections = [
+            { model: Reminder, field: "userId" },
+            { model: Routine, field: "userId" },
+            { model: Meal, field: "userId" },
+            { model: Nutrition, field: "userId" },
+            { model: Goal, field: "userId" },
+            { model: Notification, field: "userId" },
+            { model: Recommendation, field: "user_id" },
+            { model: UserFiles, field: "userId" },
+        ];
+        await Promise.all(
+            collections.map(async ({ model, field }) => {
+                await model.deleteMany({ [field]: userId }).session(session);
+            })
+        );
+
+        await User.findByIdAndDelete(userId).session(session);
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).json({
+            status: "success",
+            message: "Account and all related data deleted successfully.",
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(error);
     }
-    const collections = [
-        { model: Reminder, field: "userId" },
-        { model: Routine, field: "userId" },
-    ];
-    await Promise.all(
-        collections.map(async ({ model, field }) => {
-            await model.deleteMany({ [field]: userId });
-        })
-    );
-    res.status(200).json({
-        status: "success",
-        message: "Account and all related data deleted successfully.",
-    });
 });
+
 
 
 

@@ -122,20 +122,50 @@ exports.getUserList = catchAsync(async (req, res, next) => {
 
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-        return res.status(404).json({
-            status: 'fail',
-            message: 'User not found',
-        });
-    }
-    await User.findByIdAndDelete(req.params.id);
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    return res.status(200).json({
-        status: 'success',
-        message: 'User deleted successfully',
-    });
+    try {
+        const userId = req.params.id;
+        const user = await User.findById(userId);
+        if (!user) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({
+                status: 'fail',
+                message: 'User not found',
+            });
+        }
+
+        await Promise.all([
+            Routine.deleteMany({ userId }).session(session),
+            Meal.deleteMany({ userId }).session(session),
+            Reminder.deleteMany({ userId }).session(session),
+            MealReminder.deleteMany({ userId }).session(session),
+            WaterReminder.deleteMany({ userId }).session(session),
+            Nutrition.deleteMany({ userId }).session(session),
+            Goal.deleteMany({ userId }).session(session),
+            Notification.deleteMany({ userId }).session(session),
+            Recommendation.deleteMany({ user_id: userId }).session(session),
+            UserFiles.deleteMany({ userId }).session(session),
+        ]);
+
+        await User.findByIdAndDelete(userId).session(session);  
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'User deleted successfully',
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        return next(error);
+    }
 });
+
 
 
 exports.getUserProfile = catchAsync(async (req, res, next) => {
@@ -922,8 +952,8 @@ exports.getNutritions = async (req, res, next) => {
 
             return {
                 userDetails: {
-                    name: userDetails.name,
-                    email: userDetails.email
+                    name: userDetails?.name || userDetails?.email,
+                    email: userDetails?.email
                 },
                 userId,
                 nutritionDetails

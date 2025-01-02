@@ -11,6 +11,10 @@ import {
   Input,
   Select,
   Option,
+  Dialog,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
 } from "@material-tailwind/react";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteUser, fetchUsers } from "@/redux/userSlice";
@@ -20,13 +24,14 @@ export function UserList() {
   const dispatch = useDispatch();
   const [selectedUser, setSelectedUser] = useState(null);
   const { users, totalUsers, loading, error } = useSelector((state) => state.users);
-
   const { role } = useSelector((state) => state.auth);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState(null);
   const usersPerPage = 10;
 
   useEffect(() => {
@@ -35,14 +40,30 @@ export function UserList() {
         page: currentPage,
         search: searchTerm,
         role: filterRole,
-        limit:10
+        limit: 10,
       })
     );
   }, [dispatch, currentPage, debouncedSearchTerm, filterRole]);
 
-  const handleDelete = (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      dispatch(deleteUser(userId));
+  const handleDeleteClick = (userId) => {
+    setDeleteUserId(userId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteUserId) {
+      dispatch(deleteUser(deleteUserId)).then(() => {
+        dispatch(
+          fetchUsers({
+            page: currentPage,
+            search: searchTerm,
+            role: filterRole,
+            limit: 10,
+          })
+        );
+        setDeleteDialogOpen(false);
+        setDeleteUserId(null);
+      });
     }
   };
 
@@ -167,11 +188,10 @@ export function UserList() {
                       { _id, img, name, email, role, phone, createdAt },
                       key
                     ) => {
-                      const className = `py-3 px-5 ${
-                        key === users.length - 1
+                      const className = `py-3 px-5 ${key === users.length - 1
                           ? ""
                           : "border-b border-blue-gray-50"
-                      }`;
+                        }`;
                       return (
                         <tr key={_id}>
                           <td className={className}>{key + 1}</td>
@@ -238,7 +258,7 @@ export function UserList() {
                               </Button>
                               <TrashIcon
                                 className="h-5 w-5 text-red-500 cursor-pointer"
-                                onClick={() => handleDelete(_id)}
+                                onClick={() => handleDeleteClick(_id)}
                               />
                             </div>
                           </td>
@@ -274,6 +294,42 @@ export function UserList() {
           </CardBody>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} handler={() => setDeleteDialogOpen(false)} size="sm">
+        <DialogHeader className="bg-gray-100 text-center">
+          <Typography variant="h5" color="blue-gray" className="font-semibold">
+            Confirm Deletion
+          </Typography>
+        </DialogHeader>
+        <DialogBody className="bg-white flex flex-col items-center gap-4 p-6">
+          <div className="flex items-center justify-center p-4 rounded-full bg-red-100">
+            <TrashIcon className="h-12 w-12 text-red-500" />
+          </div>
+          <Typography className="text-center text-base font-medium text-blue-gray-600">
+            Are you sure you want to delete this user? This action cannot be undone.
+          </Typography>
+        </DialogBody>
+        <DialogFooter className="bg-gray-50 flex justify-center gap-4">
+          <Button
+            color="blue-gray"
+            variant="outlined"
+            className="w-24"
+            onClick={() => setDeleteDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="red"
+            variant="gradient"
+            className="w-24"
+            onClick={confirmDelete}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
     </div>
   );
 }
