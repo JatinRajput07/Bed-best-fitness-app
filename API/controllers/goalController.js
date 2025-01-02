@@ -25,7 +25,7 @@ exports.createGoal = catchAsync(async (req, res, next) => {
     if (existingGoal) {
         if (weightGoal) {
             if (existingGoal?.weightGoal?.startsWeight == 0) {
-                existingGoal?.weightGoal?.startsWeight = weightGoal?.currentWeight;
+                existingGoal.weightGoal.startsWeight = weightGoal?.currentWeight;
             }
             existingGoal.weightGoal = { ...existingGoal.weightGoal, ...weightGoal };
         }
