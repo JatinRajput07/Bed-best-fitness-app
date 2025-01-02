@@ -50,7 +50,9 @@ exports.createGoal = catchAsync(async (req, res, next) => {
         });
     }
 
-    weightGoal.startsWeight = weightGoal?.currentWeight || 0
+    if (weightGoal) {
+        weightGoal.startsWeight = weightGoal?.currentWeight
+    }
     const newGoal = await Goal.create({
         userId,
         weightGoal,
