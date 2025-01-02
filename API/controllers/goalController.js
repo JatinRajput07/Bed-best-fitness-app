@@ -20,13 +20,12 @@ const getLocalDate = () => {
 exports.createGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const { weightGoal, nutritionGoals, dailyWaterGoal, dailyStepsGoal } = req.body;
-
     let existingGoal = await Goal.findOne({ userId });
 
     if (existingGoal) {
         if (weightGoal) {
-            if (existingGoal.weightGoal.startsWeight === 0 && weightGoal.currentWeight) {
-                existingGoal.weightGoal.startsWeight = weightGoal.currentWeight;
+            if (existingGoal?.weightGoal?.startsWeight == 0) {
+                existingGoal?.weightGoal?.startsWeight = weightGoal?.currentWeight;
             }
             existingGoal.weightGoal = { ...existingGoal.weightGoal, ...weightGoal };
         }
@@ -51,8 +50,7 @@ exports.createGoal = catchAsync(async (req, res, next) => {
         });
     }
 
-    // नया लक्ष्य बनाएं
-    weightGoal.startsWeight = weightGoal?.currentWeight || 0;
+    weightGoal.startsWeight = weightGoal?.currentWeight || 0
     const newGoal = await Goal.create({
         userId,
         weightGoal,
@@ -66,8 +64,7 @@ exports.createGoal = catchAsync(async (req, res, next) => {
         message: 'Goal created successfully.',
         goal: newGoal
     });
-});
-
+})
 
 exports.getUserGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id
