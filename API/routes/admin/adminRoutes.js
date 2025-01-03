@@ -2,6 +2,7 @@ const express = require('express');
 const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal, updateMeeting, deleteMeeting, addHighlight, getHighlights, deleteHighlight } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const Auth = require('../../middleware/Auth');
+const { deleteUserUploadFiles } = require('../../controllers/adminUserDetail');
 const router = express.Router();
 
 
@@ -57,6 +58,8 @@ router.get('/user-daily-report/:userId', getUserRoutine);
 router.post('/highlights', addHighlight);
 router.get('/highlights', getHighlights);
 router.delete('/highlights/:id', deleteHighlight);
+
+router.delete('/user-upload-file/:id/delete_blood_report', deleteUserUploadFiles); 
 
 
 // Category Routes

@@ -15,6 +15,7 @@ router.use('/page/:title', async (req, res) => {
         if (page.title === "privacy-policy") page.title = "Privacy Policy"
         if (page.title === "terms-condition") page.title = "Terms & Conditions"
         if(page.title === "community_guidelines") page.title = "Community Guidelines"
+        if(page.title === "help-and-support") page.title = "Help And Support"
         return res.render('page', {
             page
         })
@@ -24,5 +25,3 @@ router.use('/page/:title', async (req, res) => {
 })
 
 module.exports = router;
-
-

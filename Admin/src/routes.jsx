@@ -15,6 +15,7 @@ import { ArrowLeftIcon } from "@mui/x-date-pickers";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
+const HelpAndSupport = React.lazy(() => import("@/pages/dashboard/HelpAndSupport"));
 const Home = React.lazy(() => import("@/pages/dashboard/Home"));
 const Highlights = React.lazy(() => import("@/pages/dashboard/Highlights"));
 const Profile = React.lazy(() => import("@/pages/dashboard/Profile"));
@@ -166,7 +167,7 @@ export const routes = () => {
           },
         ],
       },
-      
+
       {
         icon: <ListBulletIcon {...icon} />,
         name: "Categories",
@@ -205,6 +206,15 @@ export const routes = () => {
             element: (
               <Suspense fallback={<div>Loading...</div>}>
                 <CommunityGuidelines />
+              </Suspense>
+            ),
+          },
+          {
+            name: "Help and Support",
+            path: "/help-and-support",
+            element: (
+              <Suspense fallback={<div>Loading...</div>}>
+                <HelpAndSupport />
               </Suspense>
             ),
           },

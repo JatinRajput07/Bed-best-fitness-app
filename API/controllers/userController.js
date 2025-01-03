@@ -1111,6 +1111,18 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
 });
 
 
+exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
+    const { id } = req.params
+    if (id) {
+        await UserFiles.findByIdAndDelete(id)
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Blood Report File Deleted!.',
+    });
+})
+
+
 exports.getUploadFiles = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 

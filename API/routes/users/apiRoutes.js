@@ -47,7 +47,8 @@ const {
     get_asign_users_details,
     getNotification,
     createOrUpdateHealtyHabitRoutine,
-    resendOtp
+    resendOtp,
+    deleteUserUploadFiles
 } = require('../../controllers/userController');
 
 const {
@@ -93,7 +94,8 @@ router.post('/set_goal', createGoal); // Add user goal
 router.get('/get_goal', getUserGoal); // Get user goal
 
 // User Upload File Management (Feed and Blood Report)
-router.post('/user-upload-file', userUploadFiles); // Add user files
+router.post('/user-upload-file', userUploadFiles);
+router.delete('/user-upload-file/:id', deleteUserUploadFiles); 
 router.get('/get-upload-file', getUploadFiles); // Get user files
 
 // Routine Management

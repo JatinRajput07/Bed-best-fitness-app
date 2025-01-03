@@ -3,6 +3,7 @@ const Meal = require("../models/Meal");
 const Routine = require("../models/Routine");
 const Goal = require("../models/userGoal");
 const catchAsync = require("../utils/catchAsync");
+const UserFiles = require("../models/UserFiles");
 
 exports.getWaterTracking = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
@@ -273,3 +274,16 @@ exports.getWhatNewToday = catchAsync(async (req, res, next) => {
         whatNewToday,
     });
 });
+
+
+exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
+    const { id } = req.params
+    if (id) {
+        await UserFiles.findByIdAndDelete(id)
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Blood Report File Deleted!.',
+    });
+})
+

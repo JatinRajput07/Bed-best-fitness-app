@@ -4,6 +4,10 @@ import {
   TabsBody,
   Tab,
   TabPanel, CardFooter, Avatar, Typography, Tabs, Switch, Tooltip, Button, Progress,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
 } from "@material-tailwind/react";
 import { HomeIcon, ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
@@ -42,6 +46,22 @@ export function Profile({ id, closeModal }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false); 
+
+  const handleDeleteFile = async (fileId) => {
+    setIsDeleting(true);
+    try {
+      await Axios.delete(`/admin/user-upload-file/${fileId}/delete_blood_report`);
+      dispatch(fetchUserDetails({ id }));
+      setFileToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete the file:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchUserDetails({ id }));
@@ -241,12 +261,13 @@ export function Profile({ id, closeModal }) {
             </Tabs>)
           }
 
-          {userProfile?.user?.role === 'user' && <PDFPreview userProfile={userProfile} />}
+          {userProfile?.user?.role === 'user' && <PDFPreview userProfile={userProfile} onDelete={handleDeleteFile} />}
 
           {userProfile?.user?.role === 'user' && <RecommendedVideos userId={userProfile?.user?._id} />}
 
         </CardBody>
       </Card>
+
     </>
   );
 }
