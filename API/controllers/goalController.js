@@ -20,7 +20,7 @@ const getLocalDate = () => {
 exports.createGoal = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const { weightGoal, nutritionGoals, dailyWaterGoal, dailyStepsGoal } = req.body;
-    console.log(req.body,'=====req.body=======weght')
+    // console.log(req.body,'=====req.body=======weght')
     let existingGoal = await Goal.findOne({ userId });
 
     if (existingGoal) {

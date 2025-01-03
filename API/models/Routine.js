@@ -5,7 +5,9 @@ const dynamicSchema = new mongoose.Schema({
 }, { strict: false });
 
 const mealSchema = new mongoose.Schema({
-    status: { type: String, enum: ['take', 'skip'] },
+    status: { type: String, 
+        // enum: ['take', 'skip']
+     },
     note: { type: String },
     image: { type: String },
     items: [String]

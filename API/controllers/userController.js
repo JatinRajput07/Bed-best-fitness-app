@@ -271,7 +271,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
         return next(new AppError("Invalid or expired OTP", 400));
     }
 
-    // Update the password and clear the reset token
+
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
