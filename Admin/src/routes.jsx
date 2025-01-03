@@ -8,12 +8,15 @@ import {
   ListBulletIcon,
   ArchiveBoxIcon,
   CameraIcon,
-  StopIcon
+  StopIcon,
+  PhotoIcon
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
+
 const Home = React.lazy(() => import("@/pages/dashboard/Home"));
+const Highlights = React.lazy(() => import("@/pages/dashboard/Highlights"));
 const Profile = React.lazy(() => import("@/pages/dashboard/Profile"));
 const Notifications = React.lazy(() => import("@/pages/dashboard/Notifications"));
 const UserList = React.lazy(() => import("@/pages/dashboard/user/users"));
@@ -83,6 +86,16 @@ export const routes = () => {
           ),
         },
       ],
+    },
+    {
+      icon: <PhotoIcon {...icon} />,
+      name: "Highlights",
+      path: "/highlights",
+      element: (
+        <Suspense fallback={<div>Loading...</div>}>
+          <Highlights />
+        </Suspense>
+      ),
     },
     {
       icon: <VideoCameraIcon {...icon} />,

@@ -24,6 +24,7 @@ const Meeting = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [editingMeeting, setEditingMeeting] = useState(null);
+    const [deleteMeetingId, setDeleteMeetingId] = useState(null);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -113,17 +114,23 @@ const Meeting = () => {
         fetchMeetings();
     }, []);
 
-    const handleDelete = (meetingId) => {
-        Axios.delete(`/admin/deleteMeeting/${meetingId}`)
+    const handleDeleteConfirmation = (meetingId) => {
+        setDeleteMeetingId(meetingId);
+    };
+
+    const handleDelete = () => {
+        if (!deleteMeetingId) return;
+        Axios.delete(`/admin/deleteMeeting/${deleteMeetingId}`)
             .then((response) => {
                 if (response.data.status === "success") {
                     fetchMeetings();
-                    toast.success('Meeting Deleted!')
+                    toast.success('Meeting Deleted!');
                 }
             })
             .catch((error) => {
                 console.error("Error deleting meeting:", error);
-            });
+            })
+            .finally(() => setDeleteMeetingId(null));
     };
 
     const handleChangePage = (event, newPage) => {
@@ -180,7 +187,7 @@ const Meeting = () => {
                                             <Button
                                                 size="sm"
                                                 color="red"
-                                                onClick={() => handleDelete(meeting._id)}
+                                                onClick={() => handleDeleteConfirmation(meeting._id)}
                                             >
                                                 Delete
                                             </Button>
@@ -228,14 +235,11 @@ const Meeting = () => {
                         )}
                         <div>
                             <Typography variant="h6" className="text-gray-700">Select Roles</Typography>
-                            {console.log(selectedRole,selectedRole.includes('user'))} 
-
                             <Checkbox
                                 label="User"
                                 checked={selectedRole.includes('user')}
                                 onChange={() => handleRoleChange('user')}
                             />
-
                             <Checkbox
                                 label="Coach"
                                 checked={selectedRole.includes('coach')}
@@ -265,8 +269,28 @@ const Meeting = () => {
                 </DialogBody>
                 <DialogFooter>
                     <Button color="red" onClick={handleCloseDialog}>Cancel</Button>
-                    <Button color=" " onClick={handleSubmit} disabled={loading}>
+                    <Button color="blue" onClick={handleSubmit} disabled={loading}>
                         {loading ? "Please wait..." : "Submit"}
+                    </Button>
+                </DialogFooter>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={Boolean(deleteMeetingId)} handler={() => setDeleteMeetingId(null)}>
+                <DialogBody className="flex flex-col items-center gap-6 p-6">
+                    <Typography variant="h6" className="text-center">
+                        Confirm Deletion
+                    </Typography>
+                    <Typography className="text-center text-blue-gray-600">
+                        Are you sure you want to delete this meeting?
+                    </Typography>
+                </DialogBody>
+                <DialogFooter className="flex justify-center gap-4">
+                    <Button variant="outlined" color="blue-gray" onClick={() => setDeleteMeetingId(null)}>
+                        Cancel
+                    </Button>
+                    <Button variant="gradient" color="red" onClick={handleDelete}>
+                        Confirm
                     </Button>
                 </DialogFooter>
             </Dialog>
