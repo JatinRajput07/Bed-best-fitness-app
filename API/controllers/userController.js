@@ -24,6 +24,7 @@ const Meal = require("../models/Meal");
 const Nutrition = require("../models/Nutrition");
 const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
+const Highlight = require("../models/Highlight");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -370,7 +371,7 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
         }
 
         await User.findByIdAndDelete(userId).session(session);
-        
+
         await session.commitTransaction();
         session.endSession();
 
@@ -824,10 +825,13 @@ exports.Home = catchAsync(async (req, res, next) => {
         .map(item => item.video_id)
         .flat();
 
+
+    const highlights = await Highlight.find({}, ('url'));
+
     return res.status(200).json({
         status: "success",
         data: {
-            today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners
+            today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners, highlights
         },
     });
 });

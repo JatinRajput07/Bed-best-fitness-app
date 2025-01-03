@@ -27,6 +27,7 @@ const Meeting = require("../models/Meeting");
 const { sendPushNotification } = require("../utils/firebaseService");
 const { default: mongoose } = require("mongoose");
 const Notification = require("../models/Notification");
+const Highlight = require("../models/Highlight");
 
 
 const signToken = id => {
@@ -1630,5 +1631,51 @@ exports.deleteMeeting = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         message: 'Meeting deleted successfully.',
+    });
+});
+
+
+exports.addHighlight = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+        
+        const filePath =  `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+        const newHighlight = await Highlight.create({ url: filePath });
+        res.status(201).json({
+            status: "success",
+            message: "Highlight added successfully.",
+            data: newHighlight,
+        });
+    });
+});
+
+
+exports.getHighlights = catchAsync(async (req, res, next) => {
+    const highlights = await Highlight.find();
+    res.status(200).json({
+        status: "success",
+        data: { highlights },
+    });
+});
+
+
+exports.deleteHighlight = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const highlight = await Highlight.findByIdAndDelete(id);
+
+    if (!highlight) {
+        return next(new AppError('Highlight not found', 400));
+    }
+    res.status(200).json({
+        status: "success",
+        message: "Highlight deleted successfully.",
     });
 });

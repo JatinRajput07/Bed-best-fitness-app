@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal, updateMeeting, deleteMeeting } = require('../../controllers/adminController');
+const { getUserList, getCms, updateCms, getContactUsList, uploadVideos, getVideos, dashboard, adminLogin, assign, getassign, editassign, deleteassign, createUser, updateUser, getUserProfile, getVideosByCategoryAndSubcategory, createNutrition, getNutritions, createMeal, getMeals, getUserRoutine, getCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory, deleteUser, createBanner, getUserRecomenedVideo, getAllUserReminders, deleteVideo, getHealthOtherdata, getGoalAnalytics, createMeeting, getMeeting, getBanners, deleteBanner, toggleBannerStatus, getuserAndCoachStats, updateNutrition, deleteNutrition, deleteMeal, updateMeal, updateMeeting, deleteMeeting, addHighlight, getHighlights, deleteHighlight } = require('../../controllers/adminController');
 const { uploadFiles } = require('../../controllers/userController');
 const Auth = require('../../middleware/Auth');
 const router = express.Router();
@@ -52,7 +52,11 @@ router.delete('/nutrition/:id', Auth, deleteNutrition);
 
 router.get('/user-daily-report/:userId', getUserRoutine);
 
-router.post('/create_banner', createBanner);
+// router.post('/create_banner', createBanner);
+
+router.post('/highlights', addHighlight);
+router.get('/highlights', getHighlights);
+router.delete('/highlights/:id', deleteHighlight);
 
 
 // Category Routes
