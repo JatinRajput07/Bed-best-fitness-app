@@ -9,12 +9,14 @@ import {
   ArchiveBoxIcon,
   CameraIcon,
   StopIcon,
-  PhotoIcon
+  PhotoIcon,
+  InformationCircleIcon
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
+const IntroductionManagement = React.lazy(() => import("@/pages/dashboard/Introduction"));
 const HelpAndSupport = React.lazy(() => import("@/pages/dashboard/HelpAndSupport"));
 const Home = React.lazy(() => import("@/pages/dashboard/Home"));
 const Highlights = React.lazy(() => import("@/pages/dashboard/Highlights"));
@@ -100,10 +102,10 @@ export const routes = () => {
     },
     {
       icon: <VideoCameraIcon {...icon} />,
-      name: "Videos",
+      name: "Audio or video",
       dropdown: [
         {
-          name: "Video List",
+          name: "Audio/video List",
           path: "/videos",
           element: (
             <Suspense fallback={<div>Loading...</div>}>
@@ -112,7 +114,7 @@ export const routes = () => {
           ),
         },
         {
-          name: "Upload Video",
+          name: "Upload Audio/video",
           path: "/video-upload",
           element: (
             <Suspense fallback={<div>Loading...</div>}>
@@ -130,6 +132,16 @@ export const routes = () => {
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <BannerManagement />
+          </Suspense>
+        ),
+      },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "Introduction",
+        path: "/introduction",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <IntroductionManagement />
           </Suspense>
         ),
       },

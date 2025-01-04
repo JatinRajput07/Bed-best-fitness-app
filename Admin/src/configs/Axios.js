@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const URL = 'http://43.204.2.84:7200/';
-// const URL = 'http://localhost:7200/';
+// const URL = 'http://localhost:7200/'; 
 
 const Axios = axios.create({
     baseURL: `${URL}`,

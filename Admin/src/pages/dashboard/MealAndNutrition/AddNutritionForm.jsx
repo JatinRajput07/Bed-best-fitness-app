@@ -1,53 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  Input,
+  Select,
+  Option,
+  Button,
+  Typography,
+  Textarea,
+} from "@material-tailwind/react";
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 
-const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel, editData }) => {
+const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editData }) => {
+  // State for form inputs
   const [selectedUser, setSelectedUser] = useState(editData?.userId || "");
-  const [selectedMealTime, setSelectedMealTime] = useState(editData?.mealTime || "");
+  const [selectedCategory, setSelectedCategory] = useState(editData?.mealTime || "");
   const [description, setDescription] = useState(editData?.description || "");
-  const [quantity, setQuantity] = useState(editData?.quantity || "");
-
-  const [errors, setErrors] = useState({
-    selectedUser: "",
-    selectedMealTime: "",
-    description: "",
-    quantity: "",
+  const [item, setItem] = useState({
+    name: editData?.name || "",
+    quantity: editData?.quantity || 1,
   });
 
-  useEffect(() => {
-    if (editData) {
-      console.log(editData, '==d==d==d')
-      setSelectedUser(editData.userId);
-      setSelectedMealTime(editData.mealTime);
-      setDescription(editData.description);
-      setQuantity(editData.quantity);
-    }
-  }, [editData]);
+  // State for validation errors
+  const [errors, setErrors] = useState({});
 
+  // Categories for selection
+  const categories = ["Morning", "Lunch", "Evening", "Dinner"];
+
+  // Function to reset the form
+  const handleReset = () => {
+    setSelectedUser("");
+    setSelectedCategory("");
+    setDescription("");
+    setItem({ name: "", quantity: 1 });
+    setErrors({});
+  };
+
+  // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validate the form
     let validationErrors = {};
     if (!selectedUser) validationErrors.selectedUser = "User selection is required.";
-    if (!selectedMealTime) validationErrors.selectedMealTime = "Meal time selection is required.";
+    if (!selectedCategory) validationErrors.selectedCategory = "Category selection is required.";
     if (!description) validationErrors.description = "Description is required.";
-    if (!quantity) validationErrors.quantity = "Quantity is required.";
+    if (!item.name.trim()) validationErrors.itemName = "Item name is required.";
 
+    // Set validation errors
     setErrors(validationErrors);
+
+    // If there are validation errors, stop the submission
     if (Object.keys(validationErrors).length > 0) return;
 
+    // Prepare the data to be submitted
     const nutrition = {
       userId: selectedUser,
-      mealTime: selectedMealTime,
+      category: selectedCategory,
       description,
-      quantity,
+      items: [
+        {
+          name: item.name.trim(),
+          quantity: item.quantity,
+        },
+      ],
     };
 
+    // If editing, use PUT request; otherwise, use POST request
     if (editData?._id) {
       Axios.put(`/admin/nutrition/${editData._id}`, nutrition)
         .then((response) => {
           if (response.data.status === "success") {
-            // console.log(response.data.data,)
             onAddNutrition(response.data.data);
             handleReset();
             toast.success("Nutrition plan updated successfully.");
@@ -71,110 +97,134 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, error, handleCancel,
     }
   };
 
-  const handleReset = () => {
-    setSelectedUser("");
-    setSelectedMealTime("");
-    setDescription("");
-    setQuantity("");
-    setErrors({});
-    handleCancel();
-  };
-
   return (
-    <div className="w-full p-6 border rounded-lg shadow-lg bg-white">
-      <h2 className="text-lg font-bold mb-4">{editData ? "Edit Nutrition Plan" : "Add Nutrition Plan"}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="userSelect" className="block text-sm font-medium text-gray-700">
-            Select User
-          </label>
-          <select
-            disabled={!!editData} 
-            id="userSelect"
-            className="mt-1 h-8 px-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            value={selectedUser}
-            onChange={(e) => setSelectedUser(e.target.value)}
-          >
-            <option value="" disabled>
-              {loading ? "Loading users..." : "Select a user"}
-            </option>
-            {error ? (
-              <option disabled>Error loading users</option>
-            ) : (
-              users.filter(e => e.role === 'user').map((user) => (
-                <option key={user.id} value={user._id}>
-                  {user.name ? user.name : user.email}
-                </option>
-              ))
-            )}
-          </select>
+    <Dialog
+      open
+      size="lg" // Increased width
+      handler={handleCancel}
+      dismiss={{ enabled: false }} // Disable outside click to close
+    >
+      <DialogHeader>{editData ? "Edit Nutrition Plan" : "Add Nutrition Plan"}</DialogHeader>
+      <DialogBody>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            {/* User and Category in One Row */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <Select
+                  label="Select User"
+                  value={selectedUser}
+                  onChange={(value) => {
+                    setSelectedUser(value);
+                    setErrors((prev) => ({ ...prev, selectedUser: false })); // Clear user error
+                  }}
+                  error={!!errors.selectedUser}
+                >
+                  {users.map((user) => (
+                    <Option key={user._id} value={user._id}>
+                      {user.name}
+                    </Option>
+                  ))}
+                </Select>
+                {errors.selectedUser && (
+                  <Typography variant="small" color="red" className="mt-1">
+                    {errors.selectedUser}
+                  </Typography>
+                )}
+              </div>
+              <div className="w-full md:w-1/2">
+                <Select
+                  label="Select Category"
+                  value={selectedCategory}
+                  onChange={(value) => {
+                    setSelectedCategory(value);
+                    setErrors((prev) => ({ ...prev, selectedCategory: false })); // Clear category error
+                  }}
+                  error={!!errors.selectedCategory}
+                >
+                  {categories.map((category, index) => (
+                    <Option key={index} value={category}>
+                      {category}
+                    </Option>
+                  ))}
+                </Select>
+                {errors.selectedCategory && (
+                  <Typography variant="small" color="red" className="mt-1">
+                    {errors.selectedCategory}
+                  </Typography>
+                )}
+              </div>
+            </div>
 
-          {errors.selectedUser && <p className="text-red-500 text-xs mt-1">{errors.selectedUser}</p>}
-        </div>
+            {/* Description Input */}
+            <div>
+              <Textarea
+                label="Description"
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setErrors((prev) => ({ ...prev, description: false })); // Clear description error
+                }}
+                error={!!errors.description}
+              />
+              {errors.description && (
+                <Typography variant="small" color="red" className="mt-1">
+                  {errors.description}
+                </Typography>
+              )}
+            </div>
 
-        <div>
-          <label htmlFor="mealTimeSelect" className="block text-sm font-medium text-gray-700">
-            Select Nutrition Time
-          </label>
-          <select
-            id="mealTimeSelect"
-            className="mt-1 block px-2 h-8 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            value={selectedMealTime}
-            onChange={(e) => setSelectedMealTime(e.target.value)}
-          >
-            <option value="" disabled>Select a meal time</option>
-            <option value="Breakfast">Breakfast</option>
-            <option value="Lunch">Lunch</option>
-            <option value="Dinner">Dinner</option>
-            <option value="Night">Night</option>
-          </select>
-          {errors.selectedMealTime && <p className="text-red-500 text-xs mt-1">{errors.selectedMealTime}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="descriptionInput" className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <textarea
-            id="descriptionInput"
-            className="mt-1 px-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="quantityInput" className="block text-sm font-medium text-gray-700">
-            Quantity
-          </label>
-          <input
-            id="quantityInput"
-            className="mt-1 px-2 h-8 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            value={quantity}
-            type="number"
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-          {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            className="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600"
-            onClick={handleReset}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
-          >
-            {editData ? "Update" : "Submit"}
-          </button>
-        </div>
-      </form>
-    </div>
+            {/* Item Section */}
+            <div>
+              <Typography variant="h6">Item</Typography>
+              <div className="flex items-center gap-4 mt-2">
+                <Input
+                  placeholder="Item Name"
+                  value={item.name}
+                  onChange={(e) => {
+                    setItem((prev) => ({ ...prev, name: e.target.value }));
+                    setErrors((prev) => ({ ...prev, itemName: false })); // Clear item name error
+                  }}
+                  error={!!errors.itemName}
+                />
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setItem((prev) => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))
+                    }
+                  >
+                    -
+                  </Button>
+                  <Typography>{item.quantity}</Typography>
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setItem((prev) => ({ ...prev, quantity: prev.quantity + 1 }))
+                    }
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+              {errors.itemName && (
+                <Typography variant="small" color="red" className="mt-1">
+                  {errors.itemName}
+                </Typography>
+              )}
+            </div>
+          </div>
+        </form>
+      </DialogBody>
+      <DialogFooter>
+        <Button variant="text" onClick={handleCancel} className="mr-2">
+          Cancel
+        </Button>
+        <Button color="blue" onClick={handleSubmit} disabled={loading}>
+          {editData ? "Update" : "Submit"}
+        </Button>
+      </DialogFooter>
+    </Dialog>
   );
 };
 

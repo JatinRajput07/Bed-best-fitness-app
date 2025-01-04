@@ -28,6 +28,7 @@ const { sendPushNotification } = require("../utils/firebaseService");
 const { default: mongoose } = require("mongoose");
 const Notification = require("../models/Notification");
 const Highlight = require("../models/Highlight");
+const Introduction = require("../models/Banner");
 
 
 const signToken = id => {
@@ -770,22 +771,18 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 exports.createNutrition = async (req, res, next) => {
     try {
         const coachId = req.user.id
-        const { userId, mealTime } = req.body;
-        const existingNutrition = await Nutrition.findOne({
-            userId: userId,
-            coachId,
-            mealTime: mealTime,
-            active: true,
-            status: { $ne: 1 },
-        });
+        const { userId, category, items, description } = req.body;
 
-        if (existingNutrition) {
-            return res.status(400).json({
-                status: 'fail',
-                message: `A nutrition plan for ${mealTime} already exists and is not yet completed or inactive.`,
-            });
+        const data = {
+            userId,
+            coachId,
+            mealTime: category,
+            description,
+            name:items[0]['name'],
+            quantity:items[0]['quantity']
         }
-        const nutrition = await Nutrition.create({ coachId, ...req.body });
+
+        const nutrition = await Nutrition.create(data);
         res.status(201).json({
             status: 'success',
             message: 'Nutrition created successfully!',
@@ -799,16 +796,46 @@ exports.createNutrition = async (req, res, next) => {
 
 exports.updateNutrition = async (req, res, next) => {
     try {
-        const nutrition = await Nutrition.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
-        res.status(201).json({
+        const { userId, category, items, description } = req.body;
+
+        if (!items || items.length !== 1) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Items should contain exactly one entry with name and quantity.',
+            });
+        }
+
+        const updatedData = {
+            userId,
+            mealTime: category,
+            description,
+            name: items[0]['name'],
+            quantity: items[0]['quantity'],
+        };
+
+        const nutrition = await Nutrition.findByIdAndUpdate(
+            req.params.id,
+            updatedData,
+            { new: true }
+        );
+
+        if (!nutrition) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Nutrition not found.',
+            });
+        }
+
+        res.status(200).json({
             status: 'success',
-            message: 'update successfully!',
+            message: 'Nutrition updated successfully!',
             data: nutrition,
         });
     } catch (error) {
         next(error);
     }
 };
+
 
 
 exports.deleteNutrition = async (req, res, next) => {
@@ -907,59 +934,96 @@ exports.getNutritions = async (req, res, next) => {
     try {
         const coachId = req.user.id;
 
-        let query = {}
+        let query = {};
         if (req.user.role === 'host') {
-            query.coachId = coachId
+            query.coachId = coachId;
         }
 
+        // Fetch all nutritions based on the query
         const nutritions = await Nutrition.find(query);
 
-        const userid = [...new Set(nutritions.map(item => item.userId.toString()))];
-        const userObjectIds = userid.map(id => new mongoose.Types.ObjectId(id));
+        // Extract unique user IDs from the nutritions
+        const userIds = [...new Set(nutritions.map(item => item.userId.toString()))];
+        const userObjectIds = userIds.map(id => new mongoose.Types.ObjectId(id));
 
-        // Fetch routines for all users in parallel
+        // Fetch routines for the users
         const routines = await Routine.find({ userId: { $in: userObjectIds } });
 
-        const results = await Promise.all(userid.map(async (userId) => {
-            const userNutritions = nutritions.filter(nutrition => nutrition.userId.toString() === userId);
-            const userRoutines = routines.filter(routine => routine.userId.toString() === userId);
-
-            // Process nutrition data in parallel
-            const nutritionDetails = await Promise.all(userNutritions.map(async (nutrition) => {
-                const routineForNutrition = userRoutines.filter(routine =>
-                    routine.nutrition.some(item => item.item.toString() === nutrition._id.toString())
-                );
-
-                const takenCount = routineForNutrition.reduce((count, routine) => {
-                    return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'take').length;
-                }, 0);
-
-                const skippedCount = routineForNutrition.reduce((count, routine) => {
-                    return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'skip').length;
-                }, 0);
-
-                const isCompleted = takenCount === nutrition.quantity;
-
-                // Batch update if completed
-                if (isCompleted) {
-                    await Nutrition.updateOne({ _id: nutrition._id }, { status: 1 });
+        // Group nutritions by userId first, then by mealTime
+        const groupedByUser = await Nutrition.aggregate([
+            { $match: query }, // Match the nutritions based on the query
+            {
+                $group: {
+                    _id: "$userId", // Group by userId
+                    nutritions: {
+                        $push: {
+                            _id: "$_id",
+                            userId: "$userId",
+                            description: "$description",
+                            quantity: "$quantity",
+                            mealTime: "$mealTime",
+                            active: "$active",
+                            status: "$status",
+                            name: "$name"
+                        }
+                    }
                 }
+            }
+        ]);
+
+        // Process each user group
+        const results = await Promise.all(groupedByUser.map(async (userGroup) => {
+            const userId = userGroup._id;
+            const userDetails = await User.findById(userId);
+
+            // Group nutritions by mealTime for this user
+            const groupedByMealTime = userGroup.nutritions.reduce((acc, nutrition) => {
+                const mealTime = nutrition.mealTime;
+                if (!acc[mealTime]) {
+                    acc[mealTime] = [];
+                }
+                acc[mealTime].push(nutrition);
+                return acc;
+            }, {});
+
+            // Process each mealTime group
+            const mealTimeGroups = await Promise.all(Object.entries(groupedByMealTime).map(async ([mealTime, nutritions]) => {
+                const processedNutritions = await Promise.all(nutritions.map(async (nutrition) => {
+                    const userRoutines = routines.filter(routine => routine.userId.toString() === nutrition.userId.toString());
+
+                    const takenCount = userRoutines.reduce((count, routine) => {
+                        return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'take').length;
+                    }, 0);
+
+                    const skippedCount = userRoutines.reduce((count, routine) => {
+                        return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'skip').length;
+                    }, 0);
+
+                    const isCompleted = takenCount === nutrition.quantity;
+
+                    if (isCompleted) {
+                        await Nutrition.updateOne({ _id: nutrition._id }, { status: 1 });
+                    }
+
+                    return {
+                        _id: nutrition._id,
+                        mealTime: nutrition.mealTime,
+                        description: nutrition.description,
+                        quantity: nutrition.quantity,
+                        active: nutrition.active,
+                        status: isCompleted ? 'completed' : 'in progress',
+                        name: nutrition.name,
+                        takenCount,
+                        skippedCount,
+                        isCompleted
+                    };
+                }));
 
                 return {
-                    _id: nutrition._id,
-                    mealTime: nutrition.mealTime,
-                    description: nutrition.description,
-                    quantity: nutrition.quantity,
-                    active: nutrition.active,
-                    status: isCompleted ? 'completed' : 'in progress',
-                    takenCount,
-                    skippedCount,
-                    isCompleted
+                    mealTime,
+                    nutritionDetails: processedNutritions
                 };
             }));
-
-            // Fetch user details in parallel
-            const userDetails = await User.findById(userId);
 
             return {
                 userDetails: {
@@ -967,7 +1031,7 @@ exports.getNutritions = async (req, res, next) => {
                     email: userDetails?.email
                 },
                 userId,
-                nutritionDetails
+                mealTimeGroups
             };
         }));
 
@@ -1487,7 +1551,7 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
         if (!googleMeetLink || !roles || roles.length === 0) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'Google Meet link and roles are required.',
+                message: 'Meet link and roles are required.',
             });
         }
         const uploadedFiles = await Promise.all(
@@ -1567,7 +1631,7 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         if (!googleMeetLink || !roles || roles.length === 0) {
             return res.status(400).json({
                 status: 'fail',
-                message: 'Google Meet link and roles are required.',
+                message: 'Meet link and roles are required.',
             });
         }
 
@@ -1646,8 +1710,8 @@ exports.addHighlight = catchAsync(async (req, res, next) => {
         if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
-        
-        const filePath =  `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+
+        const filePath = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
         const newHighlight = await Highlight.create({ url: filePath });
         res.status(201).json({
             status: "success",
@@ -1677,5 +1741,83 @@ exports.deleteHighlight = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success",
         message: "Highlight deleted successfully.",
+    });
+});
+
+
+
+// Create Introduction
+exports.createIntroduction = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files) {
+            return next(new AppError('No file uploaded.', 400));
+        }
+
+        const { title, description } = req.body;
+        const imageUrl = `http://localhost:7200/uploads/images/${req.files[0].filename}`;
+        const newIntroduction = await Introduction.create({
+            title,
+            description,
+            imageUrl,
+        });
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Introduction created successfully.',
+            data: newIntroduction,
+        });
+    });
+});
+
+// Get All Introductions
+exports.getIntroductions = catchAsync(async (req, res, next) => {
+    const introductions = await Introduction.find().sort({ createdAt: -1 });
+    if (!introductions || introductions.length === 0) {
+        return next(new AppError('No introductions found.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: introductions,
+    });
+});
+
+// Toggle Introduction Status
+exports.toggleIntroductionStatus = catchAsync(async (req, res, next) => {
+    const { introductionId } = req.params;
+
+    const introduction = await Introduction.findById(introductionId);
+    if (!introduction) {
+        return next(new AppError('Introduction not found.', 404));
+    }
+
+    introduction.isActive = !introduction.isActive;
+    await introduction.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: `Introduction status updated to ${introduction.isActive ? 'active' : 'inactive'}.`,
+        data: introduction,
+    });
+});
+
+// Delete Introduction
+exports.deleteIntroduction = catchAsync(async (req, res, next) => {
+    const { introductionId } = req.params;
+
+    const introduction = await Introduction.findByIdAndDelete(introductionId);
+    if (!introduction) {
+        return next(new AppError('Introduction not found.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Introduction deleted successfully.',
     });
 });

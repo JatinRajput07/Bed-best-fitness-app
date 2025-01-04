@@ -167,7 +167,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
 
     let user = await User.findOne({
         $or: [
-            { socialId },
+            { socialId, email },
             { email }
         ]
     });
@@ -1620,3 +1620,26 @@ exports.getNotification = catchAsync(async (req, res, next) => {
         notification
     });
 })
+
+
+exports.logout = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'User not found',
+        });
+    }
+
+    user.socialId = "";
+    user.socialType = "";
+    await user.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Logout Successful',
+    });
+});
+

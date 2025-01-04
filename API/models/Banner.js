@@ -1,7 +1,7 @@
 
 const mongoose = require('mongoose');
 
-const bannerSchema = new mongoose.Schema({
+const IntroductionSchema = new mongoose.Schema({
     title: {
         type: String,
         trim: true,
@@ -26,11 +26,11 @@ const bannerSchema = new mongoose.Schema({
     timestamps: true
 });
 
-bannerSchema.pre('save', function (next) {
+IntroductionSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
 
-const Banner = mongoose.model('Banner', bannerSchema);
+const Introduction = mongoose.model('Introduction', IntroductionSchema);
 
-module.exports = Banner;
+module.exports = Introduction;

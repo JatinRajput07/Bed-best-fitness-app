@@ -26,6 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       position="top-right"
       toastOptions={{}}
       containerStyle={{
+        zIndex: 99999,
         position: "fixed",
         top: "6rem",
         right: "1rem",

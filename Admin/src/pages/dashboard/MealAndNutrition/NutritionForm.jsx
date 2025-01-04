@@ -12,7 +12,7 @@ const Nutrition = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [expandedUserId, setExpandedUserId] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [editNutrition, setEditNutrition] = useState(null);
   const [deleteNutritionId, setDeleteNutritionId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,21 +26,31 @@ const Nutrition = () => {
     setEditNutrition(null);
   };
 
-  const toggleAccordion = (userId) => {
-    setExpandedUserId((prevUserId) => (prevUserId === userId ? null : userId));
-  };
-
   const fetchNutritionData = () => {
     setIsLoading(true);
     Axios.get("/admin/nutrition")
       .then((response) => {
         if (response.data.status === "success") {
-          setNutritionData(response.data.data);
-          setFilteredData(response.data.data);
+          // Sort users by name or email
+          const sortedData = response.data.data.sort((a, b) =>
+            (a?.userDetails?.name || a?.userDetails?.email).localeCompare(
+              b?.userDetails?.name || b?.userDetails?.email
+            )
+          );
+          setNutritionData(sortedData);
+          setFilteredData(sortedData);
+          // Set the first user as selected by default
+          if (sortedData.length > 0) {
+            setSelectedUser(sortedData[0]);
+          }
+        } else {
+          setNutritionData([]);
+          setFilteredData([]);
         }
       })
       .catch((error) => {
         console.error("Error fetching nutrition data:", error);
+        toast.error("Failed to fetch nutrition data.");
       })
       .finally(() => {
         setIsLoading(false);
@@ -59,17 +69,29 @@ const Nutrition = () => {
     }
 
     setNutritionData((prevState) => {
-      if (editNutrition) {
-        return prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item));
-      }
-      return [...prevState, newNutrition];
+      const updatedData = editNutrition
+        ? prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item))
+        : [...prevState, newNutrition];
+      // Sort the updated data
+      return updatedData.sort((a, b) =>
+        (a?.userDetails?.name || a?.userDetails?.email || "").localeCompare(
+          b?.userDetails?.name || b?.userDetails?.email
+        )
+      );
     });
+
     setFilteredData((prevState) => {
-      if (editNutrition) {
-        return prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item));
-      }
-      return [...prevState, newNutrition];
+      const updatedData = editNutrition
+        ? prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item))
+        : [...prevState, newNutrition];
+      // Sort the updated data
+      return updatedData.sort((a, b) =>
+        (a?.userDetails?.name || a?.userDetails?.email || "").localeCompare(
+          b?.userDetails?.name || b?.userDetails?.email
+        )
+      );
     });
+
     setShowForm(false);
     setEditNutrition(null);
     fetchNutritionData();
@@ -81,8 +103,12 @@ const Nutrition = () => {
     Axios.delete(`/admin/nutrition/${deleteNutritionId}`)
       .then((response) => {
         if (response.data.status === "success") {
-          setNutritionData((prevState) => prevState.filter((item) => item._id !== deleteNutritionId));
-          setFilteredData((prevState) => prevState.filter((item) => item._id !== deleteNutritionId));
+          setNutritionData((prevState) =>
+            prevState.filter((item) => item._id !== deleteNutritionId)
+          );
+          setFilteredData((prevState) =>
+            prevState.filter((item) => item._id !== deleteNutritionId)
+          );
           toast.success("Nutrition plan deleted successfully.");
         }
       })
@@ -98,7 +124,7 @@ const Nutrition = () => {
     setSearchQuery(query);
     setFilteredData(
       nutritionData.filter((user) =>
-        user?.userDetails?.name.toLowerCase().includes(query)
+        (user?.userDetails?.name || user?.userDetails?.email).toLowerCase().includes(query)
       )
     );
     setCurrentPage(1); // Reset to the first page
@@ -132,110 +158,143 @@ const Nutrition = () => {
           </Button>
         </CardHeader>
         {!showForm ? (
-          <CardBody className="p-6 space-y-6">
-            {/* Search Bar */}
-            <div className="flex justify-between items-center mb-4">
-              <Input
-                type="text"
-                placeholder="Search by user name"
-                value={searchQuery}
-                onChange={handleSearch}
-                className="w-1/2"
-              />
-            </div>
-            {/* Loader */}
-            {loading || isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="loader border-t-4 border-b-4 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+          <div className="flex flex-col md:flex-row">
+            {/* Left Side: User List */}
+            <div className="w-full md:w-1/4 border-r p-4">
+              <div className="mb-6">
+                <Input
+                  type="text"
+                  placeholder="Search by user name"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  className="mb-4"
+                />
               </div>
-            ) : (
-              paginatedData.map((user) => (
-                <div key={user.userId} className="border-b pb-4 mb-4">
-                  <div
-                    className="flex justify-between items-center cursor-pointer p-4 bg-gray-100 rounded-lg"
-                    onClick={() => toggleAccordion(user.userId)}
-                  >
-                    <Typography variant="h6" className="text-gray-700">
-                      {user?.userDetails?.name || user?.userDetails?.email}
-                    </Typography>
-                    {expandedUserId === user.userId ? (
-                      <ChevronUpIcon className="h-5 w-5 text-gray-500" />
-                    ) : (
-                      <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-                    )}
-                  </div>
-                  {expandedUserId === user.userId && (
-                    <div className="mt-4">
-                      {/* Table Headers */}
-                      <div className="grid grid-cols-7 gap-4 text-gray-700 font-semibold bg-gray-200 p-3 rounded-t-lg">
-                        <div>Meal Time</div>
-                        <div>Description</div>
-                        <div>Quantity</div>
-                        <div>Taken</div>
-                        <div>Skipped</div>
-                        <div>Status</div>
-                        <div>Actions</div>
-                      </div>
-                      {user.nutritionDetails.map((nutrition, index) => (
-                        <div
-                          key={index}
-                          className="grid grid-cols-7 gap-4 p-4 bg-white border-b last:border-none"
-                        >
-                          <div>{nutrition.mealTime}</div>
-                          <div>{nutrition.description}</div>
-                          <div>{nutrition.quantity}</div>
-                          <div>{nutrition.takenCount}</div>
-                          <div>{nutrition.skippedCount}</div>
-                          <div
-                            className={
-                              nutrition.status === "completed"
-                                ? "text-green-500 font-semibold"
-                                : "text-red-500 font-semibold"
-                            }
-                          >
-                            {nutrition.status}
-                          </div>
-                          <div className="flex space-x-2">
-                            <PencilIcon
-                              className="h-5 w-5 text-blue-500 cursor-pointer"
-                              onClick={() => {
-                                setEditNutrition({ ...nutrition, userId: user.userId });
-                                setShowForm(true);
-                              }}
-                            />
-                            <TrashIcon
-                              className="h-5 w-5 text-red-500 cursor-pointer"
-                              onClick={() => setDeleteNutritionId(nutrition._id)}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <Typography variant="small" className="text-gray-600">
+                    Please wait...
+                  </Typography>
                 </div>
-              ))
-            )}
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center mt-6 space-x-4">
-                <Button
-                  color="gray"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <Typography>{`${currentPage} / ${totalPages}`}</Typography>
-                <Button
-                  color="gray"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </CardBody>
+              ) : paginatedData.length > 0 ? (
+                paginatedData.map((user, index) => (
+                  <div
+                    key={user.userId}
+                    className={`p-3 cursor-pointer rounded-lg mb-2 ${
+                      selectedUser?.userId === user.userId
+                        ? "bg-blue-100"
+                        : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => setSelectedUser(user)}
+                  >
+                    <Typography variant="small" className="font-semibold">
+                      {index + 1}. {user?.userDetails?.name || user?.userDetails?.email}
+                    </Typography>
+                  </div>
+                ))
+              ) : (
+                <Typography variant="small" className="text-gray-600 text-center">
+                  No data found.
+                </Typography>
+              )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-6 space-x-4">
+                  <Button
+                    color="gray"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Typography>{`${currentPage} / ${totalPages}`}</Typography>
+                  <Button
+                    color="gray"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Right Side: User Details */}
+            <div className="w-full md:w-3/4 p-4">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <Typography variant="small" className="text-gray-600">
+                    Please wait...
+                  </Typography>
+                </div>
+              ) : selectedUser ? (
+                <div>
+                  {selectedUser?.mealTimeGroups?.map((mealTimeGroup, index) => (
+                    <Card key={index} className="mt-6 mb-6 shadow-sm">
+                      <CardHeader className="bg-gray-100 p-4">
+                        <Typography variant="h6" className="text-gray-700">
+                          {mealTimeGroup.mealTime}
+                        </Typography>
+                      </CardHeader>
+                      <CardBody className="p-4">
+                        {mealTimeGroup.nutritionDetails.map((nutrition, idx) => (
+                          <div key={idx} className="border-b last:border-none py-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                              <div className="w-96 mb-2 md:mb-0">
+                                <Typography variant="small" className="font-semibold">
+                                  {nutrition.name}
+                                </Typography>
+                                <Typography variant="small" className="text-gray-600">
+                                  {nutrition.description}
+                                </Typography>
+                              </div>
+                              <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                                <Typography variant="small">
+                                  Quantity: {nutrition.quantity}
+                                </Typography>
+                                <Typography variant="small">
+                                  Taken: {nutrition.takenCount}
+                                </Typography>
+                                <Typography variant="small">
+                                  Skipped: {nutrition.skippedCount}
+                                </Typography>
+                                <div
+                                  className={`px-2 py-1 rounded-full text-sm font-semibold ${
+                                    nutrition.status === "completed"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  {nutrition.status}
+                                </div>
+                                <div className="flex space-x-2">
+                                  <PencilIcon
+                                    className="h-5 w-5 text-blue-500 cursor-pointer"
+                                    onClick={() => {
+                                      setEditNutrition({ ...nutrition, userId: selectedUser.userId });
+                                      setShowForm(true);
+                                    }}
+                                  />
+                                  <TrashIcon
+                                    className="h-5 w-5 text-red-500 cursor-pointer"
+                                    onClick={() => setDeleteNutritionId(nutrition._id)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Typography variant="h6" className="text-gray-700 text-center">
+                  Select a user to view details.
+                </Typography>
+              )}
+            </div>
+          </div>
         ) : (
           <AddNutritionForm
             onAddNutrition={handleAddNutrition}
@@ -279,3 +338,4 @@ const Nutrition = () => {
 };
 
 export default Nutrition;
+

@@ -157,7 +157,7 @@ const Meeting = () => {
                                 <TableRow>
                                     <TableCell>Sr. No.</TableCell>
                                     <TableCell>Image</TableCell>
-                                    <TableCell>Google Meet Link</TableCell>
+                                    <TableCell>Meet Link</TableCell>
                                     <TableCell>Date</TableCell>
                                     <TableCell>Time</TableCell>
                                     <TableCell>Roles</TableCell>
@@ -217,7 +217,7 @@ const Meeting = () => {
                             {editingMeeting ? "Edit Meeting" : "Add Meeting"}
                         </Typography>
                         <Input
-                            label="Google Meet Link"
+                            label="Meet Link"
                             value={googleMeetLink}
                             onChange={(e) => setGoogleMeetLink(e.target.value)}
                             required

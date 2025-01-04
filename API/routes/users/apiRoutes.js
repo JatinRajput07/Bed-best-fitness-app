@@ -48,7 +48,8 @@ const {
     getNotification,
     createOrUpdateHealtyHabitRoutine,
     resendOtp,
-    deleteUserUploadFiles
+    deleteUserUploadFiles,
+    logout
 } = require('../../controllers/userController');
 
 const {
@@ -150,6 +151,8 @@ router.get('/nutrition', getNutritions); // Get nutrition data
 router.get('/get_sleep_records', get_sleep_records); // Get sleep records
 
 router.get('/notification', getNotification); // Get sleep records
+
+router.post('/logout', logout); // Get sleep records
 
 
 

@@ -86,7 +86,7 @@ const AllReminders = ({ userId }) => {
     const renderReminderDetails = (reminder) => {
         const { bg, chipBg, chipColor } = getReminderColor(reminder?.type);
         return (
-            <Grid item xs={12} sm={6} md={4} key={reminder._id}>
+            <Grid style={{ textTransform: 'capitalize' }} item xs={12} sm={6} md={4} key={reminder._id}>
                 <Card sx={{ position: "relative", backgroundColor: bg, boxShadow: 3 }}>
                     <Chip
                         label={reminder?.type.charAt(0).toUpperCase() + reminder?.type.slice(1)}

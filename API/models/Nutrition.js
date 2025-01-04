@@ -6,13 +6,13 @@ const nutritionSchema = mongoose.Schema(
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         mealTime: {
             type: String,
-            enum: ['Breakfast', 'Lunch', 'Dinner', 'Night'],
             required: true,
         },
         description: { type: String, required: true },
+        name:String,
         quantity: { type: Number, required: true },
         active: { type: Boolean, default: true },
-        status: { type: Number, default: 0 }   // 0 is inProgress , 1 is Completed
+        status: { type: Number, default: 0 } 
     },
     {
         timestamps: true,

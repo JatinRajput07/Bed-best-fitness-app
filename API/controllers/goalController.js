@@ -352,7 +352,30 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
 
 exports.getNutritions = async (req, res, next) => {
     try {
-        const nutritions = await Nutrition.find({ active: true, userId: req.user.id });
+
+        const userId = new mongoose.Types.ObjectId(req.user.id)
+        const nutritions = await Nutrition.aggregate([
+            {
+                $match: {
+                    active: true,
+                    userId: userId
+                }
+            },
+            {
+                $group: {
+                    _id: "$mealTime",
+                    nutritions: { $push: { name: "$name", _id: "$_id" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    mealTime: "$_id",
+                    nutritions: 1 
+                }
+            }
+        ]);
+
         res.status(200).json({
             status: 'success',
             data: nutritions,
