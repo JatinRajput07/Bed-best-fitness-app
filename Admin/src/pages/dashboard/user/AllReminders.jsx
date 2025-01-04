@@ -169,6 +169,9 @@ const AllReminders = ({ userId }) => {
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Reminder Type:</strong> {reminder.reminderType}
                                 </Typography>
+                                {reminder.reminderType === 'everyday' && <Typography variant="body2">
+                                    <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
@@ -194,6 +197,9 @@ const AllReminders = ({ userId }) => {
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Reminder Type:</strong> {reminder.reminderType}
                                 </Typography>
+                                {reminder.reminderType === 'everyday' && <Typography variant="body2">
+                                    <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
@@ -219,6 +225,10 @@ const AllReminders = ({ userId }) => {
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Reminder Type:</strong> {reminder.reminderType}
                                 </Typography>
+
+                                {reminder.reminderType === 'everyday' && <Typography variant="body2">
+                                    <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
@@ -244,6 +254,9 @@ const AllReminders = ({ userId }) => {
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Reminder Type:</strong> {reminder.reminderType}
                                 </Typography>
+                                {reminder.reminderType === 'everyday' && <Typography variant="body2">
+                                    <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>

@@ -36,6 +36,8 @@ import BodyDataTracker from "./BodyDataTracker";
 import BodyMeasurementTracker from "./BodyMeasurementTracker";
 import HealthHabitsTracker from "./HealthHabitsTracker";
 import HygieneTracker from "./HygieneTracker";
+import HolisticWellnessTracker from "./HolisticWellnessTracker";
+import WhatsNewTodayTracker from "./WhatsNewTodayTracker";
 
 export function Profile({ id, closeModal }) {
 
@@ -48,7 +50,7 @@ export function Profile({ id, closeModal }) {
   const [error, setError] = useState(null);
 
   const [fileToDelete, setFileToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false); 
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteFile = async (fileId) => {
     setIsDeleting(true);
@@ -178,6 +180,14 @@ export function Profile({ id, closeModal }) {
                     Hygiene
                   </Tab>
 
+                  <Tab value="HolisticWellnessTracker" onClick={() => handleTabClick("HolisticWellnessTracker")}>
+                    Holistic Wellness
+                  </Tab>
+
+                  <Tab value="WhatsNewTodayTracker" onClick={() => handleTabClick("WhatsNewTodayTracker")}>
+                    Whats New Today
+                  </Tab>
+
 
                   <Tab value="reminders" onClick={() => handleTabClick("reminders")}>
                     Reminders
@@ -246,6 +256,16 @@ export function Profile({ id, closeModal }) {
                 {activeTab === "HygieneTracker" && (
                   <HygieneTracker userId={userProfile?.user?._id} />
                 )}
+
+                {activeTab === "HolisticWellnessTracker" && (
+                  <HolisticWellnessTracker userId={userProfile?.user?._id} />
+                )}
+
+                {activeTab === "WhatsNewTodayTracker" && (
+                  <WhatsNewTodayTracker userId={userProfile?.user?._id} />
+                )}
+
+
 
                 {activeTab === "reminders" && (
                   <TabPanel value="reminders">
