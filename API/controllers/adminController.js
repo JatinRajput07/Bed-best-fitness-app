@@ -28,7 +28,7 @@ const { sendPushNotification } = require("../utils/firebaseService");
 const { default: mongoose } = require("mongoose");
 const Notification = require("../models/Notification");
 const Highlight = require("../models/Highlight");
-const Introduction = require("../models/Banner");
+const Introduction = require("../models/Introduction");
 
 
 const signToken = id => {

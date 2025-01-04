@@ -25,6 +25,7 @@ const Nutrition = require("../models/Nutrition");
 const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
 const Highlight = require("../models/Highlight");
+const Introduction = require("../models/Banner");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -1618,6 +1619,16 @@ exports.getNotification = catchAsync(async (req, res, next) => {
         status: 'success',
         message: 'Notification List.',
         notification
+    });
+})
+
+
+exports.getIntro = catchAsync(async (req, res, next) => {
+    const intro = await Introduction.find({}, ('imageUrl'))
+    res.status(200).json({
+        status: 'success',
+        message: 'Successfull',
+        intro
     });
 })
 

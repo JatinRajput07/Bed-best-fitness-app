@@ -49,7 +49,8 @@ const {
     createOrUpdateHealtyHabitRoutine,
     resendOtp,
     deleteUserUploadFiles,
-    logout
+    logout,
+    getIntro
 } = require('../../controllers/userController');
 
 const {
@@ -74,6 +75,9 @@ router.post('/forgotPassword', forgotPassword); // Forgot password
 router.post('/verify_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
 router.post('/resend_otp', resendOtp);
+
+
+router.get('/intro', getIntro); // Get sleep records
 
 // Recommendations Management
 router.get('/recommendation', getUserRecommendations); // Get user recommendations
