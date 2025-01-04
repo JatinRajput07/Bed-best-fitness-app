@@ -25,7 +25,7 @@ const Nutrition = require("../models/Nutrition");
 const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
 const Highlight = require("../models/Highlight");
-const Introduction = require("../models/Banner");
+const Introduction = require("../models/Introduction");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
