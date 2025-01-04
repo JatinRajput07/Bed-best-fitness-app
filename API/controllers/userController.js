@@ -1134,6 +1134,7 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
             $group: {
                 _id: "$type",
                 paths: { $push: "$path" },
+                createdAt: { $first: "$createdAt" }, 
             },
         },
         {
@@ -1141,6 +1142,7 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
                 _id: 0,
                 type: "$_id",
                 paths: 1,
+                createdAt: 1
             },
         },
     ]);
