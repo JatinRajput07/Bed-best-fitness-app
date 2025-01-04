@@ -1760,7 +1760,7 @@ exports.createIntroduction = catchAsync(async (req, res, next) => {
         }
 
         const { title, description } = req.body;
-        const imageUrl = `http://localhost:7200/uploads/images/${req.files[0].filename}`;
+        const imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
         const newIntroduction = await Introduction.create({
             title,
             description,
