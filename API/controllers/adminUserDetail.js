@@ -200,6 +200,18 @@ exports.getWorkoutData = catchAsync(async (req, res, next) => {
 });
 
 
+exports.getknowledgeData = catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    const routineData = await Routine.find({ userId }, 'join_session date -_id').sort({ date: -1 });
+    const join_session = routineData.filter(r => r.join_session).map(r => ({ date: r.date, value: r.join_session }));
+    res.status(200).json({
+        status: "success",
+        join_session,
+    });
+});
+
+
+
 exports.getBodyData = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const routineData = await Routine.find({ userId }, 'body_data date -_id').sort({ date: -1 });

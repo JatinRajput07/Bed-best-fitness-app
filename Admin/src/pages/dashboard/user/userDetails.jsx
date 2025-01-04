@@ -38,6 +38,8 @@ import HealthHabitsTracker from "./HealthHabitsTracker";
 import HygieneTracker from "./HygieneTracker";
 import HolisticWellnessTracker from "./HolisticWellnessTracker";
 import WhatsNewTodayTracker from "./WhatsNewTodayTracker";
+import KnowledgeSessionTracker from "./KnowledgeSessionTracker";
+import WorkoutTracker from "./WorkoutTracker";
 
 export function Profile({ id, closeModal }) {
 
@@ -142,7 +144,7 @@ export function Profile({ id, closeModal }) {
 
           {userProfile?.user?.role === "user" && (
             <Tabs id="custom-animation" value={activeTab}>
-              <TabsHeader>
+              <TabsHeader  className="gap-4 py-4" style={{ overflowX: "auto", whiteSpace: "nowrap", display: "flex" }} >
 
                 <>
                   <Tab value="Weight" onClick={() => handleTabClick("Weight")}>
@@ -162,6 +164,14 @@ export function Profile({ id, closeModal }) {
                   </Tab>
                   <Tab value="nutritions" onClick={() => handleTabClick("nutritions")}>
                     Nutritions
+                  </Tab>
+
+                  <Tab value="KnowledgeSessionTracker" onClick={() => handleTabClick("KnowledgeSessionTracker")}>
+                    Knowledge Session
+                  </Tab>
+
+                  <Tab value="Workout" onClick={() => handleTabClick("Workout")}>
+                    Workout
                   </Tab>
 
                   <Tab value="bodydata" onClick={() => handleTabClick("bodydata")}>
@@ -239,6 +249,15 @@ export function Profile({ id, closeModal }) {
                 {activeTab === "nutritions" && (
                   <NutritionTracker userId={userProfile?.user?._id} />
                 )}
+
+                {activeTab === "KnowledgeSessionTracker" && (
+                  <KnowledgeSessionTracker userId={userProfile?.user?._id} />
+                )}
+
+                {activeTab === "Workout" && (
+                  <WorkoutTracker userId={userProfile?.user?._id} />
+                )}
+
                 {activeTab === "bodydata" && (
                   <BodyDataTracker userId={userProfile?.user?._id} />
                 )}
