@@ -1128,20 +1128,13 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 
     const uploadfile = await UserFiles.aggregate([
         {
-            $match: { userId: new mongoose.Types.ObjectId(userId) },
-        },
-        {
-            $group: {
-                _id: "$type",
-                paths: { $push: "$path" },
-                createdAt: { $first: "$createdAt" }, 
-            },
+            $match: { userId: new mongoose.Types.ObjectId(userId), type: "pdf", },
         },
         {
             $project: {
-                _id: 0,
-                type: "$_id",
-                paths: 1,
+                _id: 1,
+                path: 1,
+                type: 1,
                 createdAt: 1
             },
         },
