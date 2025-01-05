@@ -489,7 +489,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
             }
         };
 
-        if (section === 'nutrition') {
+        if (section === 'nutritionrrrr') {
             routine.nutrition = routine.nutrition || [];
             data.forEach((item) => {
                 const existingItem = routine.nutrition.find(

@@ -5,12 +5,18 @@ const dynamicSchema = new mongoose.Schema({
 }, { strict: false });
 
 const mealSchema = new mongoose.Schema({
-    status: { type: String, 
+    status: {
+        type: String,
         // enum: ['take', 'skip']
-     },
+    },
     note: { type: String },
     image: { type: String },
     items: [String]
+}, { strict: false });
+
+const nutritionSchema = new mongoose.Schema({
+    status: { type: String },
+    items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Nutrition' }]
 }, { strict: false });
 
 const routineSchema = new mongoose.Schema({
@@ -42,10 +48,12 @@ const routineSchema = new mongoose.Schema({
         attend: { type: Boolean },
         note: { type: String }
     },
-    nutrition: [{
-        item: { type: String },
-        status: { type: String, enum: ['take', 'skip'] }
-    }],
+    nutrition: {
+        morning: nutritionSchema,
+        lunch: nutritionSchema,
+        evening: nutritionSchema,
+        dinner: nutritionSchema
+    },
     sleep: {
         wake_up: { type: String },
         bed_at: { type: String }
