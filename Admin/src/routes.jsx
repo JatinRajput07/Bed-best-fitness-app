@@ -10,12 +10,14 @@ import {
   CameraIcon,
   StopIcon,
   PhotoIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ChatBubbleOvalLeftIcon
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
+const ChatComponent = React.lazy(() => import("@/pages/dashboard/Chat"));
 const IntroductionManagement = React.lazy(() => import("@/pages/dashboard/Introduction"));
 const HelpAndSupport = React.lazy(() => import("@/pages/dashboard/HelpAndSupport"));
 const Home = React.lazy(() => import("@/pages/dashboard/Home"));
@@ -124,6 +126,20 @@ export const routes = () => {
         },
       ],
     },
+    ...(role !== "admin"
+      ? [
+          {
+            icon: <ChatBubbleOvalLeftIcon {...icon} />,
+            name: "Chats",
+            path: "/chats",
+            element: (
+              <Suspense fallback={<div>Loading...</div>}>
+                <ChatComponent />
+              </Suspense>
+            ),
+          },
+        ]
+      : []),
     ...(role !== "host" ? [
       {
         icon: <StopIcon {...icon} />,

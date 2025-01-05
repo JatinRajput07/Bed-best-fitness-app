@@ -778,8 +778,8 @@ exports.createNutrition = async (req, res, next) => {
             coachId,
             mealTime: category,
             description,
-            name:items[0]['name'],
-            quantity:items[0]['quantity']
+            name: items[0]['name'],
+            quantity: items[0]['quantity']
         }
 
         const nutrition = await Nutrition.create(data);
@@ -928,8 +928,6 @@ exports.deleteMeal = async (req, res, next) => {
 };
 
 
-
-
 exports.getNutritions = async (req, res, next) => {
     try {
         const coachId = req.user.id;
@@ -939,22 +937,19 @@ exports.getNutritions = async (req, res, next) => {
             query.coachId = coachId;
         }
 
-        // Fetch all nutritions based on the query
         const nutritions = await Nutrition.find(query);
 
-        // Extract unique user IDs from the nutritions
         const userIds = [...new Set(nutritions.map(item => item.userId.toString()))];
         const userObjectIds = userIds.map(id => new mongoose.Types.ObjectId(id));
 
-        // Fetch routines for the users
+
         const routines = await Routine.find({ userId: { $in: userObjectIds } });
 
-        // Group nutritions by userId first, then by mealTime
         const groupedByUser = await Nutrition.aggregate([
-            { $match: query }, // Match the nutritions based on the query
+            { $match: query },
             {
                 $group: {
-                    _id: "$userId", // Group by userId
+                    _id: "$userId", 
                     nutritions: {
                         $push: {
                             _id: "$_id",
@@ -971,12 +966,11 @@ exports.getNutritions = async (req, res, next) => {
             }
         ]);
 
-        // Process each user group
+
         const results = await Promise.all(groupedByUser.map(async (userGroup) => {
             const userId = userGroup._id;
             const userDetails = await User.findById(userId);
 
-            // Group nutritions by mealTime for this user
             const groupedByMealTime = userGroup.nutritions.reduce((acc, nutrition) => {
                 const mealTime = nutrition.mealTime;
                 if (!acc[mealTime]) {
@@ -986,18 +980,27 @@ exports.getNutritions = async (req, res, next) => {
                 return acc;
             }, {});
 
-            // Process each mealTime group
             const mealTimeGroups = await Promise.all(Object.entries(groupedByMealTime).map(async ([mealTime, nutritions]) => {
                 const processedNutritions = await Promise.all(nutritions.map(async (nutrition) => {
                     const userRoutines = routines.filter(routine => routine.userId.toString() === nutrition.userId.toString());
 
-                    const takenCount = userRoutines.reduce((count, routine) => {
-                        return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'take').length;
-                    }, 0);
+                    let takenCount = 0;
+                    let skippedCount = 0;
 
-                    const skippedCount = userRoutines.reduce((count, routine) => {
-                        return count + routine.nutrition.filter(item => item.item.toString() === nutrition._id.toString() && item.status === 'skip').length;
-                    }, 0);
+                    userRoutines.forEach((routine) => {
+                        if (routine.nutrition && routine.nutrition[mealTime]) {
+                            const mealTimeData = routine.nutrition[mealTime];
+                            mealTimeData.items.forEach((item) => {
+                                if (item.toString() === nutrition._id.toString()) {
+                                    if (mealTimeData.status === 'take') {
+                                        takenCount++;
+                                    } else if (mealTimeData.status === 'skip') {
+                                        skippedCount++;
+                                    }
+                                }
+                            });
+                        }
+                    });
 
                     const isCompleted = takenCount === nutrition.quantity;
 
@@ -1108,10 +1111,6 @@ exports.getMeals = async (req, res, next) => {
         next(error);
     }
 };
-
-
-
-
 
 
 // Create Category

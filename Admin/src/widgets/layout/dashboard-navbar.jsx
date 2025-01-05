@@ -25,19 +25,21 @@ import {
   setOpenConfigurator,
   setOpenSidenav,
 } from "@/context";
+import { useSelector } from "react-redux";
 
 export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
+  const { email } = useSelector(state => state.auth)
 
   return (
     <Navbar
       color={fixedNavbar ? "white" : "transparent"}
       className={`rounded-xl transition-all ${fixedNavbar
-          ? "sticky top-4 z-40 py-3 shadow-md shadow-blue-gray-500/5"
-          : "px-0 py-1"
+        ? "sticky top-4 z-40 py-3 shadow-md shadow-blue-gray-500/5"
+        : "px-0 py-1"
         }`}
       fullWidth
       blurred={fixedNavbar}
@@ -85,7 +87,7 @@ export function DashboardNavbar() {
               className="hidden items-center gap-1 px-4 xl:flex normal-case"
             >
               <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              My Account
+              {email}
             </Button>
             <IconButton
               variant="text"
@@ -95,8 +97,8 @@ export function DashboardNavbar() {
               <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
             </IconButton>
           </Link>
-       
-   
+
+
         </div>
       </div>
     </Navbar>
