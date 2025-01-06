@@ -62,9 +62,9 @@ const {
     getMindnessfullByCategory,
     getMeals,
     getNutritions,
-    get_sleep_records
+    get_sleep_records,
+    getStepData
 } = require('../../controllers/goalController');
-
 
 // Authentication Routes
 router.post('/register', registrationValidation, register); // User registration
@@ -155,6 +155,9 @@ router.get('/nutrition', getNutritions); // Get nutrition data
 router.get('/get_sleep_records', get_sleep_records); // Get sleep records
 
 router.get('/notification', getNotification); // Get sleep records
+
+
+router.get('/getStepData',getStepData)
 
 router.post('/logout', logout); // Get sleep records
 

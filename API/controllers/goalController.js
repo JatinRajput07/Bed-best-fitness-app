@@ -80,6 +80,32 @@ exports.getUserGoal = catchAsync(async (req, res, next) => {
 })
 
 
+
+exports.getStepData = catchAsync(async (req, res, next) => {
+  const userId = req.user.id
+  const stepData = await Routine.find({ userId }, 'steps date').sort({ date: -1 });
+
+  const categories = [];
+  const data = [];
+
+  stepData.forEach((entry) => {
+    const formattedDate = entry.date;
+    categories.push(formattedDate);
+    data.push(entry?.steps?.steps || "0");
+  });
+
+  res.status(200).json({
+    status: "success",
+    chart: {
+      name: "steps",
+      data: data,
+    },
+    categories: categories,
+    message: "Get step data successfully.",
+  });
+});
+
+
 exports.getMetricData = catchAsync(async (req, res, next) => {
     const { period, metric } = req.query;
     const userId = req.user.id;
