@@ -117,42 +117,37 @@ const NutritionTracker = ({ userId }) => {
 
               {open === index && (
                 <div className="p-4 space-y-4">
-                  {day?.value.length > 0 ? (
-                    day?.value.map((nutritionDetail, nutritionIndex) => (
+                  {Object.keys(day?.value || {}).length > 0 ? (
+                    Object.entries(day?.value || {}).map(([mealTime, mealDetails], mealIndex) => (
                       <div
-                        key={nutritionIndex}
+                        key={mealIndex}
                         className="border rounded-lg p-4 flex flex-col gap-2 shadow-sm bg-gray-50"
                       >
                         {/* Nutrition Details */}
                         <p className="text-sm text-gray-600">
-                          <span className="font-semibold">Dose Time:</span>{" "}
-                          {nutritionDetail.mealTime || "N/A"}
+                          <span className="font-semibold">Nutrition Time:</span> {mealTime}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-semibold">Description:</span>{" "}
-                          {nutritionDetail.description || "N/A"}
-                        </p>
-                        {/* <p className="text-sm text-gray-600">
-                          <span className="font-semibold">Quantity:</span>{" "}
-                          {nutritionDetail.quantity || "N/A"}
-                        </p> */}
                         <p className="text-sm text-gray-600">
                           <span className="font-semibold">Status:</span>{" "}
                           <span
                             className={`font-bold ${
-                              nutritionDetail.status === "take"
-                                ? "text-green-600"
-                                : "text-red-600"
+                              mealDetails.status === "take" ? "text-green-600" : "text-red-600"
                             }`}
                           >
-                            {nutritionDetail.status === "take" ? "Taken" : "Skipped"}
+                            {mealDetails.status === "take" ? "Taken" : "Skipped"}
                           </span>
                         </p>
-                        {nutritionDetail.coach?.name && (
-                          <p className="text-sm text-gray-600">
-                            <span className="font-semibold">Coach:</span> {nutritionDetail.coach.name}{" "}
-                            ({nutritionDetail.coach.email || "N/A"})
-                          </p>
+                        {mealDetails.items?.length > 0 && (
+                          <div>
+                            <p className="text-sm text-gray-600 font-semibold">Items:</p>
+                            <ul className="list-disc pl-5">
+                              {mealDetails.items.map((item, itemIndex) => (
+                                <li key={itemIndex} className="text-sm text-gray-600">
+                                  {item.name}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     ))

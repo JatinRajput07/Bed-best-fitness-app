@@ -120,62 +120,68 @@ exports.getMealsData = catchAsync(async (req, res, next) => {
 
 
 
-
 exports.getNutritionData = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
+
     const nutritionData = await Routine.aggregate([
         { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-        { $match: { nutrition: { $exists: true, $ne: [] } } },
-        { $unwind: "$nutrition" },
         {
-            $addFields: {
-                "nutrition.item": { $convert: { input: "$nutrition.item", to: "objectId", onError: null, onNull: null } },
+            $project: {
+                date: 1,
+                nutrition: {
+                    $cond: {
+                        if: { $isArray: "$nutrition" },
+                        then: "$nutrition",
+                        else: { $objectToArray: "$nutrition" },
+                    },
+                },
             },
         },
+        { $unwind: "$nutrition" },
         {
             $lookup: {
                 from: "nutritions",
-                localField: "nutrition.item",
+                localField: "nutrition.v.items",
                 foreignField: "_id",
-                as: "nutritionDetails",
-            },
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "nutritionDetails.coachId",
-                foreignField: "_id",
-                as: "coachDetails",
-            },
-        },
-        {
-            $addFields: {
-                "nutrition.itemDetails": { $arrayElemAt: ["$nutritionDetails", 0] },
-                "nutrition.coach": { $arrayElemAt: ["$coachDetails", 0] },
+                as: "nutritionItems",
             },
         },
         {
             $group: {
-                _id: "$date",
+                _id: "$_id",
+                date: { $first: "$date" },
                 nutrition: {
                     $push: {
-                        itemId: "$nutrition.item",
-                        mealTime: "$nutrition.itemDetails.mealTime",
-                        description: "$nutrition.itemDetails.description",
-                        // quantity: "$nutrition.itemDetails.quantity",
-                        coach: {
-                            name: "$nutrition.coach.name",
-                            email: "$nutrition.coach.email",
+                        k: "$nutrition.k",
+                        v: {
+                            $mergeObjects: [
+                                "$nutrition.v",
+                                {
+                                    items: {
+                                        $map: {
+                                            input: "$nutritionItems",
+                                            as: "item",
+                                            in: { name: "$$item.name" },
+                                        },
+                                    },
+                                },
+                            ],
                         },
-                        status: "$nutrition.status",
                     },
+                },
+            },
+        },
+        {
+            $addFields: {
+                nutrition: {
+                    $arrayToObject: "$nutrition",
                 },
             },
         },
         {
             $project: {
                 _id: 0,
-                date: "$_id",
+                date: 1,
                 value: "$nutrition",
             },
         },
@@ -187,6 +193,8 @@ exports.getNutritionData = catchAsync(async (req, res, next) => {
         nutrition: nutritionData,
     });
 });
+
+
 
 
 exports.getWorkoutData = catchAsync(async (req, res, next) => {
