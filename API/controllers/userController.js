@@ -447,8 +447,6 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const today = getLocalDate();
 
-    console.log(req.body, '[=============================body=============================]')
-
     if (!data) {
         return next(new AppError(`No data provided for section: ${section}`, 400));
     }

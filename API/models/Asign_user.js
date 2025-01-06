@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const AsignUserSchema = new mongoose.Schema({
     asign_user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     host: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    imageUrl: { type: String },
     createdAt: {
         type: Date,
         default: Date.now,

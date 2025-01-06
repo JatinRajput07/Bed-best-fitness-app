@@ -577,54 +577,78 @@ exports.dashboard = catchAsync(async (req, res, next) => {
 });
 
 
+const { ObjectId } = require('mongoose').Types;
+
 exports.assign = catchAsync(async (req, res, next) => {
-    const { asign_user, host } = req.body;
-
-    if (!asign_user || !host) {
-        return res.status(400).json({ message: "Host and users are required." });
-    }
-
-    if (!Array.isArray(asign_user)) {
-        return res.status(400).json({ message: "Assigned users must be an array." });
-    }
-
-    const hostData = await User.findById(host);
-    if (!hostData) {
-        return res.status(404).json({ message: "Host not found." });
-    }
-
-    const newAssignments = [];
-    for (const userId of asign_user) {
-        const existingAssignment = await Asign_User.findOne({ asign_user: userId, host });
-        if (existingAssignment) {
-            continue;
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ message: "File upload failed.", error: err });
         }
 
-        const newAssignment = await Asign_User.create({ asign_user: userId, host });
-        newAssignments.push(newAssignment);
+        let imageUrl = null;
+        if (req.files && req.files.length > 0) {
+            imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+        }
+        const { host } = req.body;
+        let { asign_user } = req.body;
 
-        await Notification.create({
-            userId,
-            message: `You have been appointed ${hostData.name} as your coach.`,
-            type: "Appointed a coach",
-            status: "sent",
+        if (!asign_user || !host) {
+            return res.status(400).json({ message: "Host and users are required." });
+        }
+        asign_user = Array.isArray(asign_user) ? asign_user : [asign_user];
+
+        if (!ObjectId.isValid(host)) {
+            return res.status(400).json({ message: "Invalid host ID." });
+        }
+
+
+        const hostData = await User.findById(host);
+        if (!hostData) {
+            return res.status(404).json({ message: "Host not found." });
+        }
+
+        const newAssignments = [];
+        for (const userId of asign_user) {
+            if (!ObjectId.isValid(userId)) {
+                continue;
+            }
+
+            const query = { asign_user: userId, host };
+            if (imageUrl) {
+                query.imageUrl = imageUrl;
+            }
+            const existingAssignment = await Asign_User.findOne(query);
+            if (existingAssignment) {
+                continue; 
+            }
+
+            const assignmentData = { asign_user: userId, host };
+            if (imageUrl) {
+                assignmentData.imageUrl = imageUrl; 
+            }
+            const newAssignment = await Asign_User.create(assignmentData);
+            newAssignments.push(newAssignment);
+
+            await Notification.create({
+                userId,
+                message: `You have been appointed ${hostData.name} as your coach.`,
+                type: "Appointed a coach",
+                status: "sent",
+            });
+        }
+
+        if (newAssignments.length === 0) {
+            return res.status(200).json({
+                message: "All users are already assigned to the host. No new assignments were made.",
+            });
+        }
+        res.status(201).json({
+            status: "success",
+            message: `${newAssignments.length} user(s) assigned successfully.`,
+            data: newAssignments,
         });
-    }
-
-    if (newAssignments.length === 0) {
-        return res.status(400).json({
-            message: "All users are already assigned to the host. No new assignments were made.",
-        });
-    }
-
-    // Respond with the created assignments
-    res.status(201).json({
-        status: "success",
-        message: `${newAssignments.length} user(s) assigned successfully.`,
-        data: newAssignments,
     });
 });
-
 
 
 exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
@@ -949,7 +973,7 @@ exports.getNutritions = async (req, res, next) => {
             { $match: query },
             {
                 $group: {
-                    _id: "$userId", 
+                    _id: "$userId",
                     nutritions: {
                         $push: {
                             _id: "$_id",

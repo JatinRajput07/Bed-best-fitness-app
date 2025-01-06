@@ -43,12 +43,12 @@ const StepsTracker = ({ userId }) => {
                 <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">
                   Steps
                 </th>
-                <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">
+                {/* <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">
                   Calories Burned
                 </th>
                 <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">
                   Time Spent
-                </th>
+                </th> */}
                 <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">
                   Status
                 </th>
@@ -67,12 +67,12 @@ const StepsTracker = ({ userId }) => {
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
                     {record?.value?.steps || "N/A"}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2 text-gray-700">
+                  {/* <td className="border border-gray-300 px-4 py-2 text-gray-700">
                     {record?.value?.calories || "N/A"} kcal
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
                     {record?.value?.time || "N/A"}
-                  </td>
+                  </td> */}
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
                       className={`${record.value.steps >= stepGoal

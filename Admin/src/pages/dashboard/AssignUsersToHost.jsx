@@ -9,12 +9,13 @@ import { useNavigate } from "react-router-dom";
 
 const CreateAssignment = () => {
   const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { users, loading: usersLoading, error: usersError } = useSelector((state) => state.users);
   const { assignments = [], loading: assignmentsLoading, error: assignmentsError } = useSelector((state) => state.assignments);
 
   const [selectedHost, setSelectedHost] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -65,11 +66,11 @@ const CreateAssignment = () => {
     </div>
   );
 
-
   const validateForm = () => {
     const formErrors = {};
     if (!selectedHost) formErrors.host = "Host is required.";
     if (selectedUsers.length === 0) formErrors.users = "At least one user is required.";
+    // if (!imageFile) formErrors.image = "Image is required.";
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
   };
@@ -78,21 +79,28 @@ const CreateAssignment = () => {
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    const formData = new FormData();
+    formData.append("host", selectedHost);
+
+    // Append each user ID individually to FormData
+    selectedUsers.forEach((user) => {
+      formData.append("asign_user[]", user.value); // Use `asign_user[]` to send as an array
+    });
+
+    formData.append("image", imageFile);
+
     dispatch(
-      createAssignment({
-        host: selectedHost,
-        asign_user: selectedUsers.map((user) => user.value),
-      })
+      createAssignment(formData)
     ).then((res) => {
       if (res.meta.requestStatus === "fulfilled") {
         toast.success("success");
         navigate("/dashboard/assign-users-list");
         setSelectedHost(null);
         setSelectedUsers([]);
+        setImageFile(null);
         setErrors({});
       }
-    })
-
+    });
   };
 
   // Loading state
@@ -158,6 +166,38 @@ const CreateAssignment = () => {
               <Typography color="red" className="text-sm mt-1">
                 {errors.users}
               </Typography>
+            )}
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Upload Image
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+            />
+            {errors.image && (
+              <Typography color="red" className="text-sm mt-1">
+                {errors.image}
+              </Typography>
+            )}
+            {imageFile && (
+              <div className="mt-4">
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded"
+                />
+              </div>
             )}
           </div>
 
