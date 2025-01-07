@@ -8,6 +8,7 @@ const videos = require("../models/videos");
 const Nutrition = require("../models/Nutrition");
 const Meal = require("../models/Meal");
 const moment = require('moment');
+
 const Category = require("../models/Category");
 
 const getLocalDate = () => {
@@ -80,16 +81,40 @@ exports.getUserGoal = catchAsync(async (req, res, next) => {
 })
 
 
-
 exports.getStepData = catchAsync(async (req, res, next) => {
-  const userId = req.user.id
-  const stepData = await Routine.find({ userId }, 'steps date').sort({ date: -1 });
+  const userId = req.user.id;
+  const type = req.query.type || 'month';
+
+  let startDate;
+  const endDate = moment().endOf('day'); 
+
+  switch (type) {
+    case 'week':
+      startDate = moment().startOf('week');
+      break;
+    case 'month':
+      startDate = moment().startOf('month');
+      break;
+    case 'year':
+      startDate = moment().startOf('year');
+      break;
+    default:
+      startDate = moment().startOf('month');
+  }
+
+  const startDateStr = startDate.format('YYYY-MM-DD');
+  const endDateStr = endDate.format('YYYY-MM-DD');
+
+  const stepData = await Routine.find({
+    userId,
+    date: { $gte: startDateStr, $lte: endDateStr }
+  }, 'steps date').sort({ date: -1 });
 
   const categories = [];
   const data = [];
 
   stepData.forEach((entry) => {
-    const formattedDate = entry.date;
+    const formattedDate = moment(entry.date).format('YYYY-MM-DD');
     categories.push(formattedDate);
     data.push(entry?.steps?.steps || "0");
   });
@@ -104,7 +129,6 @@ exports.getStepData = catchAsync(async (req, res, next) => {
     message: "Get step data successfully.",
   });
 });
-
 
 exports.getMetricData = catchAsync(async (req, res, next) => {
     const { period, metric } = req.query;
