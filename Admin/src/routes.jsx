@@ -14,6 +14,7 @@ import {
   ChatBubbleOvalLeftIcon
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
+import DeleteAccountPolicy from "./pages/dashboard/DeleteAccountPolicy";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
@@ -246,6 +247,15 @@ export const routes = () => {
               </Suspense>
             ),
           },
+          {
+            name: "Delete Account",
+            path: "/delete-account",
+            element: (
+              <Suspense fallback={<div>Loading...</div>}>
+                <DeleteAccountPolicy />
+              </Suspense>
+            ),
+          }
         ],
       },
     ] : []),
