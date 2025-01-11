@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const mongoURI = process.env.MONGO_DB;
+const mongoURI = process.env.NODE_ENV === 'development' ? process.env.MONGO_DB : process.env.MONGO_DB_LIVE;
 console.log(mongoURI)
 
 const connectDB = async () => {
