@@ -656,7 +656,7 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
-    const coach = await Asign_User.findOne({ asign_user: userId }, ('host'))
+    const coach = await Asign_User.findOne({ asign_user: userId }, ('host imageUrl'))
         .populate('host', 'name email')
         .exec();
 
