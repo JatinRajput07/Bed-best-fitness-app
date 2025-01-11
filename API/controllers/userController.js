@@ -830,7 +830,7 @@ exports.Home = catchAsync(async (req, res, next) => {
     return res.status(200).json({
         status: "success",
         data: {
-            today, host: coach?.host || {}, videos: groupedVideos, recommendationVideos, banners, highlights
+            today, host: { ...coach?.host?.toObject(), imageUrl: coach?.imageUrl || "" } || {}, videos: groupedVideos, recommendationVideos, banners, highlights
         },
     });
 });
