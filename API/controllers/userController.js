@@ -952,49 +952,59 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     const userId = req.params.id;
     const userRole = req.user.role;
 
+    // Check if the user is a host
     if (userRole !== "host") {
         return next(new AppError("Only hosts can get details.", 403));
     }
 
+    // Get the date from query or use today's date
     let today = getLocalDate();
     if (req.query.date) {
         today = req.query.date;
     }
 
-    console.log(userId, today, '=====userId , today===');
+    // Fetch routine data for the user and date
+    let data = await Routine.findOne({ userId, date: today })
+        .populate('nutrition.morning.items', ('name -_id'))
+        .populate('nutrition.lunch.items', ('name -_id'))
+        .populate('nutrition.evening.items', ('name -_id'))
+        .populate('nutrition.dinner.items', ('name -_id'));
 
-    const data = await Routine.findOne({ userId, date: today });
+    // If no data found, return error
     if (!data) {
         return next(new AppError("No Data found for this user.", 404));
     }
 
-    const mealSections = Object.keys(data.meal);
+    // Convert Mongoose document to plain JavaScript object
+    data = data.toObject();
+
+    // Populate meal items
+    const mealSections = Object.keys(data.meal || {});
     for (const section of mealSections) {
-        const items = data.meal[section]?.items || [];
+        const items = data?.meal[section]?.items || [];
         if (items.length) {
-            const titles = await Meal.find({ _id: { $in: items } }).select('item');
-            data.meal[section].items = titles.map(item => item.item);
+            const mealTitles = await Meal.find({ _id: { $in: items } }).select('item');
+            data.meal[section].items = mealTitles.map(item => item.item);
         }
     }
 
-    const nutritionItems = data.nutrition.map(n => n.item);
-    if (nutritionItems.length) {
-        const nutritionTitles = await Nutrition.find({ _id: { $in: nutritionItems } }).select('title');
-        data.nutrition = data.nutrition.map(n => {
-            const titleObj = nutritionTitles.find(t => t._id.equals(n.item));
-            return {
-                ...n,
-                item: titleObj ? titleObj.title : n.item,
-            };
-        });
+    // Transform nutrition items to plain values
+    const nutritionSections = Object.keys(data.nutrition || {});
+    for (const section of nutritionSections) {
+        const items = data?.nutrition[section]?.items || [];
+        if (items.length) {
+            data.nutrition[section].items = items.map(item => item.name);
+        }
     }
 
+    // Send response
     return res.status(200).json({
         status: "success",
         message: "User Details.",
         data,
     });
 });
+
 
 
 
