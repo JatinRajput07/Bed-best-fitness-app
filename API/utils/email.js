@@ -7,7 +7,7 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.otp = otp;
-    this.from = `Fitness-App <${process.env.EMAIL_FROM}>`;
+    this.from = `Be D Best <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
@@ -68,7 +68,7 @@ module.exports = class Email {
   async welcome() {
     await this.send(
       'welcome',
-      'Welcom to Fitness App .This is Account verification OTP'
+      'Welcom to Be D Best .This is Account verification OTP'
     );
   }
 

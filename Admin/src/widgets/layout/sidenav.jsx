@@ -149,7 +149,7 @@ aside::-webkit-scrollbar {
 
 Sidenav.defaultProps = {
   brandImg: "/free-logo.png",
-  brandName: "FITNESS-APP",
+  brandName: "Be D Best",
 };
 
 Sidenav.propTypes = {
