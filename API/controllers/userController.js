@@ -184,7 +184,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             socialType,
             email,
             isVerified: true,
-            phone: "0000000000",
+            // phone: "0000000000",
             role: role || 'user',
             device_type,
             device_token
@@ -365,10 +365,7 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
 
         for (const { model, field } of collections) {
             const filter = { [field]: userId };
-            const recordExists = await model.exists(filter).session(session);
-            if (recordExists) {
-                await model.deleteMany(filter).session(session);
-            }
+            await model.deleteMany(filter).session(session);
         }
 
         await User.findByIdAndDelete(userId).session(session);
@@ -386,6 +383,7 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
         return next(error);
     }
 });
+
 
 
 
