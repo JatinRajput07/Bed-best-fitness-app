@@ -124,21 +124,19 @@ exports.getUserList = catchAsync(async (req, res, next) => {
 
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const userId = req.params.id;
+
+        // Check if user exists
         const user = await User.findById(userId);
         if (!user) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(404).json({
                 status: 'fail',
                 message: 'User not found',
             });
         }
 
+        // Collections to delete related records
         const collections = [
             { model: Routine, key: "userId" },
             { model: Meal, key: "userId" },
@@ -148,30 +146,23 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
             { model: Nutrition, key: "userId" },
             { model: Goal, key: "userId" },
             { model: Notification, key: "userId" },
-            { model: Recommendation, key: "user_id" },
+            { model: Recommendation, key: "user_id" }, // Note: Use consistent naming across your schema
             { model: UserFiles, key: "userId" },
         ];
 
+        // Delete related records
         for (const { model, key } of collections) {
-            const filter = { [key]: userId };
-            const recordExists = await model.exists(filter).session(session);
-            if (recordExists) {
-                await model.deleteMany(filter).session(session);
-            }
+            await model.deleteMany({ [key]: userId });
         }
 
-        await User.findByIdAndDelete(userId).session(session);
-
-        await session.commitTransaction();
-        session.endSession();
+        // Delete user
+        await User.findByIdAndDelete(userId);
 
         return res.status(200).json({
             status: 'success',
             message: 'User deleted successfully',
         });
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
         return next(error);
     }
 });
