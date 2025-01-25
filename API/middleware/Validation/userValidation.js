@@ -16,7 +16,7 @@ exports.registrationValidation = (req, res, next) => {
         schema = schema.keys({
             joiningDate: Joi.date().required(),
             batchNo: Joi.string().required(),
-            address: Joi.string().required(),
+            address: Joi.string().allow("").required(),
             ADS_id: Joi.string().required(),
         });
     }
