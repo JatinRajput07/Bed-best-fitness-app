@@ -947,18 +947,26 @@ exports.getNutritions = async (req, res, next) => {
     try {
         const coachId = req.user.id;
 
+
         let query = {};
         if (req.user.role === 'host') {
-            query.coachId = coachId;
+            query.coachId = new ObjectId(coachId);
         }
 
         const nutritions = await Nutrition.find(query);
 
+        // console.log(nutritions,'=====nutritions====')
+
         const userIds = [...new Set(nutritions.map(item => item.userId.toString()))];
         const userObjectIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+        
+        // console.log(userObjectIds,'======userIds===')
+
 
 
         const routines = await Routine.find({ userId: { $in: userObjectIds } });
+
+        console.log(query,'===d==d==d')
 
         const groupedByUser = await Nutrition.aggregate([
             { $match: query },
@@ -981,6 +989,7 @@ exports.getNutritions = async (req, res, next) => {
             }
         ]);
 
+        console.log(groupedByUser,'===d==d==d - -- --- -')
 
         const results = await Promise.all(groupedByUser.map(async (userGroup) => {
             const userId = userGroup._id;
