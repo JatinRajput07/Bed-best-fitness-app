@@ -170,7 +170,6 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 
 
 
-
 exports.getUserProfile = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const [user, userfiles, userGoal, routine] = await Promise.all([

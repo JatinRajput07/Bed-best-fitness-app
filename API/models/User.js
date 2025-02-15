@@ -45,6 +45,7 @@ const userSchema = new mongoose.Schema({
     passwordResetExpires: Date,
     socketId: String,
     isOnline: String,
+    profilePicture:String,
     isVerified: { type: Boolean, default: false },
     device_token: String,
     device_type: String,    // 'android'  , 'iso'

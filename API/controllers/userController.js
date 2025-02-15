@@ -126,11 +126,13 @@ exports.verifyAccount = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
     const { email, password, role, device_type, device_token } = req.body;
+    console.log(req.body)
     if (!email || !password) {
         return next(new AppError('Please provide email and password!', 400));
     }
 
     const user = await User.findOne({ email, role }).select('+password');
+    console.log(user,'=======================jatinderkmr0702@gmail.com===========')
     if (!user || !(await user.correctPassword(password))) {
         return next(new AppError('Incorrect email or password', 401));
     }
@@ -385,6 +387,72 @@ exports.deleteAccount = catchAsync(async (req, res, next) => {
 });
 
 
+exports.uploadProfilePicture = catchAsync(async (req, res, next) => {
+    upload(req, res, async (err) => {
+        if (err instanceof multer.MulterError) {
+            return next(new AppError(err.message, 400));
+        } else if (err) {
+            return next(new AppError(err.message, 400));
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return next(new AppError('No files uploaded.', 400));
+        }
+
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return next(new AppError('User not found.', 404));
+        }
+
+        // Delete old profile picture if exists
+        if (user.profilePicture) {
+            try {
+                const oldImagePath = `public/uploads/images/${user.profilePicture}`;
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            } catch (error) {
+                console.error('Error deleting old profile picture:', error);
+            }
+        }
+
+        const filename = req.files[0].filename;
+        const imageUrl = `http://43.204.2.84:7200/uploads/images/${filename}`;
+
+        user.profilePicture = imageUrl;
+        await user.save();
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Profile picture uploaded successfully',
+            data: {
+                profilePicture: imageUrl
+            }
+        });
+    });
+});
+
+exports.getProfilePicture = catchAsync(async (req, res, next) => {
+    const userId = req.params.userId || req.user.id;
+    const user = await User.findById(userId).select('profilePicture');
+
+    if (!user) {
+        return next(new AppError('User not found.', 404));
+    }
+
+    if (!user.profilePicture) {
+        return next(new AppError('No profile picture found.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            profilePicture: user.profilePicture
+        }
+    });
+});
 
 
 

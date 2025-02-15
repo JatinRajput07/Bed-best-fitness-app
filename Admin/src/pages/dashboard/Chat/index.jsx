@@ -115,7 +115,7 @@ const ChatComponent = () => {
                                     }`}
                                 onClick={() => setSelectedUser(user)}
                             >
-                                <Avatar src={user.otherUser.avatar || '/img/profile.png'} alt={user.otherUser.name} className="mr-2" />
+                                <Avatar src={user?.otherUser?.avatar || user?.otherUser?.profilePicture || '/img/profile.png'} alt={user.otherUser.name} className="mr-2" />
                                 <div>
                                     <Typography variant="small" className="font-semibold">
                                         {user.otherUser.name}
@@ -133,7 +133,7 @@ const ChatComponent = () => {
                         {selectedUser ? (
                             <div className="flex flex-col h-[500px]">
                                 <div className="flex items-center border-b pb-4 mb-4">
-                                    <Avatar src={selectedUser.otherUser.avatar || '/img/profile.png'} alt={selectedUser.otherUser.name} className="mr-2" />
+                                    <Avatar src={selectedUser.otherUser.avatar || selectedUser?.otherUser?.profilePicture || '/img/profile.png'} alt={selectedUser.otherUser.name} className="mr-2" />
                                     <Typography variant="h6">{selectedUser.otherUser.name}</Typography>
                                 </div>
 

@@ -50,7 +50,9 @@ const {
     resendOtp,
     deleteUserUploadFiles,
     logout,
-    getIntro
+    getIntro,
+    uploadProfilePicture,
+    getProfilePicture
 } = require('../../controllers/userController');
 
 const {
@@ -92,6 +94,9 @@ router.patch('/updateMyPassword', updatePassword); // Update user password
 router.patch('/updateProfile', updateProfile); // Update user profile
 router.get('/getProfile', getProfile); // Get user profile
 router.delete('/delete_account', deleteAccount); // Get user profile
+router.post('/uploadProfilePicture',uploadProfilePicture)
+router.get('/getProfilePicture',getProfilePicture)
+
 
 
 // User Goal Management

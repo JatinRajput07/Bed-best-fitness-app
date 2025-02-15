@@ -105,7 +105,6 @@ module.exports = (io) => {
 
 
         socket.on("chatList", async ({ senderId, receiverId, skip = 0, limit = 20 }) => {
-
             if (senderId && receiverId) {
                 try {
                     const conversation = await Conversation.findOne({
@@ -121,8 +120,8 @@ module.exports = (io) => {
                             // .sort({ createdAt: -1 })
                             // .skip(skip)
                             // .limit(limit)
-                            .populate("sender", "name email")
-                            .populate("receiver", "name email");
+                            .populate("sender", "name email profilePicture")
+                            .populate("receiver", "name email profilePicture");
 
                         console.log(messages, '=======senderId, receiverId=====')
 
@@ -142,7 +141,7 @@ module.exports = (io) => {
                     participants: userId,
                 })
                     .sort({ updatedAt: -1 })
-                    .populate("participants", "name email isOnline");
+                    .populate("participants", "name email isOnline profilePicture");
 
                 const userChats = await Promise.all(
                     conversations.map(async (conversation) => {
@@ -158,6 +157,7 @@ module.exports = (io) => {
                                 _id: otherUser._id,
                                 name: otherUser.name,
                                 email: otherUser.email,
+                                profilePicture:otherUser.profilePicture,
                                 isOnline: otherUser.isOnline,
                             },
                             lastMessage: conversation.lastMessage,
