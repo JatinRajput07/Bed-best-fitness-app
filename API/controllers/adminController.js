@@ -1287,12 +1287,13 @@ exports.createBanner = catchAsync(async (req, res, next) => {
             return next(new AppError('No files uploaded.', 400));
         }
 
-        const { title, description } = req.body;
+        const { title, description, link } = req.body;
         const imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
         const newBanner = await Banner.create({
             title,
             description,
             imageUrl,
+            link : link ?? ""
         });
 
         res.status(201).json({
@@ -1569,13 +1570,15 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
         if (!req.files || req.files.length === 0) {
             return next(new AppError('No files uploaded.', 400));
         }
-        const { googleMeetLink, roles, meetingDate, meetingTime, } = req.body;
-        if (!googleMeetLink || !roles || roles.length === 0) {
+
+        const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body; // Add category
+        if (!googleMeetLink || !roles || roles.length === 0 || !category) { // Validate category
             return res.status(400).json({
                 status: 'fail',
-                message: 'Meet link and roles are required.',
+                message: 'Meet link, roles, and category are required.',
             });
         }
+
         const uploadedFiles = await Promise.all(
             req.files.map(async (file) => {
                 const fileType = file.mimetype.split('/')[0];
@@ -1595,6 +1598,7 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
             roles,
             meetingDate,
             meetingTime,
+            category, // Include category
         });
 
         if (newMeeting) {
@@ -1613,6 +1617,7 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
                 const reminderMessage = `You have a meeting scheduled on ${meetingDate} at ${meetingTime}.`;
                 await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
             }
+
             return res.status(200).json({
                 status: 'success',
                 message: 'Meeting created and notifications sent successfully.',
@@ -1648,12 +1653,12 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         }
 
         const meetingId = req.params.id;
-        const { googleMeetLink, roles, meetingDate, meetingTime } = req.body;
+        const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body; // Add category
 
-        if (!googleMeetLink || !roles || roles.length === 0) {
+        if (!googleMeetLink || !roles || roles.length === 0 || !category) { // Validate category
             return res.status(400).json({
                 status: 'fail',
-                message: 'Meet link and roles are required.',
+                message: 'Meet link, roles, and category are required.',
             });
         }
 
@@ -1662,6 +1667,7 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
             roles,
             meetingDate,
             meetingTime,
+            category, // Include category
         };
 
         if (req.files && req.files.length > 0) {
@@ -1698,7 +1704,6 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         }
     });
 });
-
 
 exports.deleteMeeting = catchAsync(async (req, res, next) => {
     const meetingId = req.params.id;

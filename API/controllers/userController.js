@@ -26,6 +26,7 @@ const Category = require("../models/Category");
 const SubCategory = require("../models/SubCategory");
 const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
+const Meeting = require("../models/Meeting");
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -132,7 +133,7 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     const user = await User.findOne({ email, role }).select('+password');
-    console.log(user,'=======================jatinderkmr0702@gmail.com===========')
+    console.log(user, '=======================jatinderkmr0702@gmail.com===========')
     if (!user || !(await user.correctPassword(password))) {
         return next(new AppError('Incorrect email or password', 401));
     }
@@ -875,7 +876,7 @@ exports.Home = catchAsync(async (req, res, next) => {
             .exec(),
 
 
-        Banner.find({ isActive: true }, ('imageUrl -_id'))
+        Banner.find({ isActive: true }, ('imageUrl link -_id'))
             .sort({ createdAt: -1 })
             .exec(),
     ]);
@@ -1728,3 +1729,31 @@ exports.logout = catchAsync(async (req, res, next) => {
     });
 });
 
+
+exports.getMeetings = catchAsync(async (req, res, next) => {
+    const meeting = await Meeting.find()
+    res.status(200).json({
+        status: 'success',
+        message: 'Successfull',
+        meeting
+    });
+})
+
+exports.getMeetingsByCategory = catchAsync(async (req, res, next) => {
+    const { category } = req.params;
+    if (!category) {
+        return next(new AppError('Category is required.', 400));
+    }
+    const meetings = await Meeting.find({ category });
+    if (meetings.length === 0) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No meetings found for the specified category.',
+        });
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Meetings fetched successfully.',
+        meetings,
+    });
+});

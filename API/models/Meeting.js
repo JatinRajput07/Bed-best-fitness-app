@@ -14,14 +14,17 @@ const meetingSchema = new mongoose.Schema({
         required: true,
     },
     meetingDate: {
-        type: Date, 
+        type: Date,
         required: true,
     },
     meetingTime: {
         type: String,
         required: true,
     },
-    users: [{
+    category: {
+        type: String,
+    }
+    , users: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     }],

@@ -52,7 +52,9 @@ const {
     logout,
     getIntro,
     uploadProfilePicture,
-    getProfilePicture
+    getProfilePicture,
+    getMeetings,
+    getMeetingsByCategory
 } = require('../../controllers/userController');
 
 const {
@@ -163,6 +165,11 @@ router.get('/notification', getNotification); // Get sleep records
 
 
 router.get('/getStepData',getStepData)
+
+router.get('/meetings',getMeetings)
+router.get('/meeting/:category',getMeetingsByCategory)
+
+
 
 router.post('/logout', logout); // Get sleep records
 
