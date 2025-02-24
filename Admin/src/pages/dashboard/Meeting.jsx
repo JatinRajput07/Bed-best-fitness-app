@@ -25,6 +25,7 @@ const Meeting = () => {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [editingMeeting, setEditingMeeting] = useState(null);
     const [deleteMeetingId, setDeleteMeetingId] = useState(null);
+    const [category, setCategory] = useState("");
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -47,6 +48,7 @@ const Meeting = () => {
             setMeetingDate(meeting.meetingDate);
             setMeetingTime(meeting.meetingTime);
             setImagePreview(meeting.image);
+            setCategory(meeting.category); // Set the category
         } else {
             setEditingMeeting(null);
             setGoogleMeetLink("");
@@ -54,6 +56,7 @@ const Meeting = () => {
             setMeetingDate("");
             setMeetingTime("");
             setImagePreview(null);
+            setCategory(""); // Reset the category
         }
         setOpenDialog(true);
     };
@@ -65,12 +68,13 @@ const Meeting = () => {
         setMeetingDate("");
         setMeetingTime("");
         setImagePreview(null);
+        setCategory(""); // Reset the category
         setOpenDialog(false);
         setEditingMeeting(null);
     };
 
     const handleSubmit = () => {
-        if (!googleMeetLink || selectedRole.length === 0 || !meetingDate || !meetingTime) return;
+        if (!googleMeetLink || selectedRole.length === 0 || !meetingDate || !meetingTime || !category) return;
 
         setLoading(true);
         const formData = new FormData();
@@ -78,6 +82,7 @@ const Meeting = () => {
         formData.append("roles", selectedRole);
         formData.append("meetingDate", meetingDate);
         formData.append("meetingTime", meetingTime);
+        formData.append("category", category);
         if (image) {
             formData.append("image", image);
         }
@@ -97,7 +102,6 @@ const Meeting = () => {
             })
             .finally(() => setLoading(false));
     };
-
     const fetchMeetings = () => {
         Axios.get("/admin/getMeeting")
             .then((response) => {
@@ -161,6 +165,7 @@ const Meeting = () => {
                                     <TableCell>Date</TableCell>
                                     <TableCell>Time</TableCell>
                                     <TableCell>Roles</TableCell>
+                                    <TableCell>Category</TableCell>
                                     <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -175,6 +180,7 @@ const Meeting = () => {
                                         <TableCell>{new Date(meeting.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell>{new Date(meeting.createdAt).toLocaleTimeString()}</TableCell>
                                         <TableCell>{meeting.roles.join(", ")}</TableCell>
+                                        <TableCell>{meeting.category}</TableCell>
                                         <TableCell>
                                             <Button
                                                 size="sm"
@@ -233,6 +239,22 @@ const Meeting = () => {
                                 <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
                             </div>
                         )}
+                        <div>
+                            <Typography variant="h6" className="text-gray-700">Select Category</Typography>
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="w-full p-2 border rounded-md"
+                                required
+                            >
+                                <option value="">Select Category</option>
+                                <option value="story">Story</option>
+                                <option value="workout">Workout</option>
+                                <option value="knowledge">Knowledge</option>
+                                <option value="postcast">Postcast</option>
+                                <option value="recipe">Recipe</option>
+                            </select>
+                        </div>
                         <div>
                             <Typography variant="h6" className="text-gray-700">Select Roles</Typography>
                             <Checkbox

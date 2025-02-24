@@ -9,8 +9,10 @@ import {
     DialogBody,
     DialogFooter,
     Input,
+    IconButton,
 } from "@material-tailwind/react";
-import axios from "axios";
+// import { PhotoCamera } from "@mui/icons-material";
+import { CameraIcon } from "@heroicons/react/24/solid";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -37,8 +39,8 @@ const BannerManagement = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [link, setLink] = useState("");
 
-    // Fetch banners from the server
     const fetchBanners = () => {
         Axios.get("/admin/banner")
             .then((response) => {
@@ -53,18 +55,17 @@ const BannerManagement = () => {
         fetchBanners();
     }, []);
 
-    // Handle Image Upload
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         setImage(file);
         setImagePreview(URL.createObjectURL(file));
     };
 
-    // Open & Close Dialogs
     const handleOpenDialog = () => setOpenDialog(true);
     const handleCloseDialog = () => {
         setImage(null);
         setImagePreview(null);
+        setLink("");
         setOpenDialog(false);
     };
 
@@ -78,13 +79,15 @@ const BannerManagement = () => {
         setDeleteBannerId(null);
     };
 
-    // Create Banner
     const handleSubmit = () => {
         if (!image) return;
 
         setLoading(true);
         const formData = new FormData();
         formData.append("image", image);
+        if (link) {
+            formData.append("link", link);
+        }
 
         Axios.post("/admin/banner", formData)
             .then((response) => {
@@ -97,14 +100,12 @@ const BannerManagement = () => {
             .finally(() => setLoading(false));
     };
 
-    // Toggle Banner Status
     const toggleBannerStatus = (id, currentStatus) => {
         Axios.patch(`/admin/banner/${id}/status`, { isActive: !currentStatus })
             .then(() => fetchBanners())
             .catch((error) => console.error("Error toggling banner status:", error));
     };
 
-    // Delete Banner
     const deleteBanner = (id) => {
         Axios.delete(`/admin/banner/${id}`)
             .then(() => {
@@ -114,7 +115,6 @@ const BannerManagement = () => {
             .catch((error) => console.error("Error deleting banner:", error));
     };
 
-    // Pagination Handlers
     const handleChangePage = (event, newPage) => setPage(newPage);
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
@@ -155,6 +155,7 @@ const BannerManagement = () => {
                                 <TableRow>
                                     <TableCell>Sr. No.</TableCell>
                                     <TableCell>Image</TableCell>
+                                    <TableCell>Link</TableCell>
                                     <TableCell>Status</TableCell>
                                     <TableCell>Actions</TableCell>
                                 </TableRow>
@@ -169,6 +170,9 @@ const BannerManagement = () => {
                                                 alt="Banner"
                                                 className="w-32 h-32 object-cover rounded-md"
                                             />
+                                        </TableCell>
+                                        <TableCell>
+                                        {banner?.link ?? '-'}
                                         </TableCell>
                                         <TableCell>
                                             <Switch
@@ -197,21 +201,61 @@ const BannerManagement = () => {
             </Card>
 
             <Dialog open={openDialog} handler={handleCloseDialog}>
-                <DialogBody className="flex flex-col items-center">
-                    <Typography variant="h4" className="mb-4">Add New Banner</Typography>
-                    <Input type="file" onChange={handleImageChange} />
-                    {imagePreview && (
-                        <div className="mt-4 max-h-64 overflow-auto">
-                            <img
-                                src={imagePreview}
-                                alt="Preview"
-                                className="w-full h-auto rounded-md object-contain max-h-64"
+                <DialogBody className="flex flex-col items-center p-6">
+                    <Typography variant="h4" className="mb-6 font-semibold">Add New Banner</Typography>
+
+                    <div className="mb-4 w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image</label>
+                        <div className="flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg p-4">
+                            <input
+                                type="file"
+                                id="image-upload"
+                                className="hidden"
+                                onChange={handleImageChange}
                             />
+                            <label htmlFor="image-upload" className="cursor-pointer">
+                                {imagePreview ? (
+                                    <img
+                                        src={imagePreview}
+                                        alt="Banner Preview"
+                                        className="max-w-xs max-h-48 rounded-lg object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-4xl text-primary">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                className="w-10 h-10"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M7 4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4zm1 2v1h8V6H8zm-2 3v8h12V9H6zm6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </span>
+                                        <Typography variant="small" className="mt-2 text-gray-600">
+                                            Select Image
+                                        </Typography>
+                                    </div>
+                                )}
+                            </label>
+
                         </div>
-                    )}
+                    </div>
+
+                    <Input
+                        label="Link (Optional)"
+                        value={link}
+                        onChange={(e) => setLink(e.target.value)}
+                        className="mb-4 w-full"
+                    />
                 </DialogBody>
-                <DialogFooter>
-                    <Button onClick={handleCloseDialog} color="red">Cancel</Button>
+
+                <DialogFooter className="p-6">
+                    <Button onClick={handleCloseDialog} color="red" variant="text" className="mr-2">Cancel</Button>
                     <Button onClick={handleSubmit} color="green" disabled={loading}>
                         {loading ? "Uploading..." : "Submit"}
                     </Button>
