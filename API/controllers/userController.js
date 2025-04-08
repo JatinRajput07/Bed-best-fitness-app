@@ -47,6 +47,12 @@ exports.register = catchAsync(async (req, res, next) => {
     if (role === 'admin') {
         return next(new AppError('Resistration Not Allowed for Role', 400))
     }
+
+    const existingUser = await User.findOne({ email, role });
+    if (existingUser) {
+        return next(new AppError(`email already exists`, 400));
+    }
+
     let newUserData = { email, name, phone, password, device_token, device_type };
     if (role === 'host') {
         newUserData = {
