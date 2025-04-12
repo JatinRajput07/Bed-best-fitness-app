@@ -9,7 +9,7 @@ const WaterTracker = ({userId}) => {
       const numericValue = parseFloat(qty.replace(/[^\d.-]/g, ""));
       if (!isNaN(numericValue)) {
         const qtyInMl = numericValue * 1000;
-        const qtyInGlasses = qtyInMl / 250;
+        const qtyInGlasses = qtyInMl / 200
         return qtyInGlasses;
       }
     }

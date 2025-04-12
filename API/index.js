@@ -14,11 +14,13 @@ const http = require('http');
 const initSocket = require('./socket');
 require("./reminderScheduler")
 const PORT = process.env.PORT || 3000;
+const morgan = require('morgan');
 
 // DATABASE Connection
 connectDB();
 
 const app = express();
+app.use(morgan('dev'))
 
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
