@@ -1043,11 +1043,6 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     const userId = req.params.id;
     const userRole = req.user.role;
 
-    // // Check if the user is a host
-    // if (userRole !== "host") {
-    //     return next(new AppError("Only hosts can get details.", 403));
-    // }
-
     // Get the date from query or use today's date
     let today = getLocalDate();
     if (req.query.date) {
@@ -1056,20 +1051,40 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
 
     // Fetch routine data for the user and date
     let data = await Routine.findOne({ userId, date: today })
-        .populate('nutrition.morning.items', ('name -_id'))
-        .populate('nutrition.lunch.items', ('name -_id'))
-        .populate('nutrition.evening.items', ('name -_id'))
-        .populate('nutrition.dinner.items', ('name -_id'));
+        .populate('nutrition.morning.items', 'name -_id')
+        .populate('nutrition.lunch.items', 'name -_id')
+        .populate('nutrition.evening.items', 'name -_id')
+        .populate('nutrition.dinner.items', 'name -_id');
 
     // If no data found, return error
     if (!data) {
         return next(new AppError("No Data found for this user.", 404));
     }
 
+    // Dynamically populate nutrition items with space-containing keys
+    const optionalNutritionKeys = [
+        'pre breakfast',
+        'post breakfast',
+        'pre lunch',
+        'post lunch',
+        'pre dinner',
+        'post dinner',
+        'before sleep at night'
+    ];
+    for (const key of optionalNutritionKeys) {
+        if (data.nutrition?.[key]?.items?.length) {
+            await data.populate({
+                path: `nutrition.${key}.items`,
+                select: 'name -_id',
+                strictPopulate: false 
+            });
+        }
+    }
+
     // Convert Mongoose document to plain JavaScript object
     data = data.toObject();
 
-    // Populate meal items
+    // Populate meal items manually
     const mealSections = Object.keys(data.meal || {});
     for (const section of mealSections) {
         const items = data?.meal[section]?.items || [];
@@ -1079,14 +1094,16 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
         }
     }
 
-    // Transform nutrition items to plain values
-    const nutritionSections = Object.keys(data.nutrition || {});
-    for (const section of nutritionSections) {
-        const items = data?.nutrition[section]?.items || [];
-        if (items.length) {
-            data.nutrition[section].items = items.map(item => item.name);
-        }
-    }
+
+    // Transform nutrition items into plain values
+    // const nutritionSections = Object.keys(data.nutrition || {});
+    // for (const section of nutritionSections) {
+    //     const items = data?.nutrition[section]?.items || [];
+    //     console.log(items,'====section===')
+    //     if (items.length) {
+    //         data.nutrition[section].items = items.map(item => item.name);
+    //     }
+    // }
 
     // Send response
     return res.status(200).json({
@@ -1095,6 +1112,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
         data,
     });
 });
+
 
 
 
