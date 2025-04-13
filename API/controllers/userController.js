@@ -1043,10 +1043,10 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     const userId = req.params.id;
     const userRole = req.user.role;
 
-    // Check if the user is a host
-    if (userRole !== "host") {
-        return next(new AppError("Only hosts can get details.", 403));
-    }
+    // // Check if the user is a host
+    // if (userRole !== "host") {
+    //     return next(new AppError("Only hosts can get details.", 403));
+    // }
 
     // Get the date from query or use today's date
     let today = getLocalDate();
