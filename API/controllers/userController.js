@@ -1050,7 +1050,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     }
 
     // Fetch routine data for the user and date
-    let data = await Routine.findOne({ userId, date: today })
+    let data = await Routine.findOne({ userId, date: "2025-04-13" })
         .populate('nutrition.morning.items', 'name -_id')
         .populate('nutrition.lunch.items', 'name -_id')
         .populate('nutrition.evening.items', 'name -_id')
@@ -1096,14 +1096,14 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
 
 
     // Transform nutrition items into plain values
-    // const nutritionSections = Object.keys(data.nutrition || {});
-    // for (const section of nutritionSections) {
-    //     const items = data?.nutrition[section]?.items || [];
-    //     console.log(items,'====section===')
-    //     if (items.length) {
-    //         data.nutrition[section].items = items.map(item => item.name);
-    //     }
-    // }
+    const nutritionSections = Object.keys(data.nutrition || {});
+    for (const section of nutritionSections) {
+        const items = data?.nutrition[section]?.items || [];
+        if (items.length) {
+            const mealTitles = await Nutrition.find({ _id: { $in: items } }).select('name');
+            data.nutrition[section].items = mealTitles.map(item => item?.name);
+        }
+    }
 
     // Send response
     return res.status(200).json({
