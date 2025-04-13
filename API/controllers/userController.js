@@ -506,10 +506,28 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     console.log(query)
 
     const routine = await Routine.findOne(query);
+
+
+    let formattedRoutine = routine ? routine.toObject() : {};
+
+    if (formattedRoutine.meal && typeof formattedRoutine.meal === 'object' && !Array.isArray(formattedRoutine.meal)) {
+        formattedRoutine.meal = Object.entries(formattedRoutine.meal).map(([key, value]) => ({
+            type: key,
+            ...value
+        }));
+    }
+
+    if (formattedRoutine.nutrition && typeof formattedRoutine.nutrition === 'object' && !Array.isArray(formattedRoutine.nutrition)) {
+        formattedRoutine.nutrition = Object.entries(formattedRoutine.nutrition).map(([key, value]) => ({
+            type: key,
+            ...value
+        }));
+    }
+
     res.status(200).json({
         status: "success",
         message: "Routine get Successfull!",
-        routine: routine ? routine : {}
+        routine: formattedRoutine
     });
 });
 

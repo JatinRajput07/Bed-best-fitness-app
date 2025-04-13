@@ -56,6 +56,10 @@ const routineSchema = new mongoose.Schema({
         "pre dinner":nutritionSchema,
         "post dinner":nutritionSchema,
         "before sleep at night":nutritionSchema,
+        "morning": nutritionSchema,
+        "lunch": nutritionSchema,
+        "evening": nutritionSchema,
+        "dinner": nutritionSchema
     },
     sleep: {
         wake_up: { type: String },
