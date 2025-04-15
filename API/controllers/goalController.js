@@ -438,7 +438,8 @@ exports.getNutritions = async (req, res, next) => {
 
 exports.getMeals = async (req, res, next) => {
     try {
-        const userId = req.user.id
+        const userId = req.user.id;
+
         const mealsByCategory = await Meal.aggregate([
             { $match: { active: true, userId: new mongoose.Types.ObjectId(userId) } },
             {
@@ -447,21 +448,41 @@ exports.getMeals = async (req, res, next) => {
                     meals: { $push: { item: '$item', id: "$_id" } },
                 },
             },
-            { $sort: { _id: 1 } },
         ]);
-        const groupedMeals = mealsByCategory.reduce((acc, category) => {
-            acc[category._id] = category.meals;
+
+        // Define the fixed order of categories
+        const categoryOrder = [
+            "wake_up_food",
+            "breakfast",
+            "morning_snacks",
+            "lunch",
+            "evening_snacks",
+            "dinner"
+        ];
+
+        // Map the mealsByCategory into a dictionary
+        const categoryMap = mealsByCategory.reduce((acc, curr) => {
+            acc[curr._id] = curr.meals;
             return acc;
         }, {});
 
+        // Create ordered response based on predefined category order
+        const orderedMeals = {};
+        for (const category of categoryOrder) {
+            if (categoryMap[category]) {
+                orderedMeals[category] = categoryMap[category];
+            }
+        }
+
         res.status(200).json({
             status: 'success',
-            data: [groupedMeals],
+            data: [orderedMeals],
         });
     } catch (error) {
         next(error);
     }
 };
+
 
 
 

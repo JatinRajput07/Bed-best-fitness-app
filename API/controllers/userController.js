@@ -1050,7 +1050,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     }
 
     // Fetch routine data for the user and date
-    let data = await Routine.findOne({ userId, date: "2025-04-13" })
+    let data = await Routine.findOne({ userId, date: today })
         .populate('nutrition.morning.items', 'name -_id')
         .populate('nutrition.lunch.items', 'name -_id')
         .populate('nutrition.evening.items', 'name -_id')
