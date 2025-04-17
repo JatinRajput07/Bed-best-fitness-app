@@ -1,7 +1,7 @@
 import Axios from "@/configs/Axios";
 import React, { useEffect, useState } from "react";
 
-const DEFAULT_IMAGE_URL = "https://via.placeholder.com/150";
+const DEFAULT_IMAGE_URL = '/img/fb88eeb5.jpg';
 
 const MealTracker = ({ userId }) => {
   const [data, setData] = useState(null);
