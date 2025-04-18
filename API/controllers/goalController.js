@@ -403,6 +403,20 @@ exports.getMindnessfullByCategory = catchAsync(async (req, res, next) => {
 exports.getNutritions = async (req, res, next) => {
     try {
 
+        const mealOrder = [
+            "pre breakfast",
+            "post breakfast",
+            "pre lunch",
+            "post lunch",
+            "lunch",
+            "pre dinner",
+            "post dinner",
+            "dinner",
+            "before sleep at night",
+            "morning",
+            "evening",
+            "In Every 2-3 hours"
+        ];
         const userId = new mongoose.Types.ObjectId(req.user.id)
         const nutritions = await Nutrition.aggregate([
             {
@@ -426,14 +440,32 @@ exports.getNutritions = async (req, res, next) => {
             }
         ]);
 
+        const sortedNutritions = mealOrder
+        .map(meal => nutritions.find(n => n.mealTime === meal))
+        .filter(Boolean); 
+
+
         res.status(200).json({
             status: 'success',
-            data: nutritions,
+            data: sortedNutritions,
         });
     } catch (error) {
         next(error);
     }
 };
+
+    //    "pre breakfast"
+    //     "post breakfast"
+    //     "pre lunch"
+    //     "post lunch"
+    //     "pre dinner"
+    //     "post dinner"
+    //     "before sleep at night"
+    //     "morning",
+    //     "lunch",
+    //     "evening",
+    //     "dinner",
+    //     "In Every 2-3 hours"
 
 
 exports.getMeals = async (req, res, next) => {
