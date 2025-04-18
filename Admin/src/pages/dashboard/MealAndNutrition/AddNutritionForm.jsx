@@ -28,7 +28,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   const [errors, setErrors] = useState({});
 
   // Categories for selection
-  const categories = ["Pre Breakfast", "Post Breakfast", "Pre Lunch", "Post Lunch","Pre Dinner", "Post Dinner","Before Sleep at Night"];
+  const categories = ["Pre Breakfast", "Post Breakfast", "Pre Lunch", "Post Lunch","Pre Dinner", "Post Dinner","Before Sleep at Night","In Every 2-3 hours"];
 
   // Function to reset the form
   const handleReset = () => {
