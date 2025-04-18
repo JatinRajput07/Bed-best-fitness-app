@@ -411,11 +411,11 @@ exports.getNutritions = async (req, res, next) => {
             "lunch",
             "pre dinner",
             "post dinner",
+            "In Every 2-3 hours",
             "dinner",
             "before sleep at night",
             "morning",
-            "evening",
-            "In Every 2-3 hours"
+            "evening"
         ];
         const userId = new mongoose.Types.ObjectId(req.user.id)
         const nutritions = await Nutrition.aggregate([
@@ -440,9 +440,14 @@ exports.getNutritions = async (req, res, next) => {
             }
         ]);
 
+        console.log(JSON.stringify(nutritions),'=d=d=')
+
+        const normalize = str => str?.toLowerCase().replace(/\s+/g, ' ').trim();
         const sortedNutritions = mealOrder
-        .map(meal => nutritions.find(n => n.mealTime === meal))
-        .filter(Boolean); 
+            .map(meal =>
+                nutritions.find(n => normalize(n.mealTime) === normalize(meal))
+            )
+            .filter(Boolean);
 
 
         res.status(200).json({
