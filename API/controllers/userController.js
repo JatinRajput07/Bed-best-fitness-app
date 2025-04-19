@@ -347,6 +347,31 @@ const filterObj = (obj, ...allowedFields) => {
 
 exports.updateProfile = catchAsync(async (req, res, next) => {
     const filteredBody = filterObj(req.body, 'email', 'AadharNo', 'ABHA_No', 'password', 'role');
+    const dateFields = [
+        'DOB',
+        'OritationDate',
+        'FirstReportDate',
+        'JourneyStartDate',
+        'joiningDate'
+    ];
+
+    for (const field of dateFields) {
+        if (req.body[field]) {
+            const [day, month, year] = req.body[field].split("-");
+            const formattedDate = new Date(`${year}-${month}-${day}`);
+            
+            if (!isNaN(formattedDate.getTime())) {
+                filteredBody[field] = formattedDate;
+            } else {
+                return next(
+                    new AppError(
+                        `Invalid date format for ${field}. Expected format: DD-MM-YYYY.`,
+                        400
+                    )
+                );
+            }
+        }
+    }
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new: true,
         runValidators: true
