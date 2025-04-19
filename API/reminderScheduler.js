@@ -57,7 +57,8 @@ cron.schedule("* * * * *", async () => {
 });
 
 const checkMealReminders = async (user, meals, mealReminders) => {
-    console.log(mealReminders,'=d=')
+    // console.log(user._id,'===user')
+    // console.log(mealReminders,'=d=')
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
     console.log(`${hours}:${minutes}`);
@@ -70,9 +71,9 @@ const checkMealReminders = async (user, meals, mealReminders) => {
         }
     }
 
-    console.log(mealReminders?.everyday && mealReminders?.everyTime,'===d=d==dd')
+    console.log(mealReminders?.everyday , mealReminders?.everyTime,'===d=d==dd')
 
-    if (mealReminders?.everyday && mealReminders?.everyTime === `${hours}:${minutes}`) {
+    if (mealReminders[0]?.everyday && mealReminders[0]?.everyTime === `${hours}:${minutes}`) {
         await sendPushNotification(
             user.device_token,
             `Meal time alert! Let’s keep that energy up 💪`,
