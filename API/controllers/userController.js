@@ -359,7 +359,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
         if (req.body[field]) {
             const [day, month, year] = req.body[field].split("-");
             const formattedDate = new Date(`${year}-${month}-${day}`);
-            
+
             if (!isNaN(formattedDate.getTime())) {
                 filteredBody[field] = formattedDate;
             } else {
@@ -1113,7 +1113,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
             await data.populate({
                 path: `nutrition.${key}.items`,
                 select: 'name -_id',
-                strictPopulate: false 
+                strictPopulate: false
             });
         }
     }
@@ -1681,6 +1681,8 @@ exports.addReminder = catchAsync(async (req, res, next) => {
     const { reminderOn, meals, water, reminderType, reminder_type, onceTime, everydayTime, weeklyTimes } = req.body;
     const userId = req.user.id;
 
+    console.log(meals, '===addReminder===')
+
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
     }
@@ -1690,10 +1692,14 @@ exports.addReminder = catchAsync(async (req, res, next) => {
         if (mealReminder) {
             mealReminder.reminderOn = reminderOn !== undefined ? reminderOn : mealReminder.reminderOn;
             mealReminder.meals = { ...mealReminder.meals, ...meals };
+            mealReminder.everyday = req?.body?.everyday;
+            mealReminder.everyTime = req?.body?.everyTime
             await mealReminder.save();
         } else {
             mealReminder = new MealReminder({
                 userId,
+                everyday: req?.body?.everyday,
+                everyTime: req?.body?.everyTime,
                 reminderOn: reminderOn || false,
                 meals: meals || {}
             });
