@@ -43,7 +43,7 @@ cron.schedule("* * * * *", async () => {
                 if (!reminderOn) continue;
 
                 if (type === "meal" && meals) {
-                    await checkMealReminders(user, meals);
+                    await checkMealReminders(user, meals, mealReminders);
                 } else if (type === "water") {
                     await checkWaterReminders(user, reminder);
                 } else if (["step", "workout", "knowledge", "nutrition"].includes(type)) {
@@ -56,28 +56,29 @@ cron.schedule("* * * * *", async () => {
     }
 });
 
-const checkMealReminders = async (user, meals) => {
+const checkMealReminders = async (user, meals, mealReminders) => {
+    console.log(mealReminders,'=d=')
     const currentTime = new Date().toLocaleTimeString("en-US", { hour12: false });
     const [hours, minutes] = currentTime.split(":");
-    // console.log(`${hours}:${minutes}`);
+    console.log(`${hours}:${minutes}`);
 
     for (let mealType in meals) {
-
-
         const meal = meals[mealType];
         // console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
-        if (meal.enabled && meal.time ===  `${hours}:${minutes}`) {
+        if (meal.enabled && meal.time === `${hours}:${minutes}`) {
             await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
         }
+    }
 
-        if (meal?.everyday && meal?.everyTime === `${hours}:${minutes}`) {
-            await sendPushNotification(
-                user.device_token,
-                `Meal time alert! Let’s keep that energy up 💪`,
-                user._id,
-                "userApp"
-            );
-        }
+    console.log(mealReminders?.everyday && mealReminders?.everyTime,'===d=d==dd')
+
+    if (mealReminders?.everyday && mealReminders?.everyTime === `${hours}:${minutes}`) {
+        await sendPushNotification(
+            user.device_token,
+            `Meal time alert! Let’s keep that energy up 💪`,
+            user._id,
+            "userApp"
+        );
     }
 };
 
