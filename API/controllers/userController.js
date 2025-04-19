@@ -1681,7 +1681,7 @@ exports.addReminder = catchAsync(async (req, res, next) => {
     const { reminderOn, meals, water, reminderType, reminder_type, onceTime, everydayTime, weeklyTimes } = req.body;
     const userId = req.user.id;
 
-    console.log(meals, '===addReminder===')
+    console.log(req.body, '===addReminder===')
 
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
