@@ -10,6 +10,8 @@ const MealReminderSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    everyTime:{ type: String },
+    everyday:{ type: Boolean, default: false },
     meals: {
         wakeupFood: {
             enabled: { type: Boolean, default: false },

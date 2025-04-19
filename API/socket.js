@@ -2,6 +2,7 @@ const { Types } = require("mongoose");
 const User = require("./models/User");
 const Message = require('./models/Message');
 const Conversation = require('./models/Conversation');
+const { sendPushNotification } = require("./utils/firebaseService");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
@@ -79,6 +80,16 @@ module.exports = (io) => {
 
                 await newMessage.save();
 
+                if (receiver && receiver.device_token) {
+                    await sendPushNotification(
+                        receiver.device_token,
+                        `New message from ${sender?.name || sender?.email}`,
+                        receiverId,
+                        "userApp",
+                        2
+                    );
+                }
+
                 // Update conversation's last message
                 conversation.lastMessage = newMessage._id;
                 await conversation.save();
@@ -138,7 +149,7 @@ module.exports = (io) => {
         socket.on("userList", async ({ userId }) => {
             try {
                 const conversations = await Conversation.find({
-                    participants: userId,
+                    participants: { $in: [userId] },
                 })
                     .sort({ updatedAt: -1 })
                     .populate("participants", "name email isOnline profilePicture");
@@ -148,23 +159,29 @@ module.exports = (io) => {
                         const otherUser = conversation.participants.find(
                             (participant) => participant._id.toString() !== userId
                         );
-
                         const unreadCount = conversation.unreadCount?.get(userId) || 0;
+
+                        const isDeleted = !otherUser;
 
                         return {
                             conversationId: conversation._id,
-                            otherUser: {
-                                _id: otherUser._id,
-                                name: otherUser.name,
-                                email: otherUser.email,
-                                profilePicture:otherUser.profilePicture,
-                                isOnline: otherUser.isOnline,
-                            },
+                            otherUser: isDeleted
+                                ? { deleted: true }
+                                : {
+                                    _id: otherUser?._id,
+                                    name: otherUser?.name,
+                                    email: otherUser?.email,
+                                    profilePicture: otherUser?.profilePicture,
+                                    isOnline: otherUser?.isOnline,
+                                    deleted: false,
+                                },
                             lastMessage: conversation.lastMessage,
-                            unreadCount,
+                            unreadCount: conversation.unreadCount?.get?.(userId) || 0,
                         };
                     })
                 );
+
+                console.log(userChats, '===d==d==f=f=f=')
 
                 socket.emit("myChatUserList", userChats);
             } catch (error) {

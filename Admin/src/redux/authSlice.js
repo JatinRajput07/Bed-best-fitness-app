@@ -5,7 +5,7 @@ const initialState = {
   token: sessionStorage.getItem("authToken") || null,
   role: sessionStorage.getItem("userRole") || null, 
   id:sessionStorage.getItem("id") || null, 
-  id:sessionStorage.getItem("email") || null, 
+  email:sessionStorage.getItem("email") || null, 
 };
 
 const authSlice = createSlice({

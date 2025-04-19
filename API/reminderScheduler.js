@@ -62,10 +62,21 @@ const checkMealReminders = async (user, meals) => {
     // console.log(`${hours}:${minutes}`);
 
     for (let mealType in meals) {
+
+
         const meal = meals[mealType];
         // console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
         if (meal.enabled && meal.time ===  `${hours}:${minutes}`) {
             await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
+        }
+
+        if (meal?.everyday && meal?.everyTime === `${hours}:${minutes}`) {
+            await sendPushNotification(
+                user.device_token,
+                `Meal time alert! Let’s keep that energy up 💪`,
+                user._id,
+                "userApp"
+            );
         }
     }
 };
