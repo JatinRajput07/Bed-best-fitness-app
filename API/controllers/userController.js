@@ -336,24 +336,36 @@ exports.getProfile = catchAsync(async (req, res, next) => {
 })
 
 
-const filterObj = (obj, ...allowedFields) => {
+const filterObj = (obj, ...disallowedFields) => {
     const newObj = {};
-    Object.keys(obj).forEach(el => {
-        if (!allowedFields.includes(el)) newObj[el] = obj[el];
+    Object.keys(obj).forEach(key => {
+        if (!disallowedFields.includes(key)) {
+            newObj[key] = obj[key];
+        }
     });
     return newObj;
 };
 
-
 exports.updateProfile = catchAsync(async (req, res, next) => {
-    const filteredBody = filterObj(req.body, 'email', 'AadharNo', 'ABHA_No', 'password', 'role');
-    const dateFields = [
-        'DOB',
-        'OritationDate',
-        'FirstReportDate',
-        'JourneyStartDate',
-        'joiningDate'
-    ];
+    // Fetch current user
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) return next(new AppError("User not found", 404));
+
+    // Disallowed fields unless empty in DB
+    const restrictedFields = ['email', 'AadharNo', 'ABHA_No', 'password', 'role'];
+
+    // Filter request body to include only fields that exist in req.body
+    let filteredBody = filterObj(req.body, ...restrictedFields);
+
+    // Allow restricted fields if they're EMPTY in DB
+    for (const field of restrictedFields) {
+        if (req.body[field] && (!currentUser[field] || currentUser[field] === '')) {
+            filteredBody[field] = req.body[field];
+        }
+    }
+
+    // Handle date formatting
+    const dateFields = ['DOB', 'OritationDate', 'FirstReportDate', 'JourneyStartDate', 'joiningDate'];
 
     for (const field of dateFields) {
         if (req.body[field]) {
@@ -372,17 +384,20 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
             }
         }
     }
+
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new: true,
         runValidators: true
     });
+
     res.status(200).json({
         status: 'success',
         data: {
             user: updatedUser
         }
     });
-})
+});
+
 
 
 exports.deleteAccount = catchAsync(async (req, res, next) => {

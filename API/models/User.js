@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema({
     DOB: { type: Date, required: false, },
     Goal: { type: String, required: false, },
     ReferBy: { type: String, required: false, },
+    Height:{ type: String, required: false},
+    Weight:{ type: String, required: false },
     OritationDate: { type: Date, required: false, },
     FirstReportDate: { type: Date, required: false, },
     JourneyStartDate: { type: Date, required: false, },
