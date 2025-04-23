@@ -1,4 +1,5 @@
 import Axios from "@/configs/Axios";
+import { formatDate } from "@/utilService";
 import React, { useEffect, useState } from "react";
 
 const BodyDataTracker = ({ userId }) => {
@@ -77,7 +78,7 @@ const BodyDataTracker = ({ userId }) => {
             <tbody>
               {currentRecords.map((entry, index) => (
                 <tr key={index} className="odd:bg-white even:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-2">{entry.date}</td>
+                  <td className="border border-gray-300 px-4 py-2">{formatDate(entry.date)}</td>
                   <td className="border border-gray-300 px-4 py-2">
                     {entry.value?.body_fat || "N/A"}
                   </td>

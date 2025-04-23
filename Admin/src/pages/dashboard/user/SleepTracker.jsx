@@ -1,11 +1,29 @@
 import Axios from "@/configs/Axios";
+import { formatDate } from "@/utilService";
 import React, { useEffect, useState } from "react";
 
 const SleepTracker = ({ userId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1); // Track the current page
-  const recordsPerPage = 10; // Show 10 records per page
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+
+  const calculateSleepDuration = (bedTime, wakeTime) => {
+    if (!bedTime || !wakeTime) return "-";
+    
+    const bed = new Date(`2000/01/01 ${bedTime}`);
+    const wake = new Date(`2000/01/01 ${wakeTime}`);
+    
+    if (wake < bed) {
+      wake.setDate(wake.getDate() + 1);
+    }
+    
+    const diff = wake - bed;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${hours}h ${minutes}m`;
+  };
 
   useEffect(() => {
     const fetchSleepData = async () => {
@@ -63,17 +81,21 @@ const SleepTracker = ({ userId }) => {
                 <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
                 <th className="border border-gray-300 px-4 py-2 text-left">Bed At</th>
                 <th className="border border-gray-300 px-4 py-2 text-left">Wake Up</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Total Sleep</th>
               </tr>
             </thead>
             <tbody>
               {currentRecords.map((sleep, index) => (
-                  <tr key={index} className="odd:bg-white even:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-2">{sleep?.date}</td>
+                <tr key={index} className="odd:bg-white even:bg-gray-50">
+                  <td className="border border-gray-300 px-4 py-2">{formatDate(sleep?.date)}</td>
                   <td className="border border-gray-300 px-4 py-2">
-                    {sleep?.value?.bed_at || "N/A"}
+                    {sleep?.value?.bed_at || "-"}
                   </td>
                   <td className="border border-gray-300 px-4 py-2">
-                    {sleep?.value?.wake_up || "N/A"}
+                    {sleep?.value?.wake_up || "-"}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {calculateSleepDuration(sleep?.value?.bed_at, sleep?.value?.wake_up)}
                   </td>
                 </tr>
               ))}

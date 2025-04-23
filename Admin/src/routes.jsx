@@ -105,7 +105,7 @@ export const routes = () => {
     },
     {
       icon: <VideoCameraIcon {...icon} />,
-      name: "Audio or video",
+      name: "Audio or Video",
       dropdown: [
         {
           name: "Audio/video List",

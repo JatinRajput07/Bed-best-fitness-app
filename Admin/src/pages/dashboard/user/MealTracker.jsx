@@ -1,4 +1,5 @@
 import Axios from "@/configs/Axios";
+import { formatDate } from "@/utilService";
 import React, { useEffect, useState } from "react";
 
 const DEFAULT_IMAGE_URL = '/img/fb88eeb5.jpg';
@@ -107,7 +108,7 @@ const MealTracker = ({ userId }) => {
           <option value="">-- Select a Date --</option>
           {mealPlan.map((day, index) => (
             <option key={index} value={day.date}>
-              {day.date}
+              {formatDate(day.date)}
             </option>
           ))}
         </select>
@@ -121,7 +122,7 @@ const MealTracker = ({ userId }) => {
                 className="cursor-pointer py-4 px-6 bg-gray-100 hover:bg-gray-200"
                 onClick={() => toggleDay(index)}
               >
-                <h3 className="text-xl font-semibold text-gray-700">{day?.date}</h3>
+                <h3 className="text-xl font-semibold text-gray-700">{formatDate(day?.date)}</h3>
               </div>
 
               {open === index && (

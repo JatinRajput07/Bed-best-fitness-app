@@ -8,8 +8,10 @@ const UserFiles = require("../models/UserFiles");
 exports.getWaterTracking = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const goalData = await Goal.findOne({ userId }, 'dailyWaterGoal -_id');
-    const routineData = await Routine.find({ userId }, 'water date -_id');
+    const routineData = await Routine.find({ userId }, 'water date -_id').sort({ date: -1 });
     const waterAchive = routineData.filter(r => r.water).map(r => ({ date: r.date, value: r.water }));
+
+    console.log(waterAchive,'===waterAchive==')
 
     res.status(200).json({
         status: "success",
@@ -22,7 +24,7 @@ exports.getWaterTracking = catchAsync(async (req, res, next) => {
 exports.getStepTracking = catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const goalData = await Goal.findOne({ userId }, 'dailyStepsGoal -_id');
-    const routineData = await Routine.find({ userId }, 'steps date -_id');
+    const routineData = await Routine.find({ userId }, 'steps date -_id').sort({ date: -1 });
     const stepAchive = routineData.filter(r => r.steps).map(r => ({ date: r.date, value: r.steps }));
     res.status(200).json({
         status: "success",

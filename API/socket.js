@@ -80,13 +80,13 @@ module.exports = (io) => {
 
                 await newMessage.save();
 
-                if (receiver && receiver.device_token) {
+                if (receiver && receiver?.device_token) {
                     await sendPushNotification(
-                        receiver.device_token,
+                        receiver?.device_token,
                         `New message from ${sender?.name || sender?.email}`,
                         receiverId,
                         "userApp",
-                        2
+                        "chat"
                     );
                 }
 

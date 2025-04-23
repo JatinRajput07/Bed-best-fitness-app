@@ -1,4 +1,5 @@
 import Axios from "@/configs/Axios";
+import { formatDate } from "@/utilService";
 import React, { useEffect, useState } from "react";
 
 const WaterTracker = ({userId}) => {
@@ -74,7 +75,7 @@ const WaterTracker = ({userId}) => {
                   } hover:bg-gray-100`}
                 >
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.date}
+                    {formatDate(record.date)}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
                   {record.value.qty} ( {convertQtyToGlasses(record.value.qty)} Glass )

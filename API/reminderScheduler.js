@@ -67,7 +67,7 @@ const checkMealReminders = async (user, meals, mealReminders) => {
         const meal = meals[mealType];
         // console.log(meal.enabled && meal.time === `${hours}:${minutes}`,'=============meal time')
         if (meal.enabled && meal.time === `${hours}:${minutes}`) {
-            await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp");
+            await sendPushNotification(user.device_token, `Time for ${mealType}`, user._id, "userApp", "meal");
         }
     }
 
@@ -76,9 +76,10 @@ const checkMealReminders = async (user, meals, mealReminders) => {
     if (mealReminders[0]?.everyday && mealReminders[0]?.everyTime === `${hours}:${minutes}`) {
         await sendPushNotification(
             user.device_token,
-            `Meal time alert! Let’s keep that energy up 💪`,
+            `Meal time alert! Let's keep that energy up 💪`,
             user._id,
-            "userApp"
+            "userApp",
+            "meal"
         );
     }
 };
@@ -93,8 +94,7 @@ const checkWaterReminders = async (user, reminder) => {
     // console.log(reminder.reminderTime, '=============currentTime========', `${hours}:${minutes}`)
 
     if (reminder.reminderType === "once" && reminder.reminderTime === `${hours}:${minutes}`) {
-        // console.log('water reminder...')
-        await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
+        await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp", "water");
     } else if (!reminder.reminderType && reminder.startTime <= `${hours}:${minutes}` && reminder.endTime >= `${hours}:${minutes}`) {
         const intervalSent = currentMinute % reminder.intervalMinutes === 0;
         const maxTimesReached = reminder.customTimes <= 0;
@@ -102,8 +102,7 @@ const checkWaterReminders = async (user, reminder) => {
         // console.log(intervalSent && !maxTimesReached,'============intervalSent && !maxTimesReached=========')
 
         if (intervalSent && !maxTimesReached) {
-            await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp");
-
+            await sendPushNotification(user.device_token, "Time to drink water!", user._id, "userApp", "water");
             reminder.customTimes -= 1;
             await reminder.save();
         }
@@ -136,12 +135,12 @@ const checkOtherReminders = async (user, reminder) => {
     }
 
     if (reminder.reminderType === "once" && reminder.onceTime === `${hours}:${minutes}`) {
-        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
+        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp", reminder.type);
     } else if (reminder.reminderType === "everyday" && reminder.everydayTime === `${hours}:${minutes}`) {
-        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
+        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp", reminder.type);
     } else if (
         reminder.reminderType === "specificDays" && reminder.weeklyTimes[currentDay] === `${hours}:${minutes}`
     ) {
-        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp");
+        await sendPushNotification(user.device_token, reminderMessage, user._id, "userApp", reminder.type);
     }
 };

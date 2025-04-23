@@ -428,14 +428,14 @@ exports.getNutritions = async (req, res, next) => {
             {
                 $group: {
                     _id: "$mealTime",
-                    nutritions: { $push: { name: "$name", _id: "$_id" } }
+                    nutritions: { $push: { name: "$name", _id: "$_id", description:"$description",quantity:"$quantity" } }
                 }
             },
             {
                 $project: {
                     _id: 0,
                     mealTime: "$_id",
-                    nutritions: 1 
+                    nutritions: 1
                 }
             }
         ]);

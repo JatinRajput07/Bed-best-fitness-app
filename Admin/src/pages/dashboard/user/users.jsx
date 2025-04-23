@@ -19,6 +19,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { deleteUser, fetchUsers } from "@/redux/userSlice";
 import Profile from "./userDetails";
+import { formatDate } from "@/utilService";
 
 export function UserList() {
   const dispatch = useDispatch();
@@ -236,7 +237,7 @@ export function UserList() {
                           </td>
                           <td className={className}>
                             <Typography className="text-xs font-semibold text-blue-gray-600">
-                              {createdAt.split("T")[0]}
+                              {formatDate(createdAt)}
                             </Typography>
                           </td>
                           <td className={className}>

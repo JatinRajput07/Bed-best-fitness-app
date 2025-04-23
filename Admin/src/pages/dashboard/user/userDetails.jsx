@@ -4,12 +4,9 @@ import {
   TabsBody,
   Tab,
   TabPanel, CardFooter, Avatar, Typography, Tabs, Switch, Tooltip, Button, Progress,
-  Dialog,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
+  Spinner,  // Add this import
 } from "@material-tailwind/react";
-import { HomeIcon, ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, ArrowLeftIcon,ArrowPathIcon,ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
 import { platformSettingsData, conversationsData, projectsData } from "@/data";
@@ -103,9 +100,27 @@ export function Profile({ id, closeModal }) {
   }, [id, selectedDate]);
 
   if (profileLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Spinner className="h-12 w-12 text-blue-500/10 animate-spin" />
+          <Typography
+            variant="h6"
+            color="blue-gray"
+            className="mt-4"
+          >
+            Loading user details...
+          </Typography>
+        </div>
+      </div>
+    );
   }
 
+
+  const handleRefresh = () => {
+    dispatch(fetchUserDetails({ id }));
+    fetchDailyReport(id, selectedDate);
+  };
 
   return (
     <>
@@ -118,8 +133,8 @@ export function Profile({ id, closeModal }) {
           <div className="mb-10 flex items-center justify-between flex-wrap gap-6">
             <div className="flex items-center gap-6">
               <Avatar
-                src={userProfile?.user?.profilePicture || "/img/bruce-mars.jpeg"}
-                alt="bruce-mars"
+                src={userProfile?.user?.profilePicture || "/img/profile.png"}
+                alt="profile-picture"
                 size="xl"
                 variant="rounded"
                 className="rounded-lg shadow-lg shadow-blue-gray-500/40"
@@ -136,6 +151,13 @@ export function Profile({ id, closeModal }) {
                 </Typography>
               </div>
             </div>
+            <Button
+              className="flex items-center gap-2"
+              size="sm"
+              onClick={handleRefresh}
+            >
+              <ArrowPathIcon className="h-4 w-4" /> Refresh
+            </Button>
           </div>
           <div className="gird-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-0 xl:grid-cols-0">
 
@@ -291,11 +313,11 @@ export function Profile({ id, closeModal }) {
                     <AllReminders userId={userProfile?.user?._id} />
                   </TabPanel>
                 )}
-                {activeTab === "gallery" && (
+                {/* {activeTab === "gallery" && (
                   <TabPanel value="gallery">
                     <Gallery />
                   </TabPanel>
-                )}
+                )} */}
               </TabsBody>
             </Tabs>)
           }

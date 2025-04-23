@@ -8,21 +8,23 @@ exports.sendPushNotification = async (deviceToken, msg, userId, app ,type = "") 
   try {
     const message = {
       notification: {
-        title: `${type === 2  ? "New Message" : "Reminder"}`,
-        body: msg
+        title: `${type === "chat" ? "New Message" : "Reminder"}`,
+        body: msg,
+        type: type
       },
       data: {
-        type: `${type === 2  ? "New Message" : "Reminder"}`
+        type: type,
+        messageType: `${type === "chat" ? "New Message" : "Reminder"}`
       },
       token: deviceToken,
     };
 
-    await Notification.create({
-      userId,
-      message: msg,
-      type: `${type === 2  ? "New Message" : "Reminder"}`,
-      status: "sent"
-    });
+    // await Notification.create({
+    //   userId,
+    //   message: msg,
+    //   type: `${type === 2  ? "New Message" : "Reminder"}`,
+    //   status: "sent"
+    // });
 
     // response = await userApp.messaging().send(message);
     const response = await userApp.messaging().send(message);
