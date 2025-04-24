@@ -384,7 +384,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
             }
         }
     }
-    const additionalFields = ['ADS_id', 'address', 'batchNo'];
+    const additionalFields = ['ADS_id', 'address', 'batchNo','joiningDate'];
     for (const field of additionalFields) {
         if (req.body[field]) {
             if (!filteredBody.additionalInfo) filteredBody.additionalInfo = {};
