@@ -473,52 +473,58 @@ exports.getNutritions = async (req, res, next) => {
     //     "In Every 2-3 hours"
 
 
-exports.getMeals = async (req, res, next) => {
-    try {
-        const userId = req.user.id;
-
-        const mealsByCategory = await Meal.aggregate([
-            { $match: { active: true, userId: new mongoose.Types.ObjectId(userId) } },
-            {
-                $group: {
-                    _id: '$category',
-                    meals: { $push: { item: '$item', id: "$_id" } },
+    exports.getMeals = async (req, res, next) => {
+        try {
+            const userId = req.user.id;
+    
+            const mealsByCategory = await Meal.aggregate([
+                { $match: { active: true, userId: new mongoose.Types.ObjectId(userId) } },
+                {
+                    $group: {
+                        _id: '$category',
+                        meals: { $push: { item: '$item', id: "$_id" } },
+                    },
                 },
-            },
-        ]);
-
-        // Define the fixed order of categories
-        const categoryOrder = [
-            "wake_up_food",
-            "breakfast",
-            "morning_snacks",
-            "lunch",
-            "evening_snacks",
-            "dinner"
-        ];
-
-        // Map the mealsByCategory into a dictionary
-        const categoryMap = mealsByCategory.reduce((acc, curr) => {
-            acc[curr._id] = curr.meals;
-            return acc;
-        }, {});
-
-        // Create ordered response based on predefined category order
-        const orderedMeals = {};
-        for (const category of categoryOrder) {
-            if (categoryMap[category]) {
-                orderedMeals[category] = categoryMap[category];
+            ]);
+    
+            const categoryOrder = [
+                "wake_up_food",
+                "breakfast",
+                "morning_snacks",
+                "lunch",
+                "evening_snacks",
+                "dinner"
+            ];
+    
+            const categoryMap = mealsByCategory.reduce((acc, curr) => {
+                acc[curr._id] = curr.meals;
+                return acc;
+            }, {});
+    
+            // Helper function to convert snake_case to Title Case
+            const formatCategoryTitle = (str) => {
+                return str
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            };
+    
+            const orderedMeals = {};
+            for (const category of categoryOrder) {
+                if (categoryMap[category]) {
+                    orderedMeals[formatCategoryTitle(category)] = categoryMap[category];
+                }
             }
+    
+            res.status(200).json({
+                status: 'success',
+                data: [orderedMeals],
+            });
+        } catch (error) {
+            next(error);
         }
-
-        res.status(200).json({
-            status: 'success',
-            data: [orderedMeals],
-        });
-    } catch (error) {
-        next(error);
-    }
-};
+    };
+    
 
 
 

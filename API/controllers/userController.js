@@ -384,6 +384,13 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
             }
         }
     }
+    const additionalFields = ['ADS_id', 'address', 'batchNo'];
+    for (const field of additionalFields) {
+        if (req.body[field]) {
+            if (!filteredBody.additionalInfo) filteredBody.additionalInfo = {};
+            filteredBody.additionalInfo[field] = req.body[field];
+        }
+    }
 
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
         new: true,
