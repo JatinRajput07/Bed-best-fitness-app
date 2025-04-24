@@ -82,11 +82,12 @@ module.exports = (io) => {
 
                 if (receiver && receiver?.device_token) {
                     console.log("receiver?.device_token", receiver?.device_token);
+                    const appTarget = receiver.role === "host" ? "partnerApp" : "userApp";
                     await sendPushNotification(
                         receiver?.device_token,
                         `New message from ${sender?.name || sender?.email}`,
                         receiverId,
-                        "userApp",
+                        appTarget,
                         "chat"
                     );
                 }
