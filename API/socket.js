@@ -81,6 +81,7 @@ module.exports = (io) => {
                 await newMessage.save();
 
                 if (receiver && receiver?.device_token) {
+                    console.log("receiver?.device_token", receiver?.device_token);
                     await sendPushNotification(
                         receiver?.device_token,
                         `New message from ${sender?.name || sender?.email}`,

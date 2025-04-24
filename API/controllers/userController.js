@@ -388,7 +388,24 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     for (const field of additionalFields) {
         if (req.body[field]) {
             if (!filteredBody.additionalInfo) filteredBody.additionalInfo = {};
-            filteredBody.additionalInfo[field] = req.body[field];
+
+            if (field === 'joiningDate') {
+                const [day, month, year] = req.body[field].split("-");
+                const formattedDate = new Date(`${year}-${month}-${day}`);
+
+                if (!isNaN(formattedDate.getTime())) {
+                    filteredBody.additionalInfo[field] = formattedDate;
+                } else {
+                    return next(
+                        new AppError(
+                            `Invalid date format for additionalInfo.joiningDate. Expected format: DD-MM-YYYY.`,
+                            400
+                        )
+                    );
+                }
+            } else {
+                filteredBody.additionalInfo[field] = req.body[field];
+            }
         }
     }
 

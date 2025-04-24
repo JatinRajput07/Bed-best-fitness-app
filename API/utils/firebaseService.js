@@ -4,13 +4,13 @@ const Notification = require('../models/Notification');
 // Firebase push notification service
 exports.sendPushNotification = async (deviceToken, msg, userId, app ,type = "") => {
 
-  console.log(deviceToken, msg, userId, app, '=========msg============')
+  console.log(deviceToken, msg, userId, app, type,'=========msg============')
   try {
     const message = {
       notification: {
         title: `${type === "chat" ? "New Message" : "Reminder"}`,
         body: msg,
-        type: type
+        // type: type
       },
       data: {
         type: type,
