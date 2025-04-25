@@ -75,7 +75,16 @@ const Meal = () => {
     };
 
     function formatMealName(input) {
-        return input
+        const categoryMap = {
+            'wake_up_food': 'Early Morning (Wake-up Meal)',
+            'breakfast': 'Breakfast (Power Breakfast)',
+            'morning_snacks': 'Mid-Morning Snack (Energy Bites)',
+            'lunch': 'Lunch (Fuel Plate)',
+            'evening_snacks': 'Evening Snack (Refresh & Recharge)',
+            'dinner': 'Dinner (Light & Right)'
+        };
+
+        return categoryMap[input] || input
             .trim()
             .replace(/_/g, ' ')
             .replace(/\b\w/g, char => char.toUpperCase());
@@ -257,12 +266,12 @@ const Meal = () => {
                             ))}
                         </select>
                         <Select disabled={!!editMeal} label="Select Category" onChange={setCategory} value={category}>
-                            <Option value="wake_up_food">Wake Up Food</Option>
-                            <Option value="breakfast">Breakfast</Option>
-                            <Option value="morning_snacks">Morning Snacks</Option>
-                            <Option value="lunch">Lunch</Option>
-                            <Option value="evening_snacks">Evening Snacks</Option>
-                            <Option value="dinner">Dinner</Option>
+                            <Option value="wake_up_food">Early Morning (Wake-up Meal)</Option>
+                            <Option value="breakfast">Breakfast (Power Breakfast)</Option>
+                            <Option value="morning_snacks">Mid-Morning Snack (Energy Bites)</Option>
+                            <Option value="lunch">Lunch (Fuel Plate)</Option>
+                            <Option value="evening_snacks">Evening Snack (Refresh & Recharge)</Option>
+                            <Option value="dinner">Dinner (Light & Right)</Option>
                         </Select>
                         <Input label="Meal Item" value={item} onChange={(e) => setItem(e.target.value)} required className="text-lg" />
                     </div>

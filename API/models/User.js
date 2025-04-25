@@ -61,9 +61,9 @@ const userSchema = new mongoose.Schema({
 
 
 userSchema.pre('save', async function (next) {
-    if (!this.name) {
-        this.name = this.email;
-    }
+    // if (!this.name) {
+    //     this.name = this.email;
+    // }
 
     if (!this.isModified('password')) return next();
     console.log(this.password, '==-dd=d=d=d==d=d')

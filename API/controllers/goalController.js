@@ -502,17 +502,17 @@ exports.getNutritions = async (req, res, next) => {
             }, {});
     
             // Helper function to convert snake_case to Title Case
-            const formatCategoryTitle = (str) => {
-                return str
-                    .split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-            };
+            // const formatCategoryTitle = (str) => {
+            //     return str
+            //         .split('_')
+            //         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            //         .join(' ');
+            // };
     
             const orderedMeals = {};
             for (const category of categoryOrder) {
                 if (categoryMap[category]) {
-                    orderedMeals[formatCategoryTitle(category)] = categoryMap[category];
+                    orderedMeals[category] = categoryMap[category];
                 }
             }
     
