@@ -162,6 +162,12 @@ const MealTracker = ({ userId }) => {
                             <span className="font-semibold">Items:</span>{" "}
                             {mealDetails.items.length > 0 ? mealDetails.items.join(", ") : "No items"}
                           </p>
+                          {mealDetails.image && mealDetails.image_uploaded_at && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-semibold">Date :</span>{" "}
+                              {formatDate(mealDetails.image_uploaded_at)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))

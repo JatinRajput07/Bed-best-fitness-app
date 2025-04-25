@@ -11,6 +11,7 @@ const mealSchema = new mongoose.Schema({
     },
     note: { type: String },
     image: { type: String },
+    image_uploaded_at: { type: Date },
     items: [String]
 }, { strict: false });
 
@@ -125,6 +126,28 @@ const routineSchema = new mongoose.Schema({
 });
 
 routineSchema.index({ userId: 1, date: 1 }, { unique: true });
+
+routineSchema.pre('save', function (next) {
+    const meals = this.meal;
+    const mealKeys = [
+        'wake_up_food',
+        'breakfast',
+        'morning_snacks',
+        'lunch',
+        'evening_snacks',
+        'dinner'
+    ];
+
+    mealKeys.forEach((key) => {
+        const meal = meals[key];
+        if (meal && this.isModified(`meal.${key}.image`)) {
+            meal.image_uploaded_at = new Date();
+        }
+    });
+
+    next();
+});
+
 
 module.exports = mongoose.model('Routine', routineSchema);
 

@@ -257,12 +257,12 @@ const Meal = () => {
                             ))}
                         </select>
                         <Select disabled={!!editMeal} label="Select Category" onChange={setCategory} value={category}>
-                            <Option value="breakfast">Breakfast</Option>
-                            <Option value="dinner">Dinner</Option>
-                            <Option value="evening_snacks">Evening Snacks</Option>
-                            <Option value="lunch">Lunch</Option>
-                            <Option value="morning_snacks">Morning Snacks</Option>
                             <Option value="wake_up_food">Wake Up Food</Option>
+                            <Option value="breakfast">Breakfast</Option>
+                            <Option value="morning_snacks">Morning Snacks</Option>
+                            <Option value="lunch">Lunch</Option>
+                            <Option value="evening_snacks">Evening Snacks</Option>
+                            <Option value="dinner">Dinner</Option>
                         </Select>
                         <Input label="Meal Item" value={item} onChange={(e) => setItem(e.target.value)} required className="text-lg" />
                     </div>

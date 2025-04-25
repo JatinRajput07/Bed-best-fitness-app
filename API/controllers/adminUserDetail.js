@@ -163,7 +163,11 @@ exports.getNutritionData = catchAsync(async (req, res, next) => {
                                         $map: {
                                             input: "$nutritionItems",
                                             as: "item",
-                                            in: { name: "$$item.name" },
+                                            in: {
+                                                name: "$$item.name",
+                                                description: "$$item.description",
+                                                quantity: "$$item.quantity"
+                                            },
                                         },
                                     },
                                 },
@@ -195,6 +199,7 @@ exports.getNutritionData = catchAsync(async (req, res, next) => {
         nutrition: nutritionData,
     });
 });
+
 
 
 

@@ -144,7 +144,13 @@ const NutritionTracker = ({ userId }) => {
                             <ul className="list-disc pl-5">
                               {mealDetails.items.map((item, itemIndex) => (
                                 <li key={itemIndex} className="text-sm text-gray-600">
-                                  {item.name}
+                                  <span className="font-medium">{item.name}</span>
+                                  {item.quantity && (
+                                    <span className="ml-2">- Quantity: {item.quantity}</span>
+                                  )}
+                                  {item.description && (
+                                    <p className="text-gray-500 ml-2"> {item.description}</p>
+                                  )}
                                 </li>
                               ))}
                             </ul>

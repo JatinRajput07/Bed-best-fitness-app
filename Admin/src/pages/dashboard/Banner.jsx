@@ -55,8 +55,27 @@ const BannerManagement = () => {
         fetchBanners();
     }, []);
 
+    // Add this validation function near the top of the component
+    const validateImage = (file) => {
+        // Max size: 2MB
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            return "Image size should be less than 2MB";
+        }
+        return null;
+    };
+    
+    // Update the handleImageChange function
     const handleImageChange = (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+    
+        const error = validateImage(file);
+        if (error) {
+            alert(error);
+            return;
+        }
+    
         setImage(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -205,23 +224,29 @@ const BannerManagement = () => {
                     <Typography variant="h4" className="mb-6 font-semibold">Add New Banner</Typography>
 
                     <div className="mb-4 w-full">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image</label>
-                        <div className="flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg p-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Banner Image (Recommended: 1920x768px, 5:2 ratio, Max: 2MB)
+                        </label>
+                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-400 rounded-lg p-4">
                             <input
                                 type="file"
                                 id="image-upload"
                                 className="hidden"
                                 onChange={handleImageChange}
+                                accept="image/*"
+                                max-size="2097152"
                             />
-                            <label htmlFor="image-upload" className="cursor-pointer">
+                            <label htmlFor="image-upload" className="cursor-pointer w-full">
                                 {imagePreview ? (
-                                    <img
-                                        src={imagePreview}
-                                        alt="Banner Preview"
-                                        className="max-w-xs max-h-48 rounded-lg object-cover"
-                                    />
+                                    <div className="relative w-full" style={{ paddingTop: '40%' }}>
+                                        <img
+                                            src={imagePreview}
+                                            alt="Banner Preview"
+                                            className="absolute top-0 left-0 w-full h-full object-cover rounded-lg"
+                                        />
+                                    </div>
                                 ) : (
-                                    <div className="flex flex-col items-center">
+                                    <div className="flex flex-col items-center py-8">
                                         <span className="text-4xl text-primary">
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -237,12 +262,11 @@ const BannerManagement = () => {
                                             </svg>
                                         </span>
                                         <Typography variant="small" className="mt-2 text-gray-600">
-                                            Select Image
+                                            Select Image (1920x768px recommended, max 2MB)
                                         </Typography>
                                     </div>
                                 )}
                             </label>
-
                         </div>
                     </div>
 
