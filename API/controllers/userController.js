@@ -167,7 +167,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
-    const { socialId, socialType, email, role, device_type, device_token } = req.body;
+    const { socialId, socialType, email, phone, name, role, device_type, device_token } = req.body;
     if (!socialId || !socialType) {
         return res.status(400).json({
             status: 'fail',
@@ -193,10 +193,11 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
             socialType,
             email,
             isVerified: true,
-            // phone: "0000000000",
+            phone,
             role: role || 'user',
             device_type,
-            device_token
+            device_token,
+            name
         });
     }
     else {
@@ -384,7 +385,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
             }
         }
     }
-    const additionalFields = ['ADS_id', 'address', 'batchNo','joiningDate'];
+    const additionalFields = ['ADS_id', 'address', 'batchNo', 'joiningDate'];
     for (const field of additionalFields) {
         if (req.body[field]) {
             if (!filteredBody.additionalInfo) filteredBody.additionalInfo = {};
@@ -1127,10 +1128,10 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
 
     // Fetch routine data for the user and date
     let data = await Routine.findOne({ userId, date: today })
-        .populate('nutrition.morning.items', 'name -_id')
-        .populate('nutrition.lunch.items', 'name -_id')
-        .populate('nutrition.evening.items', 'name -_id')
-        .populate('nutrition.dinner.items', 'name -_id');
+        .populate('nutrition.morning.items', 'name description quantity -_id ')
+        .populate('nutrition.lunch.items', 'name description quantity -_id')
+        .populate('nutrition.evening.items', 'name description quantity -_id')
+        .populate('nutrition.dinner.items', 'name description quantity -_id');
 
     // If no data found, return error
     if (!data) {
@@ -1151,7 +1152,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
         if (data.nutrition?.[key]?.items?.length) {
             await data.populate({
                 path: `nutrition.${key}.items`,
-                select: 'name -_id',
+                select: 'name description quantity -_id',
                 strictPopulate: false
             });
         }
@@ -1176,8 +1177,12 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     for (const section of nutritionSections) {
         const items = data?.nutrition[section]?.items || [];
         if (items.length) {
-            const mealTitles = await Nutrition.find({ _id: { $in: items } }).select('name');
-            data.nutrition[section].items = mealTitles.map(item => item?.name);
+            const mealTitles = await Nutrition.find({ _id: { $in: items } }).select('name description quantity -_id');
+            data.nutrition[section].items = mealTitles.map(item => ({
+                name: item.name,
+                description: item.description,
+                quantity: item.quantity,
+            }));
         }
     }
 
