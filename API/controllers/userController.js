@@ -1848,8 +1848,10 @@ exports.logout = catchAsync(async (req, res, next) => {
         });
     }
 
-    user.socialId = "";
-    user.socialType = "";
+    // user.socialId = "";
+    // user.socialType = "";
+    user.device_token = "",
+    user.device_type = "",
     await user.save();
 
     res.status(200).json({

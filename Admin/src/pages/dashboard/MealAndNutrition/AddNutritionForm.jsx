@@ -10,58 +10,66 @@ import {
   Button,
   Typography,
   Textarea,
-  Chip,
 } from "@material-tailwind/react";
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 
 const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editData }) => {
+  // State for form inputs
   const [selectedUser, setSelectedUser] = useState(editData?.userId || "");
+  const [selectedCategory, setSelectedCategory] = useState(editData?.mealTime || "");
   const [description, setDescription] = useState(editData?.description || "");
   const [item, setItem] = useState({
     name: editData?.name || "",
-    totalQuantity: editData?.totalQuantity || 20, // Default to 20 as per requirement
+    quantity: editData?.quantity || 1,
   });
+
+  // State for validation errors
   const [errors, setErrors] = useState({});
 
-  const categories = [
-    "Pre Breakfast", "Post Breakfast", 
-    "Pre Lunch", "Post Lunch",
-    "Pre Dinner", "Post Dinner",
-    "Before Sleep at Night",
-    "In Every 2-3 hours"
-  ];
+  // Categories for selection
+  const categories = ["Pre Breakfast", "Post Breakfast", "Pre Lunch", "Post Lunch","Pre Dinner", "Post Dinner","Before Sleep at Night"];
 
+  // Function to reset the form
   const handleReset = () => {
     setSelectedUser("");
+    setSelectedCategory("");
     setDescription("");
-    setItem({ name: "", totalQuantity: 20 });
+    setItem({ name: "", quantity: 1 });
     setErrors({});
   };
 
+  // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Validate the form
     let validationErrors = {};
     if (!selectedUser) validationErrors.selectedUser = "User selection is required.";
+    if (!selectedCategory) validationErrors.selectedCategory = "Category selection is required.";
+    if (!description) validationErrors.description = "Description is required.";
     if (!item.name.trim()) validationErrors.itemName = "Item name is required.";
-    if (item.totalQuantity <= 0) validationErrors.totalQuantity = "Quantity must be positive.";
 
+    // Set validation errors
     setErrors(validationErrors);
+
+    // If there are validation errors, stop the submission
     if (Object.keys(validationErrors).length > 0) return;
 
+    // Prepare the data to be submitted
     const nutrition = {
       userId: selectedUser,
+      category: selectedCategory,
       description,
-      name: item.name.trim(),
-      totalQuantity: item.totalQuantity,
-      categories: categories.map(category => ({
-        name: category,
-        consumed: 0,
-        remaining: item.totalQuantity
-      }))
+      items: [
+        {
+          name: item.name.trim(),
+          quantity: item.quantity,
+        },
+      ],
     };
 
+    // If editing, use PUT request; otherwise, use POST request
     if (editData?._id) {
       Axios.put(`/admin/nutrition/${editData._id}`, nutrition)
         .then((response) => {
@@ -90,11 +98,17 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   };
 
   return (
-    <Dialog open size="lg" handler={handleCancel} dismiss={{ enabled: false }}>
+    <Dialog
+      open
+      size="lg" // Increased width
+      handler={handleCancel}
+      dismiss={{ enabled: false }} // Disable outside click to close
+    >
       <DialogHeader>{editData ? "Edit Nutrition Plan" : "Add Nutrition Plan"}</DialogHeader>
       <DialogBody>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* User and Category in One Row */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-1/2">
                 <Select
@@ -102,7 +116,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   value={selectedUser}
                   onChange={(value) => {
                     setSelectedUser(value);
-                    setErrors((prev) => ({ ...prev, selectedUser: false }));
+                    setErrors((prev) => ({ ...prev, selectedUser: false })); // Clear user error
                   }}
                   error={!!errors.selectedUser}
                 >
@@ -118,94 +132,86 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   </Typography>
                 )}
               </div>
+              <div className="w-full md:w-1/2">
+                <Select
+                  label="Select Category"
+                  value={selectedCategory}
+                  onChange={(value) => {
+                    setSelectedCategory(value);
+                    setErrors((prev) => ({ ...prev, selectedCategory: false })); // Clear category error
+                  }}
+                  error={!!errors.selectedCategory}
+                >
+                  {categories.map((category, index) => (
+                    <Option key={index} value={category}>
+                      {category}
+                    </Option>
+                  ))}
+                </Select>
+                {errors.selectedCategory && (
+                  <Typography variant="small" color="red" className="mt-1">
+                    {errors.selectedCategory}
+                  </Typography>
+                )}
+              </div>
             </div>
 
+            {/* Description Input */}
             <div>
               <Textarea
                 label="Description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setErrors((prev) => ({ ...prev, description: false })); // Clear description error
+                }}
+                error={!!errors.description}
               />
+              {errors.description && (
+                <Typography variant="small" color="red" className="mt-1">
+                  {errors.description}
+                </Typography>
+              )}
             </div>
 
+            {/* Item Section */}
             <div>
-              <Typography variant="h6">Nutrition Item</Typography>
-              <div className="flex flex-col gap-4 mt-2">
+              <Typography variant="h6">Item</Typography>
+              <div className="flex items-center gap-4 mt-2">
                 <Input
-                  placeholder="Item Name (e.g., Omega 3 Tablet)"
+                  placeholder="Item Name"
                   value={item.name}
                   onChange={(e) => {
                     setItem((prev) => ({ ...prev, name: e.target.value }));
-                    setErrors((prev) => ({ ...prev, itemName: false }));
+                    setErrors((prev) => ({ ...prev, itemName: false })); // Clear item name error
                   }}
                   error={!!errors.itemName}
                 />
-                {errors.itemName && (
-                  <Typography variant="small" color="red" className="mt-1">
-                    {errors.itemName}
-                  </Typography>
-                )}
-
-                <div className="flex items-center gap-4">
-                  <Typography>Total Quantity:</Typography>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="text"
-                      onClick={() =>
-                        setItem((prev) => ({ 
-                          ...prev, 
-                          totalQuantity: Math.max(1, prev.totalQuantity - 1) 
-                        }))
-                      }
-                    >
-                      -
-                    </Button>
-                    <Input 
-                      type="number" 
-                      value={item.totalQuantity} 
-                      onChange={(e) => 
-                        setItem(prev => ({ 
-                          ...prev, 
-                          totalQuantity: parseInt(e.target.value) || 0 
-                        }))
-                      }
-                      className="w-20 text-center"
-                    />
-                    <Button
-                      variant="text"
-                      onClick={() =>
-                        setItem((prev) => ({ 
-                          ...prev, 
-                          totalQuantity: prev.totalQuantity + 1 
-                        }))
-                      }
-                    >
-                      +
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setItem((prev) => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))
+                    }
+                  >
+                    -
+                  </Button>
+                  <Typography>{item.quantity}</Typography>
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setItem((prev) => ({ ...prev, quantity: prev.quantity + 1 }))
+                    }
+                  >
+                    +
+                  </Button>
                 </div>
-                {errors.totalQuantity && (
-                  <Typography variant="small" color="red" className="mt-1">
-                    {errors.totalQuantity}
-                  </Typography>
-                )}
               </div>
-            </div>
-
-            <div>
-              <Typography variant="h6" className="mb-2">Tracking Categories</Typography>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category, index) => (
-                  <Chip 
-                    key={index} 
-                    value={category} 
-                    className="cursor-default" 
-                  />
-                ))}
-              </div>
-              <Typography variant="small" className="mt-2 text-gray-600">
-                These categories will be used to track consumption of this item.
-              </Typography>
+              {errors.itemName && (
+                <Typography variant="small" color="red" className="mt-1">
+                  {errors.itemName}
+                </Typography>
+              )}
             </div>
           </div>
         </form>

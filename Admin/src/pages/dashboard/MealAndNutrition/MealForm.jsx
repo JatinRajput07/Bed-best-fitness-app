@@ -6,6 +6,15 @@ import { fetchUsers } from "@/redux/userSlice";
 import toast from "react-hot-toast";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 
+const CATEGORY_SEQUENCE = [
+    'wake_up_food',
+    'breakfast',
+    'morning_snacks',
+    'lunch',
+    'evening_snacks',
+    'dinner'
+];
+
 const Meal = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [category, setCategory] = useState("");
@@ -203,30 +212,33 @@ const Meal = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {Object.keys(userMeals.meals).map((categoryKey) =>
-                                                    userMeals.meals[categoryKey].map((meal) => (
-                                                        <tr key={meal.itemId} className="border-t">
-                                                            <td className="px-6 py-2 text-sm text-gray-600">{formatMealName(categoryKey)}</td>
-                                                            <td className="px-6 py-2 text-sm text-gray-600">{meal.itemName}</td>
-                                                            <td className="px-6 py-2 text-sm text-gray-600 flex space-x-2">
-                                                                <PencilIcon
-                                                                    className="h-5 w-5 text-blue-500 cursor-pointer"
-                                                                    onClick={() => {
-                                                                        setCategory(categoryKey);
-                                                                        setItem(meal.itemName);
-                                                                        setSelectedUserId(userMeals.userId);
-                                                                        setEditMeal(meal);
-                                                                        handleOpenDialog();
-                                                                    }}
-                                                                />
-                                                                <TrashIcon
-                                                                    className="h-5 w-5 text-red-500 cursor-pointer"
-                                                                    onClick={() => handleOpenDeleteDialog(meal.itemId)}
-                                                                />
-                                                            </td>
-                                                        </tr>
-                                                    ))
-                                                )}
+                                                {CATEGORY_SEQUENCE.map((categoryKey) => {
+                                                    if (userMeals.meals[categoryKey]) {
+                                                        return userMeals.meals[categoryKey].map((meal) => (
+                                                            <tr key={meal.itemId} className="border-t">
+                                                                <td className="px-6 py-2 text-sm text-gray-600">{formatMealName(categoryKey)}</td>
+                                                                <td className="px-6 py-2 text-sm text-gray-600">{meal.itemName}</td>
+                                                                <td className="px-6 py-2 text-sm text-gray-600 flex space-x-2">
+                                                                    <PencilIcon
+                                                                        className="h-5 w-5 text-blue-500 cursor-pointer"
+                                                                        onClick={() => {
+                                                                            setCategory(categoryKey);
+                                                                            setItem(meal.itemName);
+                                                                            setSelectedUserId(userMeals.userId);
+                                                                            setEditMeal(meal);
+                                                                            handleOpenDialog();
+                                                                        }}
+                                                                    />
+                                                                    <TrashIcon
+                                                                        className="h-5 w-5 text-red-500 cursor-pointer"
+                                                                        onClick={() => handleOpenDeleteDialog(meal.itemId)}
+                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                        ));
+                                                    }
+                                                    return null;
+                                                })}
                                             </tbody>
                                         </table>
                                     </AccordionBody>
@@ -266,12 +278,11 @@ const Meal = () => {
                             ))}
                         </select>
                         <Select disabled={!!editMeal} label="Select Category" onChange={setCategory} value={category}>
-                            <Option value="wake_up_food">Early Morning (Wake-up Meal)</Option>
-                            <Option value="breakfast">Breakfast (Power Breakfast)</Option>
-                            <Option value="morning_snacks">Mid-Morning Snack (Energy Bites)</Option>
-                            <Option value="lunch">Lunch (Fuel Plate)</Option>
-                            <Option value="evening_snacks">Evening Snack (Refresh & Recharge)</Option>
-                            <Option value="dinner">Dinner (Light & Right)</Option>
+                            {CATEGORY_SEQUENCE.map((categoryKey) => (
+                                <Option key={categoryKey} value={categoryKey}>
+                                    {formatMealName(categoryKey)}
+                                </Option>
+                            ))}
                         </Select>
                         <Input label="Meal Item" value={item} onChange={(e) => setItem(e.target.value)} required className="text-lg" />
                     </div>
