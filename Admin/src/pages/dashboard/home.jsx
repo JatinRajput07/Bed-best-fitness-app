@@ -16,7 +16,7 @@ import ReactApexChart from "react-apexcharts";
 import Axios from "@/configs/Axios";
 import { useSelector } from "react-redux";
 
-export function Home() {
+  const Home = () => {
   const { role } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [statisticsCardsData, setStatisticsCardsData] = useState([]);
