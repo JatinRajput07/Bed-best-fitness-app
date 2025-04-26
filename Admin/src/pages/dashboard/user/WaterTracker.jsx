@@ -45,8 +45,50 @@ const WaterTracker = ({userId}) => {
       <div className="text-center mb-6">
         <p className="text-gray-600 font-medium">Daily Water Goal</p>
         <p className="text-3xl font-bold text-blue-600">
-          {waterGoal} glasses
+          {waterGoal} Glasses ({waterGoal * 200}ml)
         </p>
+        {data?.waterAchive?.length > 0 && (
+          <div className="mt-4">
+            <p className="text-gray-600 font-medium">Today's Progress</p>
+            {data.waterAchive.find(record => 
+              new Date(record.date).toDateString() === new Date().toDateString()
+            ) ? (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-2xl font-bold">
+                  {Math.round(convertQtyToGlasses(
+                    data.waterAchive.find(record => 
+                      new Date(record.date).toDateString() === new Date().toDateString()
+                    ).value.qty,
+                    new Date()
+                  ))} Glasses ({parseFloat(data.waterAchive.find(record => 
+                    new Date(record.date).toDateString() === new Date().toDateString()
+                  ).value.qty) * 1000}ml)
+                </p>
+                <span className={`px-3 py-1 rounded-full ${
+                  convertQtyToGlasses(
+                    data.waterAchive.find(record => 
+                      new Date(record.date).toDateString() === new Date().toDateString()
+                    ).value.qty,
+                    new Date()
+                  ) >= waterGoal
+                    ? "bg-green-100 text-green-600"
+                    : "bg-red-100 text-red-600"
+                }`}>
+                  {convertQtyToGlasses(
+                    data.waterAchive.find(record => 
+                      new Date(record.date).toDateString() === new Date().toDateString()
+                    ).value.qty,
+                    new Date()
+                  ) >= waterGoal
+                    ? "Goal Achieved"
+                    : "Goal Not Achieved"}
+                </span>
+              </div>
+            ) : (
+              <p className="text-xl text-gray-500">No data for today</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Water Intake Records */}
@@ -77,7 +119,7 @@ const WaterTracker = ({userId}) => {
                     {formatDate(record.date)}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                    {record.value.qty} ( {convertQtyToGlasses(record.value.qty, record.date)} Glass )
+                    {Math.round(convertQtyToGlasses(record.value.qty, record.date))} Glass ({parseFloat(record.value.qty) * 1000}ml)
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span

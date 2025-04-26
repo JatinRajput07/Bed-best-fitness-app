@@ -1458,7 +1458,6 @@ exports.getBodyMeasurement = catchAsync(async (req, res, next) => {
     });
 });
 
-
 exports.createOrUpdateHealtyHabitRoutine = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     const today = getLocalDate();
@@ -1470,16 +1469,17 @@ exports.createOrUpdateHealtyHabitRoutine = catchAsync(async (req, res, next) => 
         what_new_today: ["learn_new_language", "learn_sports_skill", "play_music_today", "travel_fun_today"]
     };
 
+    // Only update fields that are provided in request body
     const updateData = {};
     Object.keys(validCategories).forEach(category => {
         const categoryKeys = validCategories[category];
-        const categoryData = {};
-        categoryKeys.forEach(key => {
-            if (req.body[key] !== undefined) {
+        const providedKeys = Object.keys(req.body).filter(key => categoryKeys.includes(key));
+        
+        if (providedKeys.length > 0) {
+            const categoryData = {};
+            providedKeys.forEach(key => {
                 categoryData[key] = req.body[key];
-            }
-        });
-        if (Object.keys(categoryData).length > 0) {
+            });
             updateData[category] = categoryData;
         }
     });
@@ -1494,10 +1494,11 @@ exports.createOrUpdateHealtyHabitRoutine = catchAsync(async (req, res, next) => 
     const existingRoutine = await Routine.findOne({ userId, date: today });
 
     if (existingRoutine) {
+        // Only update the specific fields provided
         Object.keys(updateData).forEach(category => {
             existingRoutine[category] = {
                 ...existingRoutine[category]?.toObject(),
-                ...updateData[category],
+                ...updateData[category]
             };
         });
         await existingRoutine.save();
