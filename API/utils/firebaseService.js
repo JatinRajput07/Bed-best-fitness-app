@@ -2,7 +2,7 @@ const { userApp, partnerApp } = require('../config/firebase-admin-config');
 const Notification = require('../models/Notification');
 
 // Firebase push notification service
-exports.sendPushNotification = async (deviceToken, msg, userId, app, type = "",notificationData) => {
+exports.sendPushNotification = async (deviceToken, msg, userId, app, type = "") => {
 
   console.log(deviceToken, msg, userId, app, type, '=========msg============')
   try {
@@ -18,10 +18,6 @@ exports.sendPushNotification = async (deviceToken, msg, userId, app, type = "",n
       },
       token: deviceToken,
     };
-
-    if (notificationData) {
-      message.data.notificationData = notificationData;
-    }
 
     // await Notification.create({
     //   userId,

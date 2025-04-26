@@ -98,8 +98,7 @@ module.exports = (io) => {
                         `New message from ${sender?.name || sender?.email}`,
                         receiverId,
                         appTarget,
-                        "chat",
-                        notificationData
+                        "chat"
                     );
                 }
 
