@@ -56,7 +56,7 @@ const WorkoutTracker = ({ userId }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 shadow-lg bg-white rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Workout Tracker</h2>
+      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Workout Session</h2>
 
       <div className="space-y-6 overflow-auto">
         {currentRecords.length > 0 ? (

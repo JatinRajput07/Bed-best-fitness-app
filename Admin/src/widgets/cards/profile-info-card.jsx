@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { Card, CardHeader, CardBody, Input, Typography } from "@material-tailwind/react";
+import { formatDate } from "@/utilService";
 
 export function ProfileInfoCard({ user }) {
 
@@ -38,11 +39,11 @@ export function ProfileInfoCard({ user }) {
     { label: "Nationality", value: user?.Nationality },
     { label: "Occupation", value: user?.Occupation },
     { label: "Office Address", value: user?.OfficeAddress },
-    { label: "Oritation Date", value: user?.OritationDate },
+    { label: "Oritation Date", value: user?.OritationDate ? formatDate(user?.OritationDate) :"" },
     { label: "ReferBy", value: user?.ReferBy },
     { label: "SOS Contact No", value: user?.SOS_Contact_No },
     { label: "Relation With SOS", value: user?.RelationWithSOS },
-    { label: "Date of Birth", value: user?.DOB },
+    { label: "Date of Birth", value: user?.DOB ? formatDate(user?.DOB) :""},
     { label: "Gender", value: user?.Gender },
 
 

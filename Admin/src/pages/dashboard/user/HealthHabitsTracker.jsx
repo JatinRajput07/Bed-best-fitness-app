@@ -12,7 +12,12 @@ const HealthHabitsTracker = ({ userId }) => {
     const fetchHealthHabits = async () => {
       try {
         const response = await Axios.get(`/user/getHealthHabits/${userId}/getHealthHabits`);
-        setData(response.data.healthHabits || []);
+        const filteredHabits = response.data.healthHabits.filter(habit => {
+          const { value } = habit;
+          return Object.values(value).some(v => v !== null); 
+        });
+  
+        setData(filteredHabits || []);
       } catch (error) {
         console.error("Error fetching health habits:", error);
       } finally {

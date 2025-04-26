@@ -11,6 +11,7 @@ import {
     Chip,
 } from "@mui/material";
 import Axios from "@/configs/Axios";
+import { weeklyDays } from "@/data/data";
 
 const AllReminders = ({ userId }) => {
     const [reminders, setReminders] = useState([]);
@@ -32,6 +33,7 @@ const AllReminders = ({ userId }) => {
 
         fetchReminders();
     }, [userId]);
+
 
     if (loading)
         return (
@@ -186,7 +188,7 @@ const AllReminders = ({ userId }) => {
 
 
                         {/* Render Step Reminder Details */}
-                        {reminder.type === "step" && (
+                        {reminder?.type === "step" && (
                             <>
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <strong>Reminder Type:</strong> {reminder.reminderType}
@@ -194,19 +196,31 @@ const AllReminders = ({ userId }) => {
                                 {reminder.reminderType === 'everyday' && <Typography variant="body2">
                                     <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
                                 </Typography>}
+                                {reminder.reminderType === 'once' && <Typography variant="body2">
+                                    <strong>Reminder Time:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
                                             Weekly Times:
                                         </Typography>
                                         <ul style={{ padding: 0, listStyle: "none" }}>
-                                            {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
+                                        {weeklyDays.map((day) => (
+                                            reminder.weeklyTimes && reminder.weeklyTimes.hasOwnProperty(day) ? (
+                                                <li key={day}>
+                                                <Typography variant="body2">
+                                                    <strong>{day}:</strong> {reminder.weeklyTimes[day]}
+                                                </Typography>
+                                                </li>
+                                            ) : null
+                                            ))}
+                                            {/* {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
                                                 <li key={day}>
                                                     <Typography variant="body2">
                                                         <strong>{day}:</strong> {time}
                                                     </Typography>
                                                 </li>
-                                            ))}
+                                            ))} */}
                                         </ul>
                                     </>
                                 )}
@@ -222,19 +236,31 @@ const AllReminders = ({ userId }) => {
                                 {reminder.reminderType === 'everyday' && <Typography variant="body2">
                                     <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
                                 </Typography>}
+                                {reminder.reminderType === 'once' && <Typography variant="body2">
+                                    <strong>Reminder Time:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
                                             Weekly Times:
                                         </Typography>
                                         <ul style={{ padding: 0, listStyle: "none" }}>
-                                            {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
+                                        {weeklyDays.map((day) => (
+                                            reminder.weeklyTimes && reminder.weeklyTimes.hasOwnProperty(day) ? (
+                                                <li key={day}>
+                                                <Typography variant="body2">
+                                                    <strong>{day}:</strong> {reminder.weeklyTimes[day]}
+                                                </Typography>
+                                                </li>
+                                            ) : null
+                                            ))}
+                                            {/* {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
                                                 <li key={day}>
                                                     <Typography variant="body2">
                                                         <strong>{day}:</strong> {time}
                                                     </Typography>
                                                 </li>
-                                            ))}
+                                            ))} */}
                                         </ul>
                                     </>
                                 )}
@@ -251,19 +277,25 @@ const AllReminders = ({ userId }) => {
                                 {reminder.reminderType === 'everyday' && <Typography variant="body2">
                                     <strong>{reminder.reminderType}:</strong> {reminder.everydayTime}
                                 </Typography>}
+                                {reminder.reminderType === 'once' && <Typography variant="body2">
+                                    <strong>Reminder Time:</strong> {reminder.everydayTime}
+                                </Typography>}
                                 {reminder.reminderType === "specificDays" && (
                                     <>
                                         <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
                                             Weekly Times:
                                         </Typography>
                                         <ul style={{ padding: 0, listStyle: "none" }}>
-                                            {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
+                                            {weeklyDays.map((day) => (
+                                            reminder.weeklyTimes && reminder.weeklyTimes.hasOwnProperty(day) ? (
                                                 <li key={day}>
-                                                    <Typography variant="body2">
-                                                        <strong>{day}:</strong> {time}
-                                                    </Typography>
+                                                <Typography variant="body2">
+                                                    <strong>{day}:</strong> {reminder.weeklyTimes[day]}
+                                                </Typography>
                                                 </li>
+                                            ) : null
                                             ))}
+
                                         </ul>
                                     </>
                                 )}
@@ -285,13 +317,22 @@ const AllReminders = ({ userId }) => {
                                             Weekly Times:
                                         </Typography>
                                         <ul style={{ padding: 0, listStyle: "none" }}>
-                                            {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
+                                        {weeklyDays.map((day) => (
+                                            reminder.weeklyTimes && reminder.weeklyTimes.hasOwnProperty(day) ? (
+                                                <li key={day}>
+                                                <Typography variant="body2">
+                                                    <strong>{day}:</strong> {reminder.weeklyTimes[day]}
+                                                </Typography>
+                                                </li>
+                                            ) : null
+                                            ))}
+                                            {/* {Object.entries(reminder.weeklyTimes || {}).map(([day, time]) => (
                                                 <li key={day}>
                                                     <Typography variant="body2">
                                                         <strong>{day}:</strong> {time}
                                                     </Typography>
                                                 </li>
-                                            ))}
+                                            ))} */}
                                         </ul>
                                     </>
                                 )}
