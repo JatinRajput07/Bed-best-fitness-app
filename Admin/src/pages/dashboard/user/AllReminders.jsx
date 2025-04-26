@@ -106,35 +106,57 @@ const AllReminders = ({ userId }) => {
                         </Typography>
 
                         {/* Render Meal Details */}
-                        {reminder?.type === "meal" &&
-                            Object.entries(reminder?.meals || {}).map(
-                                ([meal, details]) =>
-                                    details.enabled && (
-                                        <Box
-                                            key={meal}
-                                            p={1}
-                                            mb={1}
-                                            sx={{
-                                                backgroundColor: "#FFFFFF",
-                                                borderRadius: 1,
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            <Typography
+                        {reminder?.type === "meal" && (
+                            <>
+                                {reminder.everyday && (
+                                    <Box
+                                        p={1}
+                                        mb={1}
+                                        sx={{
+                                            backgroundColor: "#FFFFFF",
+                                            borderRadius: 1,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <Typography sx={{ fontWeight: "bold", color: "text.secondary" }}>
+                                            Every day at:
+                                        </Typography>
+                                        <Typography sx={{ color: "text.primary" }}>{reminder.everyTime}</Typography>
+                                    </Box>
+                                )}
+
+                                {Object.entries(reminder?.meals || {}).map(
+                                    ([meal, details]) =>
+                                        details.enabled && (
+                                            <Box
+                                                key={meal}
+                                                p={1}
+                                                mb={1}
                                                 sx={{
-                                                    fontWeight: "bold",
-                                                    textTransform: "capitalize",
-                                                    color: "text.secondary",
+                                                    backgroundColor: "#FFFFFF",
+                                                    borderRadius: 1,
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
                                                 }}
                                             >
-                                                {meal}:
-                                            </Typography>
-                                            <Typography sx={{ color: "text.primary" }}>{details.time}</Typography>
-                                        </Box>
-                                    )
-                            )}
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: "bold",
+                                                        textTransform: "capitalize",
+                                                        color: "text.secondary",
+                                                    }}
+                                                >
+                                                    {meal}:
+                                                </Typography>
+                                                <Typography sx={{ color: "text.primary" }}>{details.time}</Typography>
+                                            </Box>
+                                        )
+                                )}
+                            </>
+                        )}
                         {reminder.type === "water" && (
                             <>
                                 <Typography variant="body2" sx={{ mb: 1 }}>

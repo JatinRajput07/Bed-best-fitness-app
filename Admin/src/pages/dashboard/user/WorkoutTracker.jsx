@@ -64,7 +64,7 @@ const WorkoutTracker = ({ userId }) => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="border border-gray-300 px-4 py-2">Date</th>
-                <th className="border border-gray-300 px-4 py-2">Performance</th>
+                <th className="border border-gray-300 px-4 py-2">Performance (out of 10)</th>
                 <th className="border border-gray-300 px-4 py-2">Status</th>
               </tr>
             </thead>

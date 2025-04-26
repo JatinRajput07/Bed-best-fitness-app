@@ -14,6 +14,18 @@ import {
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 
+// Define the consistent category sequence
+const CATEGORY_SEQUENCE = [
+  "Pre Breakfast",
+  "Post Breakfast",
+  "Pre Lunch", 
+  "Post Lunch",
+  "Pre Dinner",
+  "Post Dinner",
+  "Before Sleep at Night",
+  "In Every 2-3 hours"
+];
+
 const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editData }) => {
   // State for form inputs
   const [selectedUser, setSelectedUser] = useState(editData?.userId || "");
@@ -26,9 +38,6 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
 
   // State for validation errors
   const [errors, setErrors] = useState({});
-
-  // Categories for selection
-  const categories = ["Pre Breakfast", "Post Breakfast", "Pre Lunch", "Post Lunch","Pre Dinner", "Post Dinner","Before Sleep at Night"];
 
   // Function to reset the form
   const handleReset = () => {
@@ -100,9 +109,9 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   return (
     <Dialog
       open
-      size="lg" // Increased width
+      size="lg"
       handler={handleCancel}
-      dismiss={{ enabled: false }} // Disable outside click to close
+      dismiss={{ enabled: false }}
     >
       <DialogHeader>{editData ? "Edit Nutrition Plan" : "Add Nutrition Plan"}</DialogHeader>
       <DialogBody>
@@ -116,7 +125,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   value={selectedUser}
                   onChange={(value) => {
                     setSelectedUser(value);
-                    setErrors((prev) => ({ ...prev, selectedUser: false })); // Clear user error
+                    setErrors((prev) => ({ ...prev, selectedUser: false }));
                   }}
                   error={!!errors.selectedUser}
                 >
@@ -138,11 +147,11 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   value={selectedCategory}
                   onChange={(value) => {
                     setSelectedCategory(value);
-                    setErrors((prev) => ({ ...prev, selectedCategory: false })); // Clear category error
+                    setErrors((prev) => ({ ...prev, selectedCategory: false }));
                   }}
                   error={!!errors.selectedCategory}
                 >
-                  {categories.map((category, index) => (
+                  {CATEGORY_SEQUENCE.map((category, index) => (
                     <Option key={index} value={category}>
                       {category}
                     </Option>
@@ -163,7 +172,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                 value={description}
                 onChange={(e) => {
                   setDescription(e.target.value);
-                  setErrors((prev) => ({ ...prev, description: false })); // Clear description error
+                  setErrors((prev) => ({ ...prev, description: false }));
                 }}
                 error={!!errors.description}
               />
@@ -183,7 +192,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   value={item.name}
                   onChange={(e) => {
                     setItem((prev) => ({ ...prev, name: e.target.value }));
-                    setErrors((prev) => ({ ...prev, itemName: false })); // Clear item name error
+                    setErrors((prev) => ({ ...prev, itemName: false }));
                   }}
                   error={!!errors.itemName}
                 />

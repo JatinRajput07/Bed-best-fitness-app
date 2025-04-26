@@ -1,5 +1,5 @@
 import Axios from "@/configs/Axios";
-import { formatDate } from "@/utilService";
+import { formatDate, formatDateTime } from "@/utilService";
 import React, { useEffect, useState } from "react";
 
 const DEFAULT_IMAGE_URL = '/img/fb88eeb5.jpg';
@@ -165,7 +165,7 @@ const MealTracker = ({ userId }) => {
                           {mealDetails.image && mealDetails.image_uploaded_at && (
                             <p className="text-sm text-gray-600">
                               <span className="font-semibold">Date :</span>{" "}
-                              {formatDate(mealDetails.image_uploaded_at)}
+                              {formatDateTime(mealDetails.image_uploaded_at)}
                             </p>
                           )}
                         </div>
