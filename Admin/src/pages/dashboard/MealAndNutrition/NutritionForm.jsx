@@ -16,9 +16,9 @@ const Nutrition = () => {
   const [editNutrition, setEditNutrition] = useState(null);
   const [deleteNutritionId, setDeleteNutritionId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // Items per page
+  const [pageSize, setPageSize] = useState(5);
   const { users, loading } = useSelector((state) => state.users);
-  const [isLoading, setIsLoading] = useState(false); // Local loading state
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
   const handleCancel = () => {
@@ -31,7 +31,6 @@ const Nutrition = () => {
     Axios.get("/admin/nutrition")
       .then((response) => {
         if (response.data.status === "success") {
-          // Sort users by name or email
           const sortedData = response.data.data.sort((a, b) =>
             (a?.userDetails?.name || a?.userDetails?.email).localeCompare(
               b?.userDetails?.name || b?.userDetails?.email
@@ -39,7 +38,6 @@ const Nutrition = () => {
           );
           setNutritionData(sortedData);
           setFilteredData(sortedData);
-          // Set the first user as selected by default
           if (sortedData.length > 0) {
             setSelectedUser(sortedData[0]);
           }
@@ -72,7 +70,6 @@ const Nutrition = () => {
       const updatedData = editNutrition
         ? prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item))
         : [...prevState, newNutrition];
-      // Sort the updated data
       return updatedData.sort((a, b) =>
         (a?.userDetails?.name || a?.userDetails?.email || "").localeCompare(
           b?.userDetails?.name || b?.userDetails?.email
@@ -84,7 +81,6 @@ const Nutrition = () => {
       const updatedData = editNutrition
         ? prevState.map((item) => (item._id === newNutrition._id ? newNutrition : item))
         : [...prevState, newNutrition];
-      // Sort the updated data
       return updatedData.sort((a, b) =>
         (a?.userDetails?.name || a?.userDetails?.email || "").localeCompare(
           b?.userDetails?.name || b?.userDetails?.email
@@ -127,7 +123,7 @@ const Nutrition = () => {
         (user?.userDetails?.name || user?.userDetails?.email).toLowerCase().includes(query)
       )
     );
-    setCurrentPage(1); // Reset to the first page
+    setCurrentPage(1);
   };
 
   // Pagination helpers
@@ -144,72 +140,90 @@ const Nutrition = () => {
   };
 
   return (
-    <div className="mt-12 mb-8 flex flex-col items-center">
+    <div className="mt-8 mb-8 flex flex-col items-center">
       <Card className="w-full max-w-6xl shadow-lg mb-6">
         <CardHeader
           variant="gradient"
-          className="bg-gradient-to-r from-red-800 to-indigo-600 p-6 rounded-t-lg flex justify-between items-center"
+          className="bg-gradient-to-r from-blue-600 to-indigo-800 p-6 rounded-t-lg flex justify-between items-center"
         >
-          <Typography variant="h5" color="white">
-            Nutrition Plans
+          <Typography variant="h5" color="white" className="font-bold">
+            Nutrition Management
           </Typography>
-          <Button color="lightBlue" onClick={() => setShowForm(true)}>
-            Add Nutrition
+          <Button 
+            color="white" 
+            onClick={() => setShowForm(true)}
+            className="shadow-md hover:shadow-lg transition-all"
+          >
+            Add Nutrition Plan
           </Button>
         </CardHeader>
         {!showForm ? (
           <div className="flex flex-col md:flex-row">
             {/* Left Side: User List */}
-            <div className="w-full md:w-1/4 border-r p-4">
+            <div className="w-full md:w-1/4 border-r p-4 bg-gray-50">
               <div className="mb-6">
                 <Input
                   type="text"
-                  placeholder="Search by user name"
+                  placeholder="Search users..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className="mb-4"
+                  className="!border !border-gray-300 focus:!border-blue-500"
+                  labelProps={{
+                    className: "hidden",
+                  }}
+                  containerProps={{ className: "min-w-[100px]" }}
                 />
               </div>
               {isLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <Typography variant="small" className="text-gray-600">
-                    Please wait...
+                    Loading users...
                   </Typography>
                 </div>
               ) : paginatedData.length > 0 ? (
-                paginatedData.map((user, index) => (
-                  <div
-                    key={user.userId}
-                    className={`p-3 cursor-pointer rounded-lg mb-2 ${
-                      selectedUser?.userId === user.userId
-                        ? "bg-blue-100"
-                        : "hover:bg-gray-100"
-                    }`}
-                    onClick={() => setSelectedUser(user)}
-                  >
-                    <Typography variant="small" className="font-semibold">
-                      {index + 1}. {user?.userDetails?.name || user?.userDetails?.email}
-                    </Typography>
-                  </div>
-                ))
+                <div className="space-y-2">
+                  {paginatedData.map((user, index) => (
+                    <div
+                      key={user.userId}
+                      className={`p-3 cursor-pointer rounded-lg transition-all ${
+                        selectedUser?.userId === user.userId
+                          ? "bg-blue-100 border-l-4 border-blue-500"
+                          : "hover:bg-gray-100 border-l-4 border-transparent"
+                      }`}
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <Typography variant="small" className="font-semibold">
+                        {index + 1}. {user?.userDetails?.name || user?.userDetails?.email}
+                      </Typography>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <Typography variant="small" className="text-gray-600 text-center">
-                  No data found.
-                </Typography>
+                <div className="p-4 text-center bg-gray-100 rounded-lg">
+                  <Typography variant="small" className="text-gray-600">
+                    No users found
+                  </Typography>
+                </div>
               )}
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-6 space-x-4">
+                <div className="flex justify-between items-center mt-6">
                   <Button
-                    color="gray"
+                    variant="outlined"
+                    color="blue"
+                    size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                   >
                     Previous
                   </Button>
-                  <Typography>{`${currentPage} / ${totalPages}`}</Typography>
+                  <Typography variant="small" color="gray">
+                    Page {currentPage} of {totalPages}
+                  </Typography>
                   <Button
-                    color="gray"
+                    variant="outlined"
+                    color="blue"
+                    size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                   >
@@ -219,66 +233,86 @@ const Nutrition = () => {
               )}
             </div>
 
-            {/* Right Side: User Details */}
+            {/* Right Side: Nutrition Details */}
             <div className="w-full md:w-3/4 p-4">
               {isLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <Typography variant="small" className="text-gray-600">
-                    Please wait...
+                    Loading nutrition details...
                   </Typography>
                 </div>
               ) : selectedUser ? (
                 <div>
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <Typography variant="h6" color="blue-gray" className="font-bold">
+                      {selectedUser?.userDetails?.name || selectedUser?.userDetails?.email}
+                    </Typography>
+                    <Typography variant="small" color="gray">
+                      Nutrition Plan Details
+                    </Typography>
+                  </div>
+
                   {selectedUser?.mealTimeGroups?.map((mealTimeGroup, index) => (
-                    <Card key={index} className="mt-6 mb-6 shadow-sm">
-                      <CardHeader className="bg-gray-100 p-4">
-                        <Typography variant="h6" className="text-gray-700">
+                    <Card key={index} className="mb-6 shadow-sm border">
+                      <CardHeader 
+                        className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b"
+                        floated={false}
+                        shadow={false}
+                      >
+                        <Typography variant="h6" color="blue-gray" className="font-semibold uppercase">
                           {mealTimeGroup.mealTime}
                         </Typography>
                       </CardHeader>
-                      <CardBody className="p-4">
+                      <CardBody className="p-0">
                         {mealTimeGroup.nutritionDetails.map((nutrition, idx) => (
-                          <div key={idx} className="border-b last:border-none py-4">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                              <div className="w-96 mb-2 md:mb-0">
-                                <Typography variant="small" className="font-semibold">
+                          <div 
+                            key={idx} 
+                            className="border-b last:border-none p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                              <div className="flex-1">
+                                <Typography variant="h6" className="font-semibold text-blue-800">
                                   {nutrition.name}
                                 </Typography>
-                                <Typography variant="small" className="text-gray-600">
-                                  {nutrition.description}
-                                </Typography>
+                                {nutrition.description && (
+                                  <Typography variant="small" className="text-gray-600 mt-1">
+                                    {nutrition.description}
+                                  </Typography>
+                                )}
                               </div>
-                              <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
-                                <Typography variant="small">
-                                  Quantity: {nutrition.quantity}
-                                </Typography>
-                                <Typography variant="small">
-                                  Taken: {nutrition.takenCount}
-                                </Typography>
-                                <Typography variant="small">
-                                  Skipped: {nutrition.skippedCount}
-                                </Typography>
-                                <div
-                                  className={`px-2 py-1 rounded-full text-sm font-semibold ${
-                                    nutrition.status === "completed"
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-red-100 text-red-700"
-                                  }`}
-                                >
-                                  {nutrition.status}
+                              <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                                <div className="bg-blue-50 px-3 py-1 rounded-full">
+                                  <Typography variant="small" className="font-semibold text-blue-800">
+                                    Qty: {nutrition.quantity}
+                                  </Typography>
                                 </div>
-                                <div className="flex space-x-2">
-                                  <PencilIcon
-                                    className="h-5 w-5 text-blue-500 cursor-pointer"
+                                <div className="bg-green-50 px-3 py-1 rounded-full">
+                                  <Typography variant="small" className="font-semibold text-green-800">
+                                    Consumed: {nutrition.consumed || 0}
+                                  </Typography>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="text"
+                                    color="blue"
+                                    size="sm"
+                                    className="p-1"
                                     onClick={() => {
                                       setEditNutrition({ ...nutrition, userId: selectedUser.userId });
                                       setShowForm(true);
                                     }}
-                                  />
-                                  <TrashIcon
-                                    className="h-5 w-5 text-red-500 cursor-pointer"
+                                  >
+                                    <PencilIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="text"
+                                    color="red"
+                                    size="sm"
+                                    className="p-1"
                                     onClick={() => setDeleteNutritionId(nutrition._id)}
-                                  />
+                                  >
+                                    <TrashIcon className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -289,9 +323,14 @@ const Nutrition = () => {
                   ))}
                 </div>
               ) : (
-                <Typography variant="h6" className="text-gray-700 text-center">
-                  Select a user to view details.
-                </Typography>
+                <div className="flex flex-col items-center justify-center h-64">
+                  <Typography variant="h6" color="gray" className="mb-2">
+                    No user selected
+                  </Typography>
+                  <Typography variant="small" color="gray">
+                    Select a user from the list to view nutrition details
+                  </Typography>
+                </div>
               )}
             </div>
           </div>
@@ -305,6 +344,7 @@ const Nutrition = () => {
           />
         )}
       </Card>
+      
       {/* Confirmation Dialog */}
       <Dialog open={Boolean(deleteNutritionId)} handler={() => setDeleteNutritionId(null)}>
         <DialogHeader className="bg-gray-100 text-center py-4">
@@ -317,19 +357,25 @@ const Nutrition = () => {
             <TrashIcon className="h-10 w-10 text-red-500" />
           </div>
           <Typography className="text-center text-base font-medium text-blue-gray-600">
-            Are you sure you want to delete this nutrition plan?
+            Are you sure you want to delete this nutrition item? This action cannot be undone.
           </Typography>
         </DialogBody>
         <DialogFooter className="bg-gray-50 flex justify-center gap-4 py-4">
-          <Button variant="outlined"
+          <Button 
+            variant="outlined"
             color="blue-gray"
-            className="w-24" onClick={() => setDeleteNutritionId(null)}>
+            onClick={() => setDeleteNutritionId(null)}
+            className="w-24"
+          >
             Cancel
           </Button>
-          <Button variant="gradient"
+          <Button 
+            variant="gradient"
             color="red"
-            className="w-24" onClick={handleDelete}>
-            Confirm
+            onClick={handleDelete}
+            className="w-24"
+          >
+            Delete
           </Button>
         </DialogFooter>
       </Dialog>
@@ -338,4 +384,3 @@ const Nutrition = () => {
 };
 
 export default Nutrition;
-

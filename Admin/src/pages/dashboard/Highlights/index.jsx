@@ -134,7 +134,11 @@ const Highlights = () => {
                                         <img
                                             src={image?.url}
                                             alt="Highlight"
-                                            className="w-full h-32 object-cover rounded-lg shadow-md"
+                                            className="w-full rounded-lg shadow-md"
+                                            style={{ 
+                                                aspectRatio: '16/9',
+                                                objectFit: 'cover'
+                                            }}
                                         />
                                         <div className="absolute bg-deep-orange-500 p-1 right-2 rounded text-white top-2">
                                             <TrashIcon
@@ -170,8 +174,8 @@ const Highlights = () => {
 
             {/* Add Image Dialog */}
             <Dialog open={openDialog} handler={handleCloseDialog} size="lg" className="rounded-lg shadow-lg">
-                <DialogBody className="p-6">
-                    <Typography variant="h4" color="blue-gray" className="text-center mb-6 font-semibold">
+                <DialogBody className="p-6 max-h-[80vh] overflow-y-auto">
+                    <Typography variant="h4" color="blue-gray" className="text-center mb-6 font-semibold sticky top-0 bg-white py-2 z-10">
                         Upload a New Highlight Image
                     </Typography>
                     <div className="space-y-6">
@@ -182,7 +186,7 @@ const Highlights = () => {
                                 className="block text-center text-blue-gray-700 cursor-pointer hover:text-blue-600 transition"
                             >
                                 <Typography variant="h6" className="mb-2 font-semibold">
-                                    Click to Select Image File
+                                    Click to Select Image File (Recommended ratio 16:9)
                                 </Typography>
                                 <Typography variant="small" color="gray">
                                     Supported formats: .jpg, .png
@@ -207,14 +211,18 @@ const Highlights = () => {
                                 <img
                                     src={imagePreview}
                                     alt="Preview"
-                                    className="w-56 h-56 object-cover rounded-xl shadow-lg border border-blue-gray-200"
+                                    className="w-full rounded-xl shadow-lg border border-blue-gray-200"
+                                    style={{ 
+                                        aspectRatio: '16/9',
+                                        objectFit: 'cover',
+                                        maxHeight: '400px'
+                                    }}
                                 />
                             </div>
                         )}
                     </div>
-
                 </DialogBody>
-                <DialogFooter className="p-6 flex justify-between">
+                <DialogFooter className="p-6 flex justify-between sticky bottom-0 bg-white">
                     <Button
                         variant="outlined"
                         color="red"

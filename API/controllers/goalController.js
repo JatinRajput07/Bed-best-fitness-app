@@ -542,14 +542,36 @@ exports.get_sleep_records = catchAsync(async (req, res, next) => {
         return res.status(404).json({ message: 'No sleep records found for the last 7 days.' });
     }
 
-    const simplifiedData = sleepRecords.map(record => ({
-        date: record.date,
-        wake_up: record.sleep?.wake_up || 'N/A',
-        bed_at: record.sleep?.bed_at || 'N/A'
-    }));
+    const simplifiedData = sleepRecords.map(record => {
+        const wakeUp = record.sleep?.wake_up || 'N/A';
+        const bedAt = record.sleep?.bed_at || 'N/A';
+        
+        let totalSleepTime = 'N/A';
+        if (wakeUp !== 'N/A' && bedAt !== 'N/A') {
+            const wakeUpTime = moment(wakeUp, 'HH:mm');
+            const bedTime = moment(bedAt, 'HH:mm');
+            
+            // If wake up time is before bed time, add 24 hours
+            if (wakeUpTime.isBefore(bedTime)) {
+                wakeUpTime.add(1, 'day');
+            }
+            
+            const duration = moment.duration(wakeUpTime.diff(bedTime));
+            const hours = Math.floor(duration.asHours());
+            const minutes = duration.minutes();
+            totalSleepTime = `${hours}h ${minutes}m`;
+        }
+
+        return {
+            date: record.date,
+            wake_up: wakeUp,
+            bed_at: bedAt,
+            total_sleep: totalSleepTime
+        };
+    });
 
     res.status(200).json({
         status: 'success',
         data: simplifiedData,
     });
-})
+});

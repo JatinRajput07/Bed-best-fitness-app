@@ -247,14 +247,30 @@ const UploadVideo = () => {
           {file?.type.startsWith("audio") && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Audio Thumbnail (Image)
+                {/* Audio Thumbnail (Image - Recommended ratio 16:9) */}
               </label>
               <input
                 type="file"
                 onChange={handleAudioThumbnailChange}
-                accept="image/jpeg"
+                accept="image/*"
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
               />
+              {audioThumbnail && (
+                <div className="mt-2">
+                  <img
+                    src={URL.createObjectURL(audioThumbnail)}
+                    alt="Audio thumbnail preview"
+                    className="w-full h-auto rounded-md"
+                    style={{ 
+                      aspectRatio: '16/9',
+                      objectFit: 'cover',
+                      maxHeight: '250px',
+                      maxWidth: '250px',
+
+                    }}
+                  />
+                </div>
+              )}
               {errors.audioThumbnail && (
                 <Typography color="red" className="text-sm mt-1">
                   {errors.audioThumbnail}

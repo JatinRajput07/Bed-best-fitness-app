@@ -93,35 +93,35 @@ const routineSchema = new mongoose.Schema({
         calf: String
     },
     health_habits: {
-        cut_blue_screen_time: { type: Boolean },
-        meditation: { type: Boolean },
-        go_to_nature: { type: Boolean },
-        read_book: { type: Boolean },
-        spend_time_family: { type: Boolean },
-        loop_with_friends: { type: Boolean },
-        spend_time_hobby: { type: Boolean }
+        cut_blue_screen_time: { type: Boolean,default: null  },
+        meditation: { type: Boolean,default: null  },
+        go_to_nature: { type: Boolean,default: null  },
+        read_book: { type: Boolean,default: null  },
+        spend_time_family: { type: Boolean,default: null  },
+        loop_with_friends: { type: Boolean,default: null  },
+        spend_time_hobby: { type: Boolean,default: null  }
     },
     hygiene: {
-        bathing: { type: Boolean },
-        hand_wash: { type: Boolean },
-        teeth_clean: { type: Boolean },
-        nail_cut: { type: Boolean }
+        bathing: { type: Boolean,default: null  },
+        hand_wash: { type: Boolean,default: null  },
+        teeth_clean: { type: Boolean,default: null  },
+        nail_cut: { type: Boolean,default: null  }
     },
     holistic_wellness: {
-        hot_water_wash: { type: Boolean },
-        cold_water_wash: { type: Boolean },
-        abhyanga: { type: Boolean },
-        neti: { type: Boolean },
-        palm_rubbing: { type: Boolean },
-        foot_massage: { type: Boolean },
-        head_massage: { type: Boolean },
-        oil_pulling: { type: Boolean }
+        hot_water_wash: { type: Boolean,default: null  },
+        cold_water_wash: { type: Boolean,default: null  },
+        abhyanga: { type: Boolean,default: null  },
+        neti: { type: Boolean,default: null  },
+        palm_rubbing: { type: Boolean,default: null  },
+        foot_massage: { type: Boolean,default: null  },
+        head_massage: { type: Boolean,default: null  },
+        oil_pulling: { type: Boolean,default: null  }
     },
     what_new_today: {
-        learn_new_language: { type: Boolean },
-        learn_sports_skill: { type: Boolean },
-        play_music_today: { type: Boolean },
-        travel_fun_today: { type: Boolean }
+        learn_new_language: { type: Boolean,default: null  },
+        learn_sports_skill: { type: Boolean,default: null  },
+        play_music_today: { type: Boolean,default: null  },
+        travel_fun_today: { type: Boolean,default: null  }
     }
 });
 

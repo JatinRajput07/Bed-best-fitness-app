@@ -85,10 +85,11 @@ module.exports = (io) => {
                     const appTarget = receiver.role === "host" ? "partnerApp" : "userApp";
                   
                     const notificationData = {
-                        senderId: sender._id,
-                        senderName: sender.name,
-                        senderEmail: sender.email,
-                        senderPhone: sender.phone,
+                        senderId: sender?._id,
+                        senderName: sender?.name,
+                        senderEmail: sender?.email,
+                        senderPhone: sender?.phone,
+                        senderImage: sender?.profilePicture,
                         messageType,
                         message,
                         conversationId: conversation._id
@@ -98,7 +99,8 @@ module.exports = (io) => {
                         `New message from ${sender?.name || sender?.email}`,
                         receiverId,
                         appTarget,
-                        "chat"
+                        "chat",
+                        notificationData
                     );
                 }
 

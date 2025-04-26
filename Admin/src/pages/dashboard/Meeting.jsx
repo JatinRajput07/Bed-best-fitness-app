@@ -217,9 +217,9 @@ const Meeting = () => {
 
             {/* Add/Edit Meeting Dialog */}
             <Dialog open={openDialog} handler={handleCloseDialog} size="lg">
-                <DialogBody>
+                <DialogBody className="max-h-[80vh] overflow-y-auto">
                     <div className="space-y-4">
-                        <Typography variant="h6" className="text-center mb-4">
+                        <Typography variant="h6" className="text-center mb-4 sticky top-0 bg-white py-2">
                             {editingMeeting ? "Edit Meeting" : "Add Meeting"}
                         </Typography>
                         <Input
@@ -231,12 +231,18 @@ const Meeting = () => {
                         <Input
                             type="file"
                             onChange={handleImageChange}
-                            label="Upload Image"
+                            label="Upload Image (Recommended ratio 5:2)"
+                            accept="image/*"
                         />
                         {imagePreview && (
                             <div className="mt-4">
                                 <Typography variant="h6" color="gray" className="mb-2">Image Preview</Typography>
-                                <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
+                                <img 
+                                    src={imagePreview} 
+                                    alt="Preview" 
+                                    className="w-full h-[200px] object-cover rounded-md"
+                                    style={{ aspectRatio: '5/2' }}
+                                />
                             </div>
                         )}
                         <div>
@@ -289,7 +295,7 @@ const Meeting = () => {
                         </div>
                     </div>
                 </DialogBody>
-                <DialogFooter>
+                <DialogFooter className="sticky bottom-0 bg-white py-2">
                     <Button color="red" onClick={handleCloseDialog}>Cancel</Button>
                     <Button color="blue" onClick={handleSubmit} disabled={loading}>
                         {loading ? "Please wait..." : "Submit"}
