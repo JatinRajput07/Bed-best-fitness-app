@@ -1200,10 +1200,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
   for (const section of mealSections) {
     const items = data?.meal[section]?.items || [];
     if (items.length) {
-      const mealTitles = await Meal.find({ _id: { $in: items } }).select(
-        "item",
-        "createdAt"
-      );
+      const mealTitles = await Meal.find({ _id: { $in: items } }).select("item");
       data.meal[section].items = mealTitles.map((item) => item.item);
     }
   }
