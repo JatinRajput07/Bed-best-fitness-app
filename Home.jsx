@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
     categories: [],
     series: [],
   });
+  
 
   const [barChartData, setBarChartData] = useState({
     series: [],
