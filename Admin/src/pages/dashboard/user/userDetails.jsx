@@ -193,7 +193,7 @@ export function Profile({ id, closeModal }) {
                   </Tab>
 
                   <Tab value="Workout" onClick={() => handleTabClick("Workout")}>
-                    Workout
+                    Workout Session
                   </Tab>
 
                   <Tab value="bodydata" onClick={() => handleTabClick("bodydata")}>
@@ -224,9 +224,9 @@ export function Profile({ id, closeModal }) {
                   <Tab value="reminders" onClick={() => handleTabClick("reminders")}>
                     Reminders
                   </Tab>
-                  <Tab value="gallery" onClick={() => handleTabClick("gallery")}>
+                  {/* <Tab value="gallery" onClick={() => handleTabClick("gallery")}>
                     Gallery
-                  </Tab>
+                  </Tab> */}
                 </>
 
               </TabsHeader>

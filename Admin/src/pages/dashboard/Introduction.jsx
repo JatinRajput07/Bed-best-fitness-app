@@ -200,6 +200,53 @@ const IntroductionManagement = () => {
             <Dialog open={openDialog} handler={handleCloseDialog}>
                 <DialogBody className="flex flex-col items-center">
                     <Typography variant="h4" className="mb-4">Add New Introduction</Typography>
+                            <div className="mb-4 w-full">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                               Introduction Image (Recommended: 1920x768px, 5:2 ratio, Max: 2MB)
+                                            </label>
+                                            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-400 rounded-lg p-4">
+                                                <input
+                                                    type="file"
+                                                    id="image-upload"
+                                                    className="hidden"
+                                                    onChange={handleImageChange}
+                                                    accept="image/*"
+                                                    max-size="2097152"
+                                                />
+                                                <label htmlFor="image-upload" className="cursor-pointer w-full">
+                                                    {imagePreview ? (
+                                                        <div className="relative w-full" style={{ paddingTop: '40%' }}>
+                                                            <img
+                                                                src={imagePreview}
+                                                                alt="Banner Preview"
+                                                                className="absolute top-0 left-0 w-full h-full object-cover rounded-lg"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center py-8">
+                                                            <span className="text-4xl text-primary">
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="currentColor"
+                                                                    className="w-10 h-10"
+                                                                >
+                                                                    <path
+                                                                        fillRule="evenodd"
+                                                                        d="M7 4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4zm1 2v1h8V6H8zm-2 3v8h12V9H6zm6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"
+                                                                        clipRule="evenodd"
+                                                                    />
+                                                                </svg>
+                                                            </span>
+                                                            <Typography variant="small" className="mt-2 text-gray-600">
+                                                                Select Image (1920x768px recommended, max 2MB)
+                                                            </Typography>
+                                                        </div>
+                                                    )}
+                                                </label>
+                                            </div>
+                                        </div>
+
                     <Input type="file" onChange={handleImageChange} />
                     {imagePreview && (
                         <div className="mt-4 max-h-64 overflow-auto">

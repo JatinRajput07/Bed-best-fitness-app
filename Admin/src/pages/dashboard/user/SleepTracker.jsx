@@ -71,7 +71,7 @@ const SleepTracker = ({ userId }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 shadow-lg bg-white rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Sleep Tracker</h2>
+      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Sleep Cycle</h2>
 
       <div className="space-y-6">
         {currentRecords.length > 0 ? (
@@ -79,9 +79,9 @@ const SleepTracker = ({ userId }) => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Bed At</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Wake Up</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Total Sleep</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Yesterday Bedtime</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Today’s Wake-up Time</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Night Sleep</th>
               </tr>
             </thead>
             <tbody>
