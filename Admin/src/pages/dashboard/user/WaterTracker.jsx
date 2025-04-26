@@ -5,12 +5,13 @@ import React, { useEffect, useState } from "react";
 const WaterTracker = ({userId}) => {
   const [data, setData] = useState(null);
 
-  const convertQtyToGlasses = (qty) => {
+  const convertQtyToGlasses = (qty, date) => {
     if (qty && typeof qty === "string") {
       const numericValue = parseFloat(qty.replace(/[^\d.-]/g, ""));
       if (!isNaN(numericValue)) {
         const qtyInMl = numericValue * 1000;
-        const qtyInGlasses = qtyInMl / 200
+        const glassSize = new Date(date) < new Date('2025-01-27') ? 250 : 200;
+        const qtyInGlasses = qtyInMl / glassSize;
         return qtyInGlasses;
       }
     }
@@ -70,20 +71,18 @@ const WaterTracker = ({userId}) => {
               { data && data?.waterAchive.length > 0 && data?.waterAchive?.map((record, index) => (
                 <tr
                   key={index}
-                  className={`${
-                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-gray-100`}
+                  className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100`}
                 >
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
                     {formatDate(record.date)}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-gray-700">
-                  {record.value.qty} ( {convertQtyToGlasses(record.value.qty)} Glass )
+                    {record.value.qty} ( {convertQtyToGlasses(record.value.qty, record.date)} Glass )
                   </td>
                   <td className="border border-gray-300 px-4 py-2 font-bold">
                     <span
                       className={`${
-                        convertQtyToGlasses(record.value.qty) >= waterGoal
+                        convertQtyToGlasses(record.value.qty, record.date) >= waterGoal
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
