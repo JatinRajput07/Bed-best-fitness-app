@@ -21,7 +21,8 @@ import axios from "axios";
 import CategoryVideos from "./CategoryVideos";
 import Axios from "@/configs/Axios";
 
-export function Videos() {
+  const Videos = () => {
+
   const dispatch = useDispatch();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);

@@ -26,7 +26,7 @@ const Highlights = React.lazy(() => import("@/pages/dashboard/Highlights"));
 const Profile = React.lazy(() => import("@/pages/dashboard/Profile"));
 const Notifications = React.lazy(() => import("@/pages/dashboard/Notifications"));
 const UserList = React.lazy(() => import("@/pages/dashboard/user/users"));
-const Videos = React.lazy(() => import("./pages/dashboard/videos"));
+const Videos = React.lazy(() => import("./pages/dashboard/Videos"));
 const PrivacyPolicy = React.lazy(() => import("./pages/dashboard/PrivacyPolicy"));
 const VideoUpload = React.lazy(() => import("./pages/dashboard/VideoUpload"));
 const TermsAndConditions = React.lazy(() => import("./pages/dashboard/TermsAndConditions"));
