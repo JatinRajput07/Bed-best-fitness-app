@@ -59,6 +59,7 @@ const { uploadFiles } = require("../../controllers/userController");
 const {
   createInventory,
   getInventory,
+  deleteInventory
 } = require("../../controllers/InventoryController");
 const Auth = require("../../middleware/Auth");
 const { deleteUserUploadFiles } = require("../../controllers/adminUserDetail");
@@ -153,6 +154,7 @@ router.delete("/introduction/:introductionId", deleteIntroduction);
 router.patch("/introduction/:introductionId/status", toggleIntroductionStatus);
 
 router.get("/inventory/:userId", Auth, getInventory);
+router.delete("/inventory/delete/:id", Auth, deleteInventory);
 router.post("/inventory/add", Auth, createInventory);
 
 module.exports = router;

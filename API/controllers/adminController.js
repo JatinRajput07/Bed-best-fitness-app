@@ -29,6 +29,7 @@ const { default: mongoose } = require("mongoose");
 const Notification = require("../models/Notification");
 const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
+const Inventory = require("../models/Inventory");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -939,7 +940,6 @@ exports.deleteMeal = async (req, res, next) => {
 exports.getNutritions = async (req, res, next) => {
   try {
     const coachId = req.user.id;
-
     let query = {};
     if (req.user.role === "host") {
       query.coachId = new ObjectId(coachId);
@@ -979,6 +979,9 @@ exports.getNutritions = async (req, res, next) => {
       groupedByUser.map(async (userGroup) => {
         const userId = userGroup._id;
         const userDetails = await User.findById(userId);
+        const getStockQuantity = await Inventory.findOne({ userId }).sort({
+          createdAt: -1,
+        });
 
         const groupedByMealTime = userGroup.nutritions.reduce(
           (acc, nutrition) => {
@@ -997,14 +1000,20 @@ exports.getNutritions = async (req, res, next) => {
             async ([mealTime, nutritions]) => {
               const processedNutritions = await Promise.all(
                 nutritions.map(async (nutrition) => {
-                  const userRoutines = routines.filter((routine) => routine.userId.toString() === nutrition.userId.toString());
+                  const userRoutines = routines.filter(
+                    (routine) =>
+                      routine.userId.toString() === nutrition.userId.toString()
+                  );
                   let takenCount = 0;
                   let skippedCount = 0;
-
                   userRoutines.forEach((routine) => {
-                    if (routine.nutrition && routine.nutrition[mealTime]) {
-                      const mealTimeData = routine.nutrition[mealTime];
-                      mealTimeData.items.forEach((item) => {
+                    if (
+                      routine.nutrition &&
+                      routine.nutrition[mealTime?.toLowerCase().trim()]
+                    ) {
+                      const mealTimeData =
+                        routine.nutrition[mealTime?.toLowerCase().trim()];
+                      mealTimeData?.items?.forEach((item) => {
                         if (item.toString() === nutrition._id.toString()) {
                           if (mealTimeData.status === "take") {
                             takenCount++;
@@ -1036,6 +1045,7 @@ exports.getNutritions = async (req, res, next) => {
                     takenCount,
                     skippedCount,
                     isCompleted,
+                    stockQuantity: getStockQuantity?.quantity || 0,
                   };
                 })
               );
