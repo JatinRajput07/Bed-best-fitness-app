@@ -291,12 +291,22 @@ const Nutrition = () => {
                               <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                 <div className="bg-blue-50 px-3 py-1 rounded-full">
                                   <Typography variant="small" className="font-semibold text-blue-800">
-                                    Qty: {nutrition.quantity}
+                                    Total Stock: {nutrition?.stockQuantity}
+                                  </Typography>
+                                </div>
+                                <div className="bg-blue-50 px-3 py-1 rounded-full">
+                                  <Typography variant="small" className="font-semibold text-blue-800">
+                                    Remaining Stock: {nutrition?.stockQuantity - nutrition?.takenCount}
                                   </Typography>
                                 </div>
                                 <div className="bg-green-50 px-3 py-1 rounded-full">
                                   <Typography variant="small" className="font-semibold text-green-800">
-                                    Consumed: {nutrition.consumed || 0}
+                                    Used: {nutrition?.takenCount || 0}
+                                  </Typography>
+                                </div>
+                                <div className="bg-green-50 px-3 py-1 rounded-full">
+                                  <Typography variant="small" className="font-semibold text-green-800">
+                                    Daily Dose: {nutrition?.quantity || 0}
                                   </Typography>
                                 </div>
                                 <div className="flex gap-2">

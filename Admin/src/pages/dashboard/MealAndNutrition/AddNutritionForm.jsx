@@ -14,6 +14,7 @@ import {
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import {PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 
 const CATEGORY_SEQUENCE = [
   "Pre Breakfast",
@@ -32,6 +33,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   const [nutritionData, setNutritionData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(editData?.mealTime || "");
   const [description, setDescription] = useState(editData?.description || "");
+  const [inventoryId, setInventoryId] = useState("");
   
   const [item, setItem] = useState({
     name: editData?.name || "",
@@ -61,6 +63,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       .then((response) => {
         if (response.data.status === "success") {
           setNutritionData(response.data.data);
+          setInventoryId("");
         }  })
           .catch((error) => {
             toast.error(error?.response?.data?.message || 
@@ -126,6 +129,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       userId: selectedUser,
       quantity: itemInventory.quantity,
       title: itemInventory.title,
+      inventoryId: inventoryId,
     };
 
     Axios.post(`/admin/inventory/add/`,formData)
@@ -134,6 +138,25 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
         toast.success(`Inventory added successfully!`);
         setIsInventory(false)
         setItemInventory({ title: "", userId: "" });
+      }
+    })
+    .catch((error) => {
+      toast.error(error?.response?.data?.message || `Failed to add inventory`);
+    });
+  }
+
+  const handleDeleteInventory = (e) => {
+    if (!inventoryId){
+      toast.success(`Inventory id required!`);
+    }
+
+    Axios.delete(`/admin/inventory/delete/${inventoryId}`)
+    .then((response) => {
+      if (response.data.status === "success") {
+        toast.success(`Inventory deleted successfully!`);
+        if(selectedUser){
+          fetchNutritionData();
+        }
       }
     })
     .catch((error) => {
@@ -156,7 +179,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
           </Typography>
           {!isInventory ? (
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2  ml-auto" onClick={handleInventory}>
-                Add Inventory
+                Add & Manage Inventory 
             </Button>  
           ) : (
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2  ml-auto" onClick={handleInventory}>
@@ -178,6 +201,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                 label="Select User"
                 value={selectedUser}
                 onChange={(value) => {
+                  setItemInventory({ title: "", quantity: 0 });
                   setSelectedUser(value);
                   setErrors(prev => ({ ...prev, selectedUser: false }));
                 }}
@@ -244,6 +268,40 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
             )} 
           </div>
         </form>
+        <hr className="mt-3" />
+        {nutritionData.length > 0 && nutritionData.map((item) => (
+            <div className="flex items-center justify-between mt-4">
+              <Typography variant="small" className="font-medium text-gray-700">{item?.title}  - </Typography>
+              <Typography variant="small" className="font-semibold text-green-800">{item?.quantity || 0} </Typography>
+              <div className="flex items-center gap-4">
+              <Button
+                variant="text"
+                color="blue"
+                size="sm"
+                className="p-1"
+                onClick={() => {
+                  setInventoryId(item?._id);
+                  setItemInventory({ title: item?.title, quantity: item?.quantity });
+                  setSelectedUser(item?.userId);
+                }}
+              >
+                <PencilIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="text"
+                color="red"
+                size="sm"
+                className="p-1"
+                onClick={() => {
+                  setInventoryId(item?._id);
+                  handleDeleteInventory();
+                }}
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+              </div>
+            </div>
+        ))}
           </DialogBody>
         ) : (
               <DialogBody className="p-6">
@@ -255,6 +313,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                         label="Select User"
                         value={selectedUser}
                         onChange={(value) => {
+                         
                           setSelectedUser(value);
                           setErrors(prev => ({ ...prev, selectedUser: false }));
                         }}
@@ -423,7 +482,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                 Processing...
               </span>
             ) : (
-              !isInventory ? editData ? "Update Plan" : "Add Plan" : "Add Inventory"
+              !isInventory ? editData ? "Update Plan" : "Add Plan" : inventoryId ? "Update Inventory" : "Add Inventory"
             )}
           </Button>
         </div>
