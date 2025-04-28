@@ -36,10 +36,17 @@ const Nutrition = () => {
               b?.userDetails?.name || b?.userDetails?.email
             )
           );
-          setNutritionData(sortedData);
+
           setFilteredData(sortedData);
           if (sortedData.length > 0) {
-            setSelectedUser(sortedData[0]);
+            if(!selectedUser) {
+              setSelectedUser(sortedData[0]);
+            }else{
+              const user = sortedData.find((user) => user.userId === selectedUser.userId);
+              if (user) {
+                setSelectedUser(user);
+              }
+            }
           }
         } else {
           setNutritionData([]);
@@ -105,6 +112,7 @@ const Nutrition = () => {
           setFilteredData((prevState) =>
             prevState.filter((item) => item._id !== deleteNutritionId)
           );
+           fetchNutritionData()
           toast.success("Nutrition plan deleted successfully.");
         }
       })

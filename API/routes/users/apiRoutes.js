@@ -80,7 +80,6 @@ router.post('/verify_otp', verifyOTP); // OTP verification
 router.patch('/resetPassword', resetPassword); // Reset password
 router.post('/resend_otp', resendOtp);
 
-
 router.get('/intro', getIntro); // Get sleep records
 
 // Recommendations Management
@@ -98,8 +97,6 @@ router.get('/getProfile', getProfile); // Get user profile
 router.delete('/delete_account', deleteAccount); // Get user profile
 router.post('/uploadProfilePicture',uploadProfilePicture)
 router.get('/getProfilePicture',getProfilePicture)
-
-
 
 // User Goal Management
 router.post('/set_goal', createGoal); // Add user goal
@@ -160,17 +157,10 @@ router.get('/mindfulness/:category', getMindnessfullByCategory); // Get mindfuln
 router.get('/meal', getMeals); // Get meals
 router.get('/nutrition', getNutritions); // Get nutrition data
 router.get('/get_sleep_records', get_sleep_records); // Get sleep records
-
 router.get('/notification', getNotification); // Get sleep records
-
-
 router.get('/getStepData',getStepData)
-
 router.get('/meetings',getMeetings)
 router.get('/meeting/:category',getMeetingsByCategory)
-
-
-
 router.post('/logout', logout); // Get sleep records
 
 
