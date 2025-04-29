@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardBody, Typography, Button, Input, Dialog, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react";
-import { ChevronDownIcon, ChevronUpIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useSelector, useDispatch } from "react-redux";
 import Axios from "@/configs/Axios";
 import { fetchUsers } from "@/redux/userSlice";
@@ -16,7 +16,7 @@ const Nutrition = () => {
   const [editNutrition, setEditNutrition] = useState(null);
   const [deleteNutritionId, setDeleteNutritionId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const { users, loading } = useSelector((state) => state.users);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
@@ -36,12 +36,13 @@ const Nutrition = () => {
               b?.userDetails?.name || b?.userDetails?.email
             )
           );
-
-          setFilteredData(sortedData);
+          setNutritionData(sortedData);  // ✅ ADD THIS
+          setFilteredData(sortedData);   // Already present
+  
           if (sortedData.length > 0) {
-            if(!selectedUser) {
+            if (!selectedUser) {
               setSelectedUser(sortedData[0]);
-            }else{
+            } else {
               const user = sortedData.find((user) => user.userId === selectedUser.userId);
               if (user) {
                 setSelectedUser(user);
@@ -49,7 +50,7 @@ const Nutrition = () => {
             }
           }
         } else {
-          setNutritionData([]);
+          setNutritionData([]);   
           setFilteredData([]);
         }
       })
@@ -126,14 +127,20 @@ const Nutrition = () => {
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    setFilteredData(
-      nutritionData.filter((user) =>
-        (user?.userDetails?.name || user?.userDetails?.email).toLowerCase().includes(query)
-      )
-    );
+    if (query === '') {
+      setFilteredData(nutritionData);
+    } else {
+      const filtered = nutritionData.filter((user) => {
+        const name = user?.userDetails?.name || '';
+        const email = user?.userDetails?.email || '';
+        return (name + email).toLowerCase().includes(query);
+      });
+      setFilteredData(filtered);
+    }
+  
     setCurrentPage(1);
   };
-
+  
   // Pagination helpers
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = filteredData.slice(
@@ -204,7 +211,7 @@ const Nutrition = () => {
                         {index + 1}. {user?.userDetails?.name || user?.userDetails?.email}
                       </Typography>
                     </div>
-                  ))}
+                  ))} 
                 </div>
               ) : (
                 <div className="p-4 text-center bg-gray-100 rounded-lg">

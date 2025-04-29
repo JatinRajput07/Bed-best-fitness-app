@@ -14,12 +14,13 @@ import {
 import Axios from "@/configs/Axios";
 import toast from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import {PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import ReactSelect from "react-select";
 
 const CATEGORY_SEQUENCE = [
   "Pre Breakfast",
   "Post Breakfast",
-  "Pre Lunch", 
+  "Pre Lunch",
   "Post Lunch",
   "Pre Dinner",
   "Post Dinner",
@@ -34,15 +35,15 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   const [selectedCategory, setSelectedCategory] = useState(editData?.mealTime || "");
   const [description, setDescription] = useState(editData?.description || "");
   const [inventoryId, setInventoryId] = useState("");
-  
+
   const [item, setItem] = useState({
     name: editData?.name || "",
     quantity: editData?.quantity || 1,
   });
 
   const [itemInventory, setItemInventory] = useState({
-    title:  "",
-    quantity:  1,
+    title: "",
+    quantity: 1,
     userId: "",
   });
 
@@ -50,13 +51,13 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
 
   const handleInventory = () => {
     setIsInventory(!isInventory)
-  };  
+  };
 
   useEffect(() => {
-    if(selectedUser){
+    if (selectedUser) {
       fetchNutritionData();
     }
-  }, [isInventory , selectedUser]);
+  }, [isInventory, selectedUser]);
 
   const fetchNutritionData = () => {
     Axios.get(`/admin/inventory/${selectedUser}`)
@@ -64,12 +65,13 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
         if (response.data.status === "success") {
           setNutritionData(response.data.data);
           setInventoryId("");
-        }  })
-          .catch((error) => {
-            toast.error(error?.response?.data?.message || 
-              `Failed to ${editData?._id ? 'update' : 'add'} nutrition plan`);
-          });
-      };
+        }
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message ||
+          `Failed to ${editData?._id ? 'update' : 'add'} nutrition plan`);
+      });
+  };
 
 
   const handleReset = () => {
@@ -91,9 +93,10 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
 
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
-
+    const get = nutritionData.find((val=>val.title === item.name.trim()))
     const nutrition = {
       userId: selectedUser,
+      inventoryId: get?._id,
       category: selectedCategory,
       description,
       items: [{
@@ -102,7 +105,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       }],
     };
 
-    const apiCall = editData?._id 
+    const apiCall = editData?._id
       ? Axios.put(`/admin/nutrition/${editData._id}`, nutrition)
       : Axios.post("/admin/nutrition", nutrition);
 
@@ -115,7 +118,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
         }
       })
       .catch((error) => {
-        toast.error(error?.response?.data?.message || 
+        toast.error(error?.response?.data?.message ||
           `Failed to ${editData?._id ? 'update' : 'add'} nutrition plan`);
       });
   };
@@ -124,7 +127,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
     e.preventDefault();
     let validationErrors = {};
     if (!itemInventory.title) validationErrors.title = "Title is required";
-
+  
     const formData = {
       userId: selectedUser,
       quantity: itemInventory.quantity,
@@ -132,37 +135,52 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       inventoryId: inventoryId,
     };
 
-    Axios.post(`/admin/inventory/add/`,formData)
-    .then((response) => {
-      if (response.data.status === "success") {
-        toast.success(`Inventory added successfully!`);
-        setIsInventory(false)
-        setItemInventory({ title: "", userId: "" });
-      }
-    })
-    .catch((error) => {
-      toast.error(error?.response?.data?.message || `Failed to add inventory`);
-    });
+    Axios.post(`/admin/inventory/add/`, formData)
+      .then((response) => {
+        if (response.data.status === "success") {
+          toast.success(`Inventory added successfully!`);
+          setIsInventory(false)
+          setItemInventory({ title: "", userId: "" });
+        }
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message || `Failed to add inventory`);
+      });
   }
 
-  const handleDeleteInventory = (e) => {
-    if (!inventoryId){
+  const handleDeleteInventory = (id) => {
+    if (!id) {
       toast.success(`Inventory id required!`);
+      return
     }
 
-    Axios.delete(`/admin/inventory/delete/${inventoryId}`)
-    .then((response) => {
-      if (response.data.status === "success") {
-        toast.success(`Inventory deleted successfully!`);
-        if(selectedUser){
-          fetchNutritionData();
+    Axios.delete(`/admin/inventory/delete/${id}`)
+      .then((response) => {
+        if (response.data.status === "success") {
+          toast.success(`Inventory deleted successfully!`);
+          if (selectedUser) {
+            fetchNutritionData();
+          }
         }
-      }
-    })
-    .catch((error) => {
-      toast.error(error?.response?.data?.message || `Failed to add inventory`);
-    });
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message || `Failed to add inventory`);
+      });
   }
+
+  const options = users
+    .filter((user) => user.role === "user")
+    .map((user) => ({
+      value: user._id,
+      label: `${user.name} (${user.email})`,
+    }));
+
+  const optionsInventory = nutritionData
+    .map((val) => ({
+      value: val.title,
+      label:val?.title,
+    }));
+
 
   return (
     <Dialog
@@ -179,282 +197,268 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
           </Typography>
           {!isInventory ? (
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2  ml-auto" onClick={handleInventory}>
-                Add & Manage Inventory 
-            </Button>  
+              Add & Manage Inventory
+            </Button>
           ) : (
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2  ml-auto" onClick={handleInventory}>
-                Back
+              Back
             </Button>
-           )}
+          )}
           <button onClick={handleCancel} className="hover:bg-white/10 p-1 rounded-full">
             <XMarkIcon className="h-5 w-5" />
           </button>
-     
+
         </div>
       </DialogHeader>
       {isInventory ? (
-          <DialogBody className="p-6">
-        <form onSubmit={handleSubmitInventory} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Select
-                label="Select User"
-                value={selectedUser}
-                onChange={(value) => {
-                  setItemInventory({ title: "", quantity: 0 });
-                  setSelectedUser(value);
-                  setErrors(prev => ({ ...prev, selectedUser: false }));
+        <DialogBody className="p-6">
+          <form onSubmit={handleSubmitInventory} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <ReactSelect
+                  options={options}
+                  value={options.find((opt) => opt.value === selectedUser)}
+                  onChange={(selected) => {
+                    setSelectedUser(selected.value);
+                    setErrors((prev) => ({ ...prev, selectedUser: false }));
+                  }}
+                  placeholder="Select User"
+                  classNamePrefix="react-select"
+                />
+                {errors.selectedUser && (
+                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                    {errors.selectedUser}
+                  </Typography>
+                )}
+
+              </div>
+              <div>
+                <Input
+                  label="Title"
+                  value={itemInventory.title}
+                  onChange={(e) => {
+                    setItemInventory(prev => ({ ...prev, title: e.target.value }));
+                    setErrors(prev => ({ ...prev, itemName: false }));
+                  }}
+                  error={!!errors.itemName}
+                  className="!border !border-gray-300 focus:!border-blue-500"
+                  labelProps={{
+                    className: "before:content-none after:content-none",
+                  }}
+                />
+                {errors.title && (
+                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                    {errors.title}
+                  </Typography>
+                )}
+              </div>
+              <Input
+                label="Quantity"
+                type="number"
+                value={itemInventory.quantity}
+                onChange={(e) => {
+                  setItemInventory(prev => ({ ...prev, quantity: e.target.value }));
                 }}
-                error={!!errors.selectedUser}
+                error={!!errors.quantity}
                 className="!border !border-gray-300 focus:!border-blue-500"
                 labelProps={{
                   className: "before:content-none after:content-none",
                 }}
-              >
-                {users.filter(e => e?.role === "user").map((user) => (
-                  <Option key={user._id} value={user._id} className="hover:bg-blue-50">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{user.name}</span>
-                      {user.email && (
-                        <span className="text-xs text-gray-500 truncate">({user.email})</span>
-                      )}
-                    </div>
-                  </Option>
-                ))}
-              </Select>
-              {errors.selectedUser && (
+              />
+              {errors.quantity && (
                 <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                  {errors.selectedUser}
+                  {errors.quantity}
                 </Typography>
               )}
             </div>
-            <div>
-                  <Input
-                    label="Title"
-                    value={itemInventory.title}
-                    onChange={(e) => {
-                      setItemInventory(prev => ({ ...prev, title: e.target.value }));
-                      setErrors(prev => ({ ...prev, itemName: false }));
-                    }}
-                    error={!!errors.itemName}
-                    className="!border !border-gray-300 focus:!border-blue-500"
-                    labelProps={{
-                      className: "before:content-none after:content-none",
-                    }}
-                  />
-                  {errors.title && (
-                    <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                      {errors.title}
-                    </Typography>
-                  )}
-                </div>
-              <Input
-              label="Quantity"
-              type="number"
-              value={itemInventory.quantity}
-              onChange={(e) => {
-                setItemInventory(prev => ({ ...prev, quantity: e.target.value }));
-              }}
-              error={!!errors.quantity}
-              className="!border !border-gray-300 focus:!border-blue-500"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-            {errors.quantity && (
-              <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                {errors.quantity}
-              </Typography>
-            )} 
-          </div>
-        </form>
-        <hr className="mt-3" />
-        {nutritionData.length > 0 && nutritionData.map((item) => (
+          </form>
+          <hr className="mt-3" />
+          {nutritionData.length > 0 && nutritionData.map((item) => (
             <div className="flex items-center justify-between mt-4">
               <Typography variant="small" className="font-medium text-gray-700">{item?.title}  - </Typography>
               <Typography variant="small" className="font-semibold text-green-800">{item?.quantity || 0} </Typography>
               <div className="flex items-center gap-4">
-              <Button
-                variant="text"
-                color="blue"
-                size="sm"
-                className="p-1"
-                onClick={() => {
-                  setInventoryId(item?._id);
-                  setItemInventory({ title: item?.title, quantity: item?.quantity });
-                  setSelectedUser(item?.userId);
-                }}
-              >
-                <PencilIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="text"
-                color="red"
-                size="sm"
-                className="p-1"
-                onClick={() => {
-                  setInventoryId(item?._id);
-                  handleDeleteInventory();
-                }}
-              >
-                <TrashIcon className="h-4 w-4" />
-              </Button>
+                <Button
+                  variant="text"
+                  color="blue"
+                  size="sm"
+                  className="p-1"
+                  onClick={() => {
+                    setInventoryId(item?._id);
+                    setItemInventory({ title: item?.title, quantity: item?.quantity });
+                    setSelectedUser(item?.userId);
+                  }}
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="text"
+                  color="red"
+                  size="sm"
+                  className="p-1"
+                  onClick={() => {
+                    handleDeleteInventory(item?._id);
+                  }}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-        ))}
-          </DialogBody>
-        ) : (
-              <DialogBody className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* User and Category Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Select
-                        label="Select User"
-                        value={selectedUser}
-                        onChange={(value) => {
-                         
-                          setSelectedUser(value);
-                          setErrors(prev => ({ ...prev, selectedUser: false }));
-                        }}
-                        error={!!errors.selectedUser}
-                        className="!border !border-gray-300 focus:!border-blue-500"
-                        labelProps={{
-                          className: "before:content-none after:content-none",
-                        }}
-                      >
-                        {users.filter(e => e?.role === "user").map((user) => (
-                          <Option key={user._id} value={user._id} className="hover:bg-blue-50">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{user.name}</span>
-                              {user.email && (
-                                <span className="text-xs text-gray-500 truncate">({user.email})</span>
-                              )}
-                            </div>
-                          </Option>
-                        ))}
-                      </Select>
-                      {errors.selectedUser && (
-                        <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                          {errors.selectedUser}
-                        </Typography>
-                      )}
-                    </div>
+          ))}
+        </DialogBody>
+      ) : (
+        <DialogBody className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* User and Category Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <ReactSelect
+                  options={options}
+                  value={options.find((opt) => opt.value === selectedUser)}
+                  onChange={(selected) => {
+                    setSelectedUser(selected.value);
+                    setErrors((prev) => ({ ...prev, selectedUser: false }));
+                  }}
+                  placeholder="Select User"
+                  classNamePrefix="react-select"
+                />
+                {errors.selectedUser && (
+                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                    {errors.selectedUser}
+                  </Typography>
+                )}
+              </div>
 
-                    <div>
-                      <Select
-                        label="Meal Time Category"
-                        value={selectedCategory}
-                        onChange={(value) => {
-                          setSelectedCategory(value);
-                          setErrors(prev => ({ ...prev, selectedCategory: false }));
-                        }}
-                        error={!!errors.selectedCategory}
-                        className="!border !border-gray-300 focus:!border-blue-500"
-                        labelProps={{
-                          className: "before:content-none after:content-none",
-                        }}
-                      >
-                        {CATEGORY_SEQUENCE.map((category) => (
-                          <Option key={category} value={category} className="hover:bg-blue-50">
-                            {category}
-                          </Option>
-                        ))}
-                      </Select>
-                      {errors.selectedCategory && (
-                        <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                          {errors.selectedCategory}
-                        </Typography>
-                      )}
-                    </div>
-                  </div>
+              <div>
+                <Select
+                  label="Meal Time Category"
+                  value={selectedCategory}
+                  onChange={(value) => {
+                    setSelectedCategory(value);
+                    setErrors(prev => ({ ...prev, selectedCategory: false }));
+                  }}
+                  error={!!errors.selectedCategory}
+                  className="!border !border-gray-300 focus:!border-blue-500"
+                  labelProps={{
+                    className: "before:content-none after:content-none",
+                  }}
+                >
+                  {CATEGORY_SEQUENCE.map((category) => (
+                    <Option key={category} value={category} className="hover:bg-blue-50">
+                      {category}
+                    </Option>
+                  ))}
+                </Select>
+                {errors.selectedCategory && (
+                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                    {errors.selectedCategory}
+                  </Typography>
+                )}
+              </div>
+            </div>
 
-                  {/* Description */}
-                  <div>
-                    <Textarea
-                      label="Description"
-                      value={description}
-                      onChange={(e) => {
-                        setDescription(e.target.value);
-                        setErrors(prev => ({ ...prev, description: false }));
-                      }}
-                      error={!!errors.description}
-                      className="!border !border-gray-300 focus:!border-blue-500"
-                      rows={3}
-                      labelProps={{
-                        className: "before:content-none after:content-none",
-                      }}
-                    />
-                    {errors.description && (
-                      <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                        {errors.description}
-                      </Typography>
-                    )}
-                  </div>
+            {/* Description */}
+            <div>
+              <Textarea
+                label="Description"
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setErrors(prev => ({ ...prev, description: false }));
+                }}
+                error={!!errors.description}
+                className="!border !border-gray-300 focus:!border-blue-500"
+                rows={3}
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
+              />
+              {errors.description && (
+                <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                  {errors.description}
+                </Typography>
+              )}
+            </div>
 
-                  {/* Nutrition Item */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <Typography variant="h6" color="blue-gray" className="mb-4 font-semibold">
-                      Nutrition Item Details
-                    </Typography>
-                    
-                    <div className="space-y-4">
-                      <div>
-                      <Select
-                        label="Select Inventory"
-                        value={item.name}
-                        onChange={(value) => {
-                          setItem((prev) => ({ ...prev, name: value }));
-                        }}
-                        error={!!errors.name}
-                        className="!border !border-gray-300 focus:!border-blue-500"
-                        labelProps={{
-                          className: "before:content-none after:content-none",
-                        }}
-                      >
-                        {nutritionData?.map((item) => (
-                          <Option key={item._id} value={item.title}>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{item.title}</span>
-                            </div>
-                          </Option>
-                        ))}
-                        </Select>
-                      </div>
+            {/* Nutrition Item */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <Typography variant="h6" color="blue-gray" className="mb-4 font-semibold">
+                Nutrition Item Details
+              </Typography>
 
-                      <div className="flex items-center justify-between">
-                        <Typography variant="small" className="font-medium text-gray-700">
-                          Dose
-                        </Typography>
-                        <div className="flex items-center gap-4">
-                          <Button
-                            variant="outlined"
-                            size="sm"
-                            color="blue-gray"
-                            className="w-10 h-10 flex items-center justify-center p-0"
-                            onClick={() => setItem(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))}
-                          >
-                            -
-                          </Button>
-                          <Typography className="w-8 text-center font-bold">
-                            {item.quantity}
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="sm"
-                            color="blue-gray"
-                            className="w-10 h-10 flex items-center justify-center p-0"
-                            onClick={() => setItem(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
-                          >
-                            +
-                          </Button>
+              <div className="space-y-4">
+                <div>
+                <ReactSelect
+                  options={optionsInventory}
+                  value={optionsInventory.find((opt) => opt.value === item.name)}
+                  onChange={(selected) => {
+                    setItem((prev) => ({ ...prev, name: selected?.value }));
+                  }}
+                  placeholder="Select Inventory"
+                  classNamePrefix="react-select"
+                />
+                {errors?.item?.name && (
+                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
+                    {errors?.item?.name}
+                  </Typography>
+                )}
+
+
+                  {/* <Select
+                    label="Select Inventory"
+                    value={item.name}
+                    onChange={(value) => {
+                      setItem((prev) => ({ ...prev, name: value }));
+                    }}
+                    error={!!errors.name}
+                    className="!border !border-gray-300 focus:!border-blue-500"
+                    labelProps={{
+                      className: "before:content-none after:content-none",
+                    }}
+                  >
+                    {nutritionData?.map((item) => (
+                      <Option key={item._id} value={item.title}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{item.title}</span>
                         </div>
-                      </div>
-                    </div>
+                      </Option>
+                    ))}
+                  </Select> */}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Typography variant="small" className="font-medium text-gray-700">
+                    Dose
+                  </Typography>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outlined"
+                      size="sm"
+                      color="blue-gray"
+                      className="w-10 h-10 flex items-center justify-center p-0"
+                      onClick={() => setItem(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))}
+                    >
+                      -
+                    </Button>
+                    <Typography className="w-8 text-center font-bold">
+                      {item.quantity}
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="sm"
+                      color="blue-gray"
+                      className="w-10 h-10 flex items-center justify-center p-0"
+                      onClick={() => setItem(prev => ({ ...prev, quantity: prev.quantity + 1 }))}
+                    >
+                      +
+                    </Button>
                   </div>
-                </form>
-              </DialogBody>
-        )}
+                </div>
+              </div>
+            </div>
+          </form>
+        </DialogBody>
+      )}
 
       <DialogFooter className="bg-gray-50 px-6 py-4 rounded-b-lg border-t">
         <div className="flex items-center justify-end gap-3">
@@ -466,10 +470,10 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
           >
             Cancel
           </Button>
-          
+
           <Button
             color="blue"
-            onClick={isInventory ? handleSubmitInventory: handleSubmit}
+            onClick={isInventory ? handleSubmitInventory : handleSubmit}
             disabled={loading}
             className="shadow-md hover:shadow-lg transition-all"
           >

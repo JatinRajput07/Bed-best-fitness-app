@@ -62,6 +62,7 @@ function RecommendedVideos({ userId }) {
       </Typography>
       <div className="mt-6 grid grid-cols-1 gap-12 md:grid-cols-2 xl:grid-cols-4">
         {videos.map(({ video_id }, key) => (
+          video_id && (
           <Card
             key={video_id?._id}
             color="transparent"
@@ -84,6 +85,7 @@ function RecommendedVideos({ userId }) {
               {video_id?.title}
             </Typography>
           </Card>
+           )
         ))}
       </div>
 
