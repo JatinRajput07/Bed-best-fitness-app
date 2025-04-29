@@ -4,6 +4,7 @@ const nutritionSchema = mongoose.Schema(
     {
         coachId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        inventoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true },
         mealTime: {
             type: String,
             required: true,

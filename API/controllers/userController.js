@@ -582,8 +582,6 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
     date: req.query.date ? req.query.date : today,
   };
 
-  console.log(query);
-
   const routine = await Routine.findOne(query);
 
   let formattedRoutine = routine ? routine.toObject() : {};

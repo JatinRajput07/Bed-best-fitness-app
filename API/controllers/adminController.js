@@ -789,11 +789,12 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 exports.createNutrition = async (req, res, next) => {
   try {
     const coachId = req.user.id;
-    const { userId, category, items, description } = req.body;
+    const { userId, category, items, description, inventoryId } = req.body;
 
     const data = {
       userId,
       coachId,
+      inventoryId,
       mealTime: category,
       description,
       name: items[0]["name"],
