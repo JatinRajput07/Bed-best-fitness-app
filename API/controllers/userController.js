@@ -660,6 +660,17 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
           }
           updateNestedFields(target[key], updates[key]);
         } else {
+          // Special handling for meal images
+          if (key === 'image' && target[key] && updates[key]) {
+            // Preserve previous image in history
+            if (!target.imageHistory) {
+              target.imageHistory = [];
+            }
+            target.imageHistory.push({
+              url: target[key],
+              uploaded_at: target.image_uploaded_at || new Date()
+            });
+          }
           target[key] = updates[key];
         }
       }

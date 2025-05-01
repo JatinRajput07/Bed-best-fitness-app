@@ -12,6 +12,10 @@ const mealSchema = new mongoose.Schema({
     note: { type: String },
     image: { type: String },
     image_uploaded_at: { type: Date },
+    imageHistory: [{
+        url: { type: String },
+        uploaded_at: { type: Date }
+    }],
     items: [String]
 }, { strict: false });
 
