@@ -625,6 +625,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const today = getLocalDate();
 
+  // 1. Input Validation (Existing - No Changes)
   if (!data) {
     return next(new AppError(`No data provided for section: ${section}`, 400));
   }
@@ -643,59 +644,61 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     return next(new AppError(`Invalid section: ${section}`, 400));
   }
 
+  // 2. Find or Create Routine (Existing - No Changes)
   let routine = await Routine.findOne({ userId, date: today });
 
   if (!routine) {
     routine = await Routine.create({ userId, date: today, [section]: data });
   } else {
-    const updateNestedFields = (target, updates) => {
-      for (const key in updates) {
-        if (
-          typeof updates[key] === "object" &&
-          !Array.isArray(updates[key]) &&
-          updates[key] !== null
-        ) {
-          if (!target[key] || typeof target[key] !== "object") {
-            target[key] = {};
+    // 3. Section-Specific Handling
+    switch (section) {
+      case "meal":
+        // Meal-specific handling with image preservation
+        await handleMealUpdate(routine, data);
+        break;
+      
+      case "nutritionrrr":
+        // Existing nutrition handling (No Changes)
+        routine.nutrition = routine.nutrition || [];
+        data.forEach((item) => {
+          const existingItem = routine.nutrition.find(
+            (nutri) => nutri.item === item.item
+          );
+          if (existingItem) {
+            Object.assign(existingItem, item);
+          } else {
+            routine.nutrition.push(item);
           }
-          updateNestedFields(target[key], updates[key]);
-        } else {
-          // Special handling for meal images
-          if (key === 'image' && target[key] && updates[key]) {
-            // Preserve previous image in history
-            if (!target.imageHistory) {
-              target.imageHistory = [];
+        });
+        break;
+      
+      default:
+        // All other sections (Existing - No Changes)
+        const updateNestedFields = (target, updates) => {
+          for (const key in updates) {
+            if (
+              typeof updates[key] === "object" &&
+              !Array.isArray(updates[key]) &&
+              updates[key] !== null
+            ) {
+              if (!target[key] || typeof target[key] !== "object") {
+                target[key] = {};
+              }
+              updateNestedFields(target[key], updates[key]);
+            } else {
+              target[key] = updates[key];
             }
-            target.imageHistory.push({
-              url: target[key],
-              uploaded_at: target.image_uploaded_at || new Date()
-            });
           }
-          target[key] = updates[key];
-        }
-      }
-    };
-
-    if (section === "nutritionrrrr") {
-      routine.nutrition = routine.nutrition || [];
-      data.forEach((item) => {
-        const existingItem = routine.nutrition.find(
-          (nutri) => nutri.item === item.item
-        );
-        if (existingItem) {
-          Object.assign(existingItem, item);
-        } else {
-          routine.nutrition.push(item);
-        }
-      });
-    } else {
-      routine[section] = routine[section] || {};
-      updateNestedFields(routine[section], data);
+        };
+        
+        routine[section] = routine[section] || {};
+        updateNestedFields(routine[section], data);
     }
 
     await routine.save();
   }
 
+  // 4. Response (Existing - No Changes)
   const responseData = {
     status: "success",
     message: `${section} updated successfully`,
@@ -704,6 +707,54 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
 
   res.status(200).json(responseData);
 });
+
+// Helper function for meal updates
+async function handleMealUpdate(routine, data) {
+  const mealTypes = [
+    'wake_up_food',
+    'breakfast',
+    'morning_snacks',
+    'lunch',
+    'evening_snacks',
+    'dinner'
+  ];
+
+  // Initialize meal object if not exists
+  if (!routine.meal) {
+    routine.meal = {};
+  }
+
+  // Process each meal type in the update data
+  for (const mealType of mealTypes) {
+    if (data[mealType]) {
+      // Initialize meal type if not exists
+      if (!routine.meal[mealType]) {
+        routine.meal[mealType] = {};
+      }
+
+      // Handle image preservation
+      if (data[mealType].image && routine.meal[mealType].image) {
+        if (!routine.meal[mealType].imageHistory) {
+          routine.meal[mealType].imageHistory = [];
+        }
+        routine.meal[mealType].imageHistory.push({
+          url: routine.meal[mealType].image,
+          uploaded_at: routine.meal[mealType].image_uploaded_at || new Date()
+        });
+      }
+
+      // Update only the changed fields
+      for (const field in data[mealType]) {
+        if (field === 'image') {
+          routine.meal[mealType][field] = data[mealType][field];
+          routine.meal[mealType].image_uploaded_at = new Date();
+        } else {
+          routine.meal[mealType][field] = data[mealType][field];
+        }
+      }
+    }
+  }
+}
 
 exports.uploadFiles = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
