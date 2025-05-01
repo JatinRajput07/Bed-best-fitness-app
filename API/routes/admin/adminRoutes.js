@@ -55,7 +55,7 @@ const {
   toggleIntroductionStatus,
   deleteIntroduction,
 } = require("../../controllers/adminController");
-const { uploadFiles } = require("../../controllers/userController");
+const { uploadFiles, getUserRecommendations, getVideoRecommendations, deleteVideoRecommendation } = require("../../controllers/userController");
 const {
   createInventory,
   getInventory,
@@ -156,5 +156,7 @@ router.patch("/introduction/:introductionId/status", toggleIntroductionStatus);
 router.get("/inventory/:userId", Auth, getInventory);
 router.delete("/inventory/delete/:id", Auth, deleteInventory);
 router.post("/inventory/add", Auth, createInventory);
+router.get("/recommendations", Auth, getVideoRecommendations);
+router.delete('/video-recommendation/:recommendationId', deleteVideoRecommendation);
 
 module.exports = router;

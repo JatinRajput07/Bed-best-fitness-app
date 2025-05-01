@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 import DeleteAccountPolicy from "./pages/dashboard/DeleteAccountPolicy";
+import RecommendedVideos from "./pages/dashboard/RecommendedVideos";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
@@ -122,6 +123,15 @@ export const routes = () => {
           element: (
             <Suspense fallback={<div>Loading...</div>}>
               <VideoUpload />
+            </Suspense>
+          ),
+        },
+        {
+          name: "Recommended Videos",
+          path: "/recommended-videos",
+          element: (
+            <Suspense fallback={<div>Loading...</div>}>
+              < RecommendedVideos />
             </Suspense>
           ),
         },

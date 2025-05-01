@@ -814,7 +814,7 @@ exports.createNutrition = async (req, res, next) => {
 
 exports.updateNutrition = async (req, res, next) => {
   try {
-    const { userId, category, items, description } = req.body;
+    const { userId, category, items, description ,inventoryId } = req.body;
 
     if (!items || items.length !== 1) {
       return res.status(400).json({
@@ -828,6 +828,7 @@ exports.updateNutrition = async (req, res, next) => {
       userId,
       mealTime: category,
       description,
+      // inventoryId,
       name: items[0]["name"],
       quantity: items[0]["quantity"],
     };

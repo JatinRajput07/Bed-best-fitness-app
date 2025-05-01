@@ -1950,3 +1950,33 @@ exports.getMeetingsByCategory = catchAsync(async (req, res, next) => {
     meetings,
   });
 });
+
+
+exports.getVideoRecommendations = catchAsync(async (req, res, next) => {
+  const recommendations = await Recommendation.find()
+    .populate("user_id", "name email profilePicture")
+    .populate("video_id")
+    .exec();
+  const validRecommendations = recommendations.filter(rec => rec.video_id !== null);
+
+  return res.status(200).json({
+    status: "success",
+    recommendations: validRecommendations,
+  });
+});
+
+exports.deleteVideoRecommendation = catchAsync(async (req, res, next) => {
+  const { recommendationId } = req.params;
+  if (!recommendationId) {
+    return next(new AppError("Recommendation ID is required", 400));
+  }
+  const recommendation = await Recommendation.findByIdAndDelete(recommendationId);
+
+  if (!recommendation) {
+    return next(new AppError("Recommendation not found", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "Video recommendation deleted successfully"
+  });
+});
