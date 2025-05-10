@@ -586,7 +586,9 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
 
   let formattedRoutine = routine ? routine.toObject() : {};
 
-  if ( formattedRoutine.meal && typeof formattedRoutine.meal === "object" &&
+  if (
+    formattedRoutine.meal &&
+    typeof formattedRoutine.meal === "object" &&
     !Array.isArray(formattedRoutine.meal)
   ) {
     formattedRoutine.meal = Object.entries(formattedRoutine.meal).map(
@@ -652,15 +654,15 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     // SPECIAL HANDLING FOR MEAL SECTION
     if (section === "meal") {
       if (!routine.meal) routine.meal = {};
-      
+
       // Process each meal type separately
       const mealTypes = ['wake_up_food', 'breakfast', 'morning_snacks', 'lunch', 'evening_snacks', 'dinner'];
-      
+
       mealTypes.forEach(mealType => {
         if (data[mealType]) {
           // Initialize if not exists
           if (!routine.meal[mealType]) routine.meal[mealType] = {};
-          
+
           // Handle image separately to preserve existing
           if (data[mealType].image) {
             // Save previous image to history
@@ -673,12 +675,12 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
                 uploaded_at: routine.meal[mealType].image_uploaded_at || new Date()
               });
             }
-            
+
             // Update current image and timestamp
             routine.meal[mealType].image = data[mealType].image;
             routine.meal[mealType].image_uploaded_at = new Date();
           }
-          
+
           // Update other fields normally
           Object.keys(data[mealType]).forEach(key => {
             if (key !== 'image') {
@@ -688,35 +690,24 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         }
       });
     }
-    // Nutrition section (unchanged)
-    else if (section === "nutrition") {
-      routine.nutrition = routine.nutrition || [];
-      data?.item?.forEach((item) => {
-        const existingItem = routine.nutrition.find(
-          (nutri) => nutri.item === item
-        );
-        if (existingItem) {
-          Object.assign(existingItem, item);
-        } else {
-          routine.nutrition.push(item);
-        }
-      });
-    }
     // All other sections (unchanged)
     else {
       const updateNestedFields = (target, updates) => {
         for (const key in updates) {
+          // Convert key to lowercase if section is nutrition
+          const processedKey = section === 'nutrition' ? key.toLowerCase() : key;
+          
           if (
             typeof updates[key] === "object" &&
             !Array.isArray(updates[key]) &&
             updates[key] !== null
           ) {
-            if (!target[key] || typeof target[key] !== "object") {
-              target[key] = {};
+            if (!target[processedKey] || typeof target[processedKey] !== "object") {
+              target[processedKey] = {};
             }
-            updateNestedFields(target[key], updates[key]);
+            updateNestedFields(target[processedKey], updates[key]);
           } else {
-            target[key] = updates[key];
+            target[processedKey] = updates[key];
           }
         }
       };
@@ -1411,7 +1402,7 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
         const fileType = file.mimetype.split("/")[0];
         const filePath = `http://43.204.2.84:7200/uploads/${
           fileType == "application" ? "pdf" : fileType
-        }s/${file.filename}`;
+          }s/${file.filename}`;
 
         const fileData = {
           fileName: file.filename,
