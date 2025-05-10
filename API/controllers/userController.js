@@ -586,9 +586,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
 
   let formattedRoutine = routine ? routine.toObject() : {};
 
-  if (
-    formattedRoutine.meal &&
-    typeof formattedRoutine.meal === "object" &&
+  if ( formattedRoutine.meal && typeof formattedRoutine.meal === "object" &&
     !Array.isArray(formattedRoutine.meal)
   ) {
     formattedRoutine.meal = Object.entries(formattedRoutine.meal).map(
@@ -598,6 +596,8 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
       })
     );
   }
+
+  console.log(formattedRoutine, "======================formattedRoutine=====================");
 
   if (
     formattedRoutine.nutrition &&
@@ -691,9 +691,9 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
     // Nutrition section (unchanged)
     else if (section === "nutrition") {
       routine.nutrition = routine.nutrition || [];
-      data.forEach((item) => {
+      data?.item?.forEach((item) => {
         const existingItem = routine.nutrition.find(
-          (nutri) => nutri.item === item.item
+          (nutri) => nutri.item === item
         );
         if (existingItem) {
           Object.assign(existingItem, item);
