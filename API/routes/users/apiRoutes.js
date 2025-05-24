@@ -54,7 +54,8 @@ const {
     uploadProfilePicture,
     getProfilePicture,
     getMeetings,
-    getMeetingsByCategory
+    getMeetingsByCategory,
+    getUserImages
 } = require('../../controllers/userController');
 
 const {
@@ -105,7 +106,8 @@ router.get('/get_goal', getUserGoal); // Get user goal
 // User Upload File Management (Feed and Blood Report)
 router.post('/user-upload-file', userUploadFiles);
 router.delete('/user-upload-file/:id', deleteUserUploadFiles); 
-router.get('/get-upload-file', getUploadFiles); // Get user files
+router.get('/get-upload-file', getUploadFiles);
+router.get('/get-user-images', getUserImages);  // Get user files
 
 // Routine Management
 router.post('/routine', addRoutine); // Add a routine

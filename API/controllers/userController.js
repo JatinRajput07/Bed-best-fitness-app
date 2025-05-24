@@ -1438,11 +1438,36 @@ exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
 });
 
 exports.getUploadFiles = catchAsync(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user.id || req.query.userId;
 
   const uploadfile = await UserFiles.aggregate([
     {
       $match: { userId: new mongoose.Types.ObjectId(userId), type: "pdf" },
+    },
+    {
+      $project: {
+        _id: 1,
+        path: 1,
+        type: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: "success",
+    message: "Files retrieved successfully.",
+    data: uploadfile,
+  });
+});
+
+
+exports.getUserImages = catchAsync(async (req, res, next) => {
+  const userId = req.user.id || req.query.userId;
+
+  const uploadfile = await UserFiles.aggregate([
+    {
+      $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
     },
     {
       $project: {
