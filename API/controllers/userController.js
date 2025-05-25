@@ -911,12 +911,7 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const coach = await Asign_User.findOne(
-    { asign_user: userId },
-    "host imageUrl"
-  )
-    .populate("host", "name email")
-    .exec();
+  const coach = await Asign_User.findOne({ asign_user: userId },"host imageUrl").populate("host", "name email").exec();
 
   const past20Days = Array.from({ length: 20 }, (_, i) => {
     const date = new Date();
@@ -1101,7 +1096,7 @@ exports.Home = catchAsync(async (req, res, next) => {
     .map((item) => item.video_id)
     .flat();
 
-  const highlights = await Highlight.find({}, "url");
+  const highlights = await Highlight.find({}, "url").sort({ createdAt: -1 });
 
   return res.status(200).json({
     status: "success",
@@ -1402,26 +1397,29 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
         const fileType = file.mimetype.split("/")[0];
         const filePath = `http://43.204.2.84:7200/uploads/${
           fileType == "application" ? "pdf" : fileType
-          }s/${file.filename}`;
+        }s/${file.filename}`;
 
         const fileData = {
           fileName: file.filename,
           path: filePath,
           mimeType: fileType == "application" ? "pdf" : fileType,
         };
-        return fileData;
+        
+        // Create a record for each file
+        const uploadfile = await UserFiles.create({
+          userId: req.user.id,
+          path: fileData.path,
+          type: fileData.mimeType
+        });
+        
+        return uploadfile;
       })
     );
-    const data = {
-      userId: req.user.id,
-      path: uploadedFiles[0].path,
-      type: uploadedFiles[0].mimeType,
-    };
-    const uploadfile = await UserFiles.create(data);
+    
     res.status(200).json({
       status: "success",
       message: "Files uploaded successfully.",
-      data: uploadfile,
+      data: uploadedFiles, // Return all uploaded files data
     });
   });
 });
@@ -1464,7 +1462,6 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 
 exports.getUserImages = catchAsync(async (req, res, next) => {
   const userId = req.user.id || req.query.userId;
-
   const uploadfile = await UserFiles.aggregate([
     {
       $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
@@ -1477,6 +1474,9 @@ exports.getUserImages = catchAsync(async (req, res, next) => {
         createdAt: 1,
       },
     },
+    {
+      $sort: { createdAt: -1 },
+    }
   ]);
 
   res.status(200).json({
