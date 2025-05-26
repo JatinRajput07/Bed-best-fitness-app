@@ -696,7 +696,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
         for (const key in updates) {
           // Convert key to lowercase if section is nutrition
           const processedKey = section === 'nutrition' ? key.toLowerCase() : key;
-          
+
           if (
             typeof updates[key] === "object" &&
             !Array.isArray(updates[key]) &&
@@ -711,7 +711,7 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
           }
         }
       };
-      
+
       routine[section] = routine[section] || {};
       updateNestedFields(routine[section], data);
     }
@@ -911,7 +911,7 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const coach = await Asign_User.findOne({ asign_user: userId },"host imageUrl").populate("host", "name email").exec();
+  const coach = await Asign_User.findOne({ asign_user: userId }, "host imageUrl").populate("host", "name email").exec();
 
   const past20Days = Array.from({ length: 20 }, (_, i) => {
     const date = new Date();
@@ -1395,31 +1395,36 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
     const uploadedFiles = await Promise.all(
       req.files.map(async (file) => {
         // Use fileType from body if available, otherwise determine from mimetype
-        const fileType = req.body.fileType 
-          ? req.body.fileType.toLowerCase()
-          : file.mimetype.split("/")[0];
-        
-        const filePath = `http://43.204.2.84:7200/uploads/${
-          fileType == "application" ? "pdf" : fileType
-        }s/${file.filename}`;
+        const fileType = req.body.fileType ? req.body.fileType.toLowerCase() : file.mimetype.split("/")[0];
+        console.log(fileType, '=======================File Type======')
+        let filePath
+
+        if (req?.body?.fileType && req?.body?.fileType === "image") {
+          filePath = `http://43.204.2.84:7200/uploads/${req?.body?.fileType}s/${file.filename}`;
+        } else {
+          filePath = `http://43.204.2.84:7200/uploads/pdfs/${file.filename}`;
+        }
+
+
+        console.log(filePath, '=========================')
 
         const fileData = {
           fileName: file.filename,
           path: filePath,
           mimeType: fileType == "application" ? "pdf" : fileType,
         };
-        
+
         // Create a record for each file
         const uploadfile = await UserFiles.create({
           userId: req.user.id,
           path: fileData.path,
           type: fileData.mimeType
         });
-        
+
         return uploadfile;
       })
     );
-    
+
     res.status(200).json({
       status: "success",
       message: "Files uploaded successfully.",
