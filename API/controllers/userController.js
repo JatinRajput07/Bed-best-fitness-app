@@ -27,6 +27,8 @@ const SubCategory = require("../models/SubCategory");
 const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
 const Meeting = require("../models/Meeting");
+const FileType = require('file-type');
+const fs = require('fs').promises;
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -1374,13 +1376,11 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
   });
 });
 
+
+
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
-    console.log(
-      req.files,
-      req.body,
-      "==========================req.files=============="
-    );
+    console.log(req.files, req.body, "==========================req.files==============");
 
     if (err instanceof multer.MulterError) {
       return next(new AppError(err.message, 400));
@@ -1394,35 +1394,43 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
 
     const uploadedFiles = await Promise.all(
       req.files.map(async (file) => {
-        const fileType = file.mimetype.split("/")[0];
-        const filePath = `http://43.204.2.84:7200/uploads/${
-          fileType == "application" ? "pdf" : fileType
-        }s/${file.filename}`;
+        // Read file buffer to detect real mime type
+        const buffer = await fs.readFile(file.path);
+        const type = await FileType.fromBuffer(buffer);
+
+        const mime = type ? type.mime : file.mimetype;
+        const fileType = mime.split("/")[0]; // image, video, audio, application etc.
+
+        const folderName = fileType === "application" && mime === "application/pdf"
+          ? "pdfs"
+          : fileType + "s";
+
+        const filePath = `http://43.204.2.84:7200/uploads/${folderName}/${file.filename}`;
 
         const fileData = {
           fileName: file.filename,
           path: filePath,
-          mimeType: fileType == "application" ? "pdf" : fileType,
+          mimeType: mime,
         };
-        
-        // Create a record for each file
+
         const uploadfile = await UserFiles.create({
           userId: req.user.id,
           path: fileData.path,
-          type: fileData.mimeType
+          type: fileType === "application" && mime === "application/pdf" ? "pdf" : fileType,
         });
-        
+
         return uploadfile;
       })
     );
-    
+
     res.status(200).json({
       status: "success",
       message: "Files uploaded successfully.",
-      data: uploadedFiles, // Return all uploaded files data
+      data: uploadedFiles,
     });
   });
 });
+
 
 exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
   const { id } = req.params;
