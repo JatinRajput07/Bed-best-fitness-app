@@ -1375,7 +1375,6 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
 });
 
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
-  req.fileType = req.body.fileType;
   upload(req, res, async (err) => {
     console.log(
       req.files,

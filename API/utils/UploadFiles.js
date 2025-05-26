@@ -5,11 +5,10 @@ const { exec } = require('child_process');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        console.log(file, '========================create_banner==============')
+        console.log(file,'========================create_banner==============')
         const fileType = file.mimetype.split('/')[0];
-        const isPdf = file.mimetype.split('/')[1];
-        // console.log(isPdf, '========================create_banner==============')
-        const folder = `./public/uploads/${isPdf == "pdf" ? "pdf" : fileType}s`;
+        console.log(fileType,'========================fileType==============')
+        const folder = `./public/uploads/${fileType == "application" ? "pdf" : fileType}s`;
 
         fs.mkdirSync(folder, { recursive: true });
         cb(null, folder);
