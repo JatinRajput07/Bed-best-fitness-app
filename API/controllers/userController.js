@@ -1400,7 +1400,7 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
         let filePath
 
         if (req?.body?.fileType && req?.body?.fileType === "image") {
-          filePath = `http://43.204.2.84:7200/uploads/${req?.body?.fileType}s/${file.filename}`;
+          filePath = `http://43.204.2.84:7200/uploads/images/${file.filename}`;
         } else {
           filePath = `http://43.204.2.84:7200/uploads/pdfs/${file.filename}`;
         }
