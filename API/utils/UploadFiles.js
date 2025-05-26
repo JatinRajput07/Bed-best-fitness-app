@@ -1,17 +1,15 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const FileType = require('file-type');
 const { exec } = require('child_process');
 
 const storage = multer.diskStorage({
-    destination: async (req, file, cb) => {
+    destination: (req, file, cb) => {
         console.log(file, '========================create_banner==============')
-        const buffer = file.buffer; // multer stores buffer if we configure it below
-        const type = await FileType.fromBuffer(buffer);
-        const mime = type ? type.mime : file.mimetype;
-        const fileType = mime.split('/')[0];
-        const folder = `./public/uploads/${fileType == "application" ? "pdf" : fileType}s`;
+        const fileType = file.mimetype.split('/')[0];
+        const isPdf = file.mimetype.split('/')[1];
+        // console.log(isPdf, '========================create_banner==============')
+        const folder = `./public/uploads/${isPdf == "pdf" ? "pdf" : fileType}s`;
 
         fs.mkdirSync(folder, { recursive: true });
         cb(null, folder);
