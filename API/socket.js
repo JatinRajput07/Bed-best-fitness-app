@@ -142,17 +142,35 @@ module.exports = (io) => {
                         const messages = await Message.find({
                             conversationId: conversation._id,
                         })
-                            // .sort({ createdAt: -1 })
-                            // .skip(skip)
-                            // .limit(limit)
+                            .sort({ createdAt: -1 })
+                            .skip(skip)
+                            .limit(limit)
                             .populate("sender", "name email profilePicture")
                             .populate("receiver", "name email profilePicture");
 
-                        console.log(messages, '=======senderId, receiverId=====')
+                        const totalMessages = await Message.countDocuments({
+                            conversationId: conversation._id
+                        });
 
-                        socket.emit("myChatList", messages);
+                        socket.emit("myChatList", {
+                            messages,
+                            pagination: {
+                                total: totalMessages,
+                                skip,
+                                limit,
+                                hasMore: skip + limit < totalMessages
+                            }
+                        });
                     } else {
-                        socket.emit("myChatList", []);
+                        socket.emit("myChatList", {
+                            messages: [],
+                            pagination: {
+                                total: 0,
+                                skip,
+                                limit,
+                                hasMore: false
+                            }
+                        });
                     }
                 } catch (error) {
                     console.error("Error in chatList:", error);
