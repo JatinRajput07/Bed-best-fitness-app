@@ -22,7 +22,7 @@ const MealAndNutrition = () => {
     <Card>
       <CardBody>
         <Typography variant="h6" className="mb-4">
-          Meal & Nutrition List
+          Meal & Supplements List
         </Typography>
         <Button onClick={() => setActiveTab("choose")} color="blue" className="mb-4">
           Add

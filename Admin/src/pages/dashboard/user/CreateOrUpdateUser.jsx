@@ -19,7 +19,7 @@ const permissionSections = [
         permissions: ["create", "update", "view", "delete"],
     },
     {
-        name: "Nutrition",
+        name: "Supplements",
         permissions: ["create", "update", "view", "delete"],
     },
     {

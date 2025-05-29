@@ -224,9 +224,9 @@ export function Profile({ id, closeModal }) {
                   <Tab value="reminders" onClick={() => handleTabClick("reminders")}>
                     Reminders
                   </Tab>
-                  {/* <Tab value="gallery" onClick={() => handleTabClick("gallery")}>
+                  <Tab value="gallery" onClick={() => handleTabClick("gallery")}>
                     Gallery
-                  </Tab> */}
+                  </Tab>
                 </>
 
               </TabsHeader>
@@ -313,11 +313,11 @@ export function Profile({ id, closeModal }) {
                     <AllReminders userId={userProfile?.user?._id} />
                   </TabPanel>
                 )}
-                {/* {activeTab === "gallery" && (
+                {activeTab === "gallery" && (
                   <TabPanel value="gallery">
-                    <Gallery />
+                    <Gallery userId={userProfile?.user?._id} />
                   </TabPanel>
-                )} */}
+                )}
               </TabsBody>
             </Tabs>)
           }

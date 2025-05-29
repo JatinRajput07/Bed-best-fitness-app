@@ -150,8 +150,8 @@ export function UserList() {
                 className=""
               >
                 <Option value="">All</Option>
-                <Option value="user">User</Option>
-                <Option value="host">Host</Option>
+                <Option value="user">Client</Option>
+                <Option value="host">Healthbuddy</Option>
               </Select>
             </div>
 
@@ -231,7 +231,7 @@ export function UserList() {
                             <Chip
                               variant="gradient"
                               color={role === "user" ? "cyan" : "indigo"}
-                              value={role === "user" ? "User" : "Host"}
+                              value={role === "user" ? "Client" : "Health buddy"}
                               className="py-0.5 px-2 text-[11px] font-medium w-fit"
                             />
                           </td>

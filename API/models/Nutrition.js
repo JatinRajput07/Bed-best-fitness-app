@@ -9,7 +9,7 @@ const nutritionSchema = mongoose.Schema(
             type: String,
             required: true,
         },
-        description: { type: String, required: true },
+        description: { type: String, required: false },
         name:String,
         quantity: { type: Number, required: true },
         active: { type: Boolean, default: true },

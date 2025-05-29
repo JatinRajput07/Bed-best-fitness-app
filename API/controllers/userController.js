@@ -137,13 +137,17 @@ exports.verifyAccount = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  const { email, password, role, device_type, device_token } = req.body;
+  const { email, password, role, device_type, device_token, phone } = req.body;
   console.log(req.body);
   if (!email || !password) {
     return next(new AppError("Please provide email and password!", 400));
   }
 
-  const user = await User.findOne({ email, role }).select("+password");
+  const user = await User.findOne({ 
+    email, 
+    role,
+    phone 
+  }).select("+password");
   console.log(
     user,
     "=======================jatinderkmr0702@gmail.com==========="
@@ -192,8 +196,28 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
   }
 
   let user = await User.findOne({
-    $or: [{ socialId, email }, { email }],
+    $or: [
+      { socialId, email },
+      { email },
+      { phone }
+    ],
   });
+
+  if (user) {
+    user = await User.findByIdAndUpdate(
+      user._id,
+      {
+        socialId,
+        socialType,
+        email,
+        phone,
+        name,
+        device_type,
+        device_token
+      },
+      { new: true }
+    );
+  }
   if (!user) {
     if (!email) {
       return res.status(400).json({
@@ -1470,28 +1494,46 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 
 
 exports.getUserImages = catchAsync(async (req, res, next) => {
-  const userId = req.user.id || req.query.userId;
-  const uploadfile = await UserFiles.aggregate([
-    {
-      $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
-    },
-    {
-      $project: {
-        _id: 1,
-        path: 1,
-        type: 1,
-        createdAt: 1,
+  const userId = req.query.userId;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 9;
+  const skip = (page - 1) * limit;
+
+  const [images, total] = await Promise.all([
+    UserFiles.aggregate([
+      {
+        $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
       },
-    },
-    {
-      $sort: { createdAt: -1 },
-    }
+      {
+        $project: {
+          _id: 1,
+          path: 1,
+          type: 1,
+          createdAt: 1,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]),
+    UserFiles.countDocuments({ userId: userId, type: "image" })
   ]);
 
-  res.status(200).json({
+  return res.status(200).json({
     status: "success",
-    message: "Files retrieved successfully.",
-    data: uploadfile,
+    data: images,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
   });
 });
 

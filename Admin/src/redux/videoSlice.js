@@ -1,124 +1,126 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import Axios from '@/configs/Axios'; // Axios instance for API requests
-import { utilService } from '../utilService';
+import { utilService } from '../utilService'; // Assuming this exists for toast messages
 
-// Async thunk for fetching videos by category
-export const fetchVideos = createAsyncThunk('admin/video-list', async (_, { rejectWithValue }) => {
-  try {
-    const response = await Axios.get(`/admin/video-list`);
-    return response.data.data;
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || 'An error occurred.';
-    return rejectWithValue(errorMessage);
-  }
-});
-
-// Async thunk for creating/uploading a new video
-export const createVideo = createAsyncThunk(
-  'admin/upload-videos',
-  async (data, { dispatch, rejectWithValue }) => {
-
-
-    // console.log(data, '=========================videos=============================')
-
+// Async thunk for fetching videos with pagination and filters
+export const fetchVideos = createAsyncThunk(
+  'videos/fetchVideos', // A more descriptive name for the thunk action type
+  async (params, { rejectWithValue }) => { // Now accepts 'params'
     try {
-      const formData = new FormData();
-
-      // Append all necessary fields to the FormData object
-      formData.append('title', data.title);
-      formData.append('category', data.category);
-      formData.append('description', data.description);
-      formData.append('filetype', data.filetype);  // This helps identify whether it's a video, audio, etc.
-      formData.append('subcategories', data.subcategories?.value);  // Ensure subcategories is an array or object
-
-      // Append the file(s) - video, audio, or both
-      if (data.file) {
-        formData.append('file', data.file);  // Video or audio file
-      }
-
-      // If there is an audio thumbnail (for audio files), add it to the formData
-      if (data.audioThumbnail && data.audioThumbnail !== null) {
-        formData.append('audioThumbnail', data.audioThumbnail);  // Audio thumbnail
-      }
-
-      // Make the API request to upload the video/audio
-      const response = await Axios.post('/admin/upload-videos', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          dispatch(updateProgress(progress));
-        },
-      });
-
-      return response.data.video || response.data.audio;  // Returning the uploaded video or audio details
+      const response = await Axios.get(`/admin/video-list`, { params }); // Pass params to Axios
+      // Return the data array, totalCount, AND the currentPage so the reducer knows whether to append or replace
+      return {
+        data: response.data.data,
+        totalCount: response.data.totalCount,
+        currentPage: params.page // Crucial for append/replace logic in reducer
+      };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'An error occurred.';
-      utilService.showErrorToast(errorMessage);  // Show error toast for the user
-      return rejectWithValue(errorMessage);  // Return error message in case of failure
+      const errorMessage = error.response?.data?.message || 'An error occurred fetching videos.';
+      utilService.showErrorToast(errorMessage); // Show error toast
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-
+// Async thunk for creating/uploading a new video
+export const createVideo = createAsyncThunk(
+  'videos/createVideo',
+  async (formData, { rejectWithValue, dispatch }) => { // formData is now the FormData object
+    try {
+      const response = await Axios.post('/admin/upload-videos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Important for file uploads
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          dispatch(setProgress(percentCompleted)); // Dispatch a local action to update progress
+        },
+      });
+      return response.data; // This will be { status: "success", media: { ... } }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to upload video.';
+      utilService.showErrorToast(errorMessage); // Show error toast
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 
 const videoSlice = createSlice({
   name: 'videos',
   initialState: {
-    videos: [], // Ensure this is an array
+    videos: [],
     loading: false,
     error: null,
     progress: 0,
+    totalCount: 0, // Add totalCount to the state 
   },
   reducers: {
+    setProgress: (state, action) => {
+      state.progress = action.payload;
+    },
     resetProgress: (state) => {
       state.progress = 0;
       state.error = null;
-      state.filePath = null;
     },
-    updateProgress: (state, action) => {
-      state.progress = action.payload;
-    },
-  }, // You can add any sync reducers if needed
+    // Removed updateProgress as setProgress serves the same purpose
+  },
   extraReducers: (builder) => {
     // Handling the fetchVideos action states
     builder
-      .addCase(fetchVideos.pending, (state) => {
-        state.loading = true;
+      .addCase(fetchVideos.pending, (state, action) => {
+        // Only clear videos and show main loading spinner for the first page
+        // (initial load or new search/filter application)
+        if (action.meta.arg.page === 1) {
+          state.loading = true;
+          state.videos = []; // Clear previous videos
+          state.totalCount = 0; // Reset total count
+        }
         state.error = null; // Clear previous errors
-        state.videos = []; // Clear previous videos
       })
       .addCase(fetchVideos.fulfilled, (state, action) => {
         state.loading = false;
-        state.videos = action.payload; // Set videos to the fetched list
+        const { data, totalCount, currentPage } = action.payload;
+
+        if (currentPage === 1) {
+          // If it's the first page (initial load or new search/filter), replace existing videos
+          state.videos = data;
+        } else {
+          // If it's a subsequent page (infinite scroll), append new videos
+          state.videos = [...state.videos, ...data];
+        }
+        state.totalCount = totalCount; // Update total count
       })
       .addCase(fetchVideos.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload; // Set error message if failed
+        // For rejected state, we typically don't clear videos unless we want to indicate no data
+        // state.videos = []; // You might want to clear videos on error, depends on UX
       });
 
     // Handling the createVideo action states
     builder
       .addCase(createVideo.pending, (state) => {
-        state.loading = true; // Show loading when creating a video
+        state.loading = true;
         state.progress = 0;
+        state.error = null; // Clear any previous errors before a new upload
       })
       .addCase(createVideo.fulfilled, (state, action) => {
         state.loading = false;
-        if (Array.isArray(state.videos)) {
-          state.videos.push(action.payload); // Add the new video to the list
-        } else {
-          state.videos = [action.payload]; // If not an array, reset as array with new video
-        }
+        state.progress = 100; // Ensure progress is 100% on success
+        // Prepend the new video to the list to show it immediately at the top
+        // action.payload is { status: "success", media: { ... } }
+        state.videos = [action.payload.media, ...state.videos]; // Correctly add the 'media' object
+        state.totalCount += 1; // Increment totalCount as a new video is added
       })
-      .addCase(createVideo.rejected, (state) => {
-        state.loading = false; // Stop loading if the video creation failed
+      .addCase(createVideo.rejected, (state, action) => {
+        state.loading = false;
         state.progress = 0;
+        state.error = action.payload; // Set error for createVideo
       });
   },
 });
 
-
-export const { resetProgress, updateProgress } = videoSlice.actions;
+export const { setProgress, resetProgress } = videoSlice.actions; // Export setProgress
 export default videoSlice.reducer;

@@ -72,7 +72,7 @@ export const routes = () => {
     },
     {
       icon: <ArchiveBoxIcon {...icon} />,
-      name: "Meal And Nutrition",
+      name: "Meal And Supplements",
       dropdown: [
         {
           name: "Meal",
@@ -84,8 +84,8 @@ export const routes = () => {
           ),
         },
         {
-          name: "Nutrition",
-          path: "/nutrition",
+          name: "Supplements",
+          path: "/supplements",
           element: (
             <Suspense fallback={<div>Loading...</div>}>
               <Nutrition />

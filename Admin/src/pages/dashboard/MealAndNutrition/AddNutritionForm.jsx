@@ -69,7 +69,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       })
       .catch((error) => {
         toast.error(error?.response?.data?.message ||
-          `Failed to ${editData?._id ? 'update' : 'add'} nutrition plan`);
+          `Failed to ${editData?._id ? 'update' : 'add'} Supplements plan`);
       });
   };
 
@@ -88,12 +88,12 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
     let validationErrors = {};
     if (!selectedUser) validationErrors.selectedUser = "Please select a user";
     if (!selectedCategory) validationErrors.selectedCategory = "Please select a category";
-    if (!description) validationErrors.description = "Description is required";
+    // if (!description) validationErrors.description = "Description is required";
     if (!item.name.trim()) validationErrors.itemName = "Item name is required";
 
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
-    const get = nutritionData.find((val=>val.title === item.name.trim()))
+    const get = nutritionData.find((val => val.title === item.name.trim()))
     const nutrition = {
       userId: selectedUser,
       inventoryId: get?._id,
@@ -127,7 +127,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
     e.preventDefault();
     let validationErrors = {};
     if (!itemInventory.title) validationErrors.title = "Title is required";
-  
+
     const formData = {
       userId: selectedUser,
       quantity: itemInventory.quantity,
@@ -178,7 +178,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
   const optionsInventory = nutritionData
     .map((val) => ({
       value: val.title,
-      label:val?.title,
+      label: val?.title,
     }));
 
 
@@ -193,7 +193,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
       <DialogHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-t-lg">
         <div className="flex items-center justify-between w-full">
           <Typography variant="h5" className="font-bold">
-            {!isInventory ? editData ? "Edit Nutrition Plan" : "Add New Nutrition Plan" : "Add Inventory"}
+            {!isInventory ? editData ? "Edit Nutrition Plan" : "Add New Supplements Plan" : "Add Inventory"}
           </Typography>
           {!isInventory ? (
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2  ml-auto" onClick={handleInventory}>
@@ -311,7 +311,10 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* User and Category Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <div className="space-y-1">
+                <Typography variant="small" className="font-medium text-gray-700">
+                  Select User
+                </Typography>
                 <ReactSelect
                   options={options}
                   value={options.find((opt) => opt.value === selectedUser)}
@@ -319,7 +322,7 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                     setSelectedUser(selected.value);
                     setErrors((prev) => ({ ...prev, selectedUser: false }));
                   }}
-                  placeholder="Select User"
+                  placeholder="Select a user"
                   classNamePrefix="react-select"
                 />
                 {errors.selectedUser && (
@@ -329,9 +332,11 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                 )}
               </div>
 
-              <div>
+              <div className="space-y-1">
+                <Typography variant="small" className="font-medium text-gray-700">
+                  Meal Time Category
+                </Typography>
                 <Select
-                  label="Meal Time Category"
                   value={selectedCategory}
                   onChange={(value) => {
                     setSelectedCategory(value);
@@ -339,9 +344,6 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                   }}
                   error={!!errors.selectedCategory}
                   className="!border !border-gray-300 focus:!border-blue-500"
-                  labelProps={{
-                    className: "before:content-none after:content-none",
-                  }}
                 >
                   {CATEGORY_SEQUENCE.map((category) => (
                     <Option key={category} value={category} className="hover:bg-blue-50">
@@ -358,9 +360,11 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
             </div>
 
             {/* Description */}
-            <div>
+            <div className="space-y-1">
+              <Typography variant="small" className="font-medium text-gray-700">
+                Description (optional)
+              </Typography>
               <Textarea
-                label="Description"
                 value={description}
                 onChange={(e) => {
                   setDescription(e.target.value);
@@ -369,64 +373,32 @@ const AddNutritionForm = ({ onAddNutrition, users, loading, handleCancel, editDa
                 error={!!errors.description}
                 className="!border !border-gray-300 focus:!border-blue-500"
                 rows={3}
-                labelProps={{
-                  className: "before:content-none after:content-none",
-                }}
               />
-              {errors.description && (
-                <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                  {errors.description}
-                </Typography>
-              )}
             </div>
 
             {/* Nutrition Item */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <Typography variant="h6" color="blue-gray" className="mb-4 font-semibold">
-                Nutrition Item Details
+            <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+              <Typography variant="h6" color="blue-gray" className="font-semibold">
+                Supplements Item Details
               </Typography>
 
               <div className="space-y-4">
-                <div>
-                <ReactSelect
-                  options={optionsInventory}
-                  value={optionsInventory.find((opt) => opt.value === item.name)}
-                  onChange={(selected) => {
-                    setItem((prev) => ({ ...prev, name: selected?.value }));
-                  }}
-                  placeholder="Select Inventory"
-                  classNamePrefix="react-select"
-                />
-                {errors?.item?.name && (
-                  <Typography variant="small" color="red" className="mt-1 flex items-center gap-1">
-                    {errors?.item?.name}
+                <div className="space-y-1">
+                  <Typography variant="small" className="font-medium text-gray-700">
+                    Select Inventory
                   </Typography>
-                )}
-
-
-                  {/* <Select
-                    label="Select Inventory"
-                    value={item.name}
-                    onChange={(value) => {
-                      setItem((prev) => ({ ...prev, name: value }));
+                  <ReactSelect
+                    options={optionsInventory}
+                    value={optionsInventory.find((opt) => opt.value === item.name)}
+                    onChange={(selected) => {
+                      setItem((prev) => ({ ...prev, name: selected?.value }));
                     }}
-                    error={!!errors.name}
-                    className="!border !border-gray-300 focus:!border-blue-500"
-                    labelProps={{
-                      className: "before:content-none after:content-none",
-                    }}
-                  >
-                    {nutritionData?.map((item) => (
-                      <Option key={item._id} value={item.title}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{item.title}</span>
-                        </div>
-                      </Option>
-                    ))}
-                  </Select> */}
+                    placeholder="Select inventory item"
+                    classNamePrefix="react-select"
+                  />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="space-y-1">
                   <Typography variant="small" className="font-medium text-gray-700">
                     Dose
                   </Typography>

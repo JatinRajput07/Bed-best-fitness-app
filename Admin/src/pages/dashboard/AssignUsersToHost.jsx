@@ -136,7 +136,7 @@ const CreateAssignment = () => {
               value={hostOptions.find((host) => host.value === selectedHost)}
               onChange={(selected) => setSelectedHost(selected?.value || null)}
               components={{ Option: CustomOption }}
-              placeholder="Select a host"
+              placeholder="Select a HeathBuddy"
               className="react-select-container"
               classNamePrefix="react-select"
             />
@@ -158,7 +158,7 @@ const CreateAssignment = () => {
               value={selectedUsers}
               onChange={(selected) => setSelectedUsers(selected || [])}
               components={{ Option: CustomOption }}
-              placeholder="Select users"
+              placeholder="Select Client"
               className="react-select-container"
               classNamePrefix="react-select"
             />

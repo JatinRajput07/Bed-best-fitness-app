@@ -253,117 +253,129 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
     if (err instanceof multer.MulterError) {
       return next(new AppError(err.message, 400));
     } else if (err) {
+      console.error(err); // Log the error for debugging purpose
       return next(new AppError(err.message, 400));
     }
 
-    if (!req.files || req.files.length === 0) {
-      return next(new AppError("No files uploaded.", 400));
+    let mainFile = null;
+    let thumbnailFile = null;
+
+    if (req.files && Array.isArray(req.files)) {
+      mainFile = req.files.find(f => f.fieldname === 'file');
+      thumbnailFile = req.files.find(f => f.fieldname === 'thumbnail');
     }
-    const {
+
+    if (!mainFile) {
+      return next(new AppError('No main content file uploaded.', 400));
+    }
+
+    const { title, category, description } = req.body;
+
+    let subcategoryId = null;
+    if (req.body.subcategories && Array.isArray(req.body.subcategories) && req.body.subcategories.length > 0) {
+      subcategoryId = req.body.subcategories[0];
+    } else if (typeof req.body.subcategories === 'string' && req.body.subcategories) {
+      subcategoryId = req.body.subcategories; 
+    }
+
+    const subcategories = Array.isArray(req.body.subcategories)
+      ? req.body.subcategories
+      : [req.body.subcategories].filter(Boolean); 
+
+      if (!category || !subcategoryId) { // Now checking for a single subcategoryId
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Category and at least one subcategory are required.',
+        });
+      }
+
+    const fileType = mainFile.mimetype.split('/')[0];
+    const mainFilePath = `http://43.204.2.84:7200/uploads/${fileType}s/${mainFile.filename}`;
+
+    let videoThumbnailPath = null;
+    let audioThumbnailPath = null;
+
+    if (thumbnailFile) {
+      const thumbFileType = thumbnailFile.mimetype.split('/')[0];
+      const thumbPath = `http://43.204.2.84:7200/uploads/images/${thumbnailFile.filename}`;
+
+      if (fileType === 'video') {
+        videoThumbnailPath = thumbPath;
+      } else if (fileType === 'audio') {
+        audioThumbnailPath = thumbPath;
+      }
+    }
+
+    console.log({
       title,
+      mainFilePath,
       category,
+      subcategories : subcategoryId,
       description,
-      subcategories,
-      filetype,
-      audioThumbnail,
-    } = req.body;
-    if (!category || !subcategories || subcategories.length === 0) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Category and subcategory are required.",
-      });
-    }
+      fileType,
+      videoThumbnailPath,
+      audioThumbnailPath,
+      // Add other relevant data for debugging
+    }, "[---------------------Processed File Data------------------]");
 
-    const uploadedFiles = await Promise.all(
-      req.files.map(async (file) => {
-        const fileType = file.mimetype.split("/")[0];
-        const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
-
-        const fileData = {
-          fileName: file.filename,
-          path: filePath,
-          mimeType: fileType,
-        };
-        if (fileType === "video") {
-          try {
-            const thumbnailPath = await generateThumbnail(file.path);
-            fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(
-              thumbnailPath
-            )}`;
-          } catch (error) {
-            console.error("Error generating thumbnail:", error);
-          }
-        }
-
-        if (fileType === "audio") {
-          const thumbnailFile = req.files.find(
-            (f) => f.fieldname === "audioThumbnail"
-          );
-          if (thumbnailFile) {
-            fileData.audioThumbnail = `http://43.204.2.84:7200/uploads/images/${path.basename(
-              thumbnailFile.filename
-            )}`;
-          }
-        }
-
-        return fileData;
-      })
-    );
-
-    console.log(
-      uploadedFiles,
-      "[---------------------uploadedFiles=------------------]"
-    );
-
-    // Create a video (or audio) entry in the database
+    // Create a new entry in the database using your Video model
     const media = await Video.create({
       title,
-      path: uploadedFiles[0].path, // Use the path of the first uploaded file
-      category,
-      subcategories, // Store the subcategories as received
+      path: mainFilePath, // Path to the main content file
+      category, // Category ID
+      subcategories:subcategoryId, // Array of subcategory IDs
       description,
-      filetype: uploadedFiles[0].mimeType,
-      thumbnail: uploadedFiles[0].thumbnail || null, // Store thumbnail if available
-      audioThumbnail: uploadedFiles[0].audioThumbnail || null, // Store audio thumbnail if available
+      filetype: fileType, // Derived file type (video, audio, application)
+      thumbnail: videoThumbnailPath, // Thumbnail for video (if applicable)
+      audioThumbnail: audioThumbnailPath, // Thumbnail for audio (if applicable)
     });
 
-    // If media is successfully created, send response
+    // Send success response if media creation was successful
     if (media) {
       return res.status(200).json({
-        status: "success",
-        media, // Returning the created media object with its details
+        status: 'success',
+        media, // Return the created media object
       });
     } else {
+      // Fallback for unexpected failure in media creation
       return res.status(500).json({
-        status: "fail",
-        message: "Failed to create media.",
+        status: 'fail',
+        message: 'Failed to create media.',
       });
     }
   });
 });
 
 exports.getVideos = catchAsync(async (req, res, next) => {
-  const videosByCategory = await Video.aggregate([
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 12;
+  const skip = (page - 1) * limit;
+
+  const searchQuery = req.query.search;
+  const categoryFilter = req.query.category;
+  const filetypeFilter = req.query.filetype;
+
+  const pipeline = [
     {
       $addFields: {
-        isValidCategory: {
-          $regexMatch: { input: "$category", regex: /^[a-f\d]{24}$/i },
+        // Safely convert 'category' to ObjectId. If it fails, set to null.
+        categoryId: {
+          $convert: {
+            input: "$category",
+            to: "objectId",
+            onError: null, // Return null if conversion fails
+            onNull: null, // Return null if input is null
+          },
         },
-        isValidSubcategory: {
-          $regexMatch: { input: "$subcategories", regex: /^[a-f\d]{24}$/i },
+        // Safely convert 'subcategories' to ObjectId. If it fails, set to null.
+        subcategoryId: {
+          $convert: {
+            input: "$subcategories",
+            to: "objectId",
+            onError: null, // Return null if conversion fails
+            onNull: null, // Return null if input is null
+          },
         },
-      },
-    },
-    {
-      $match: {
-        isValidCategory: true,
-        isValidSubcategory: true,
-      },
-    },
-    {
-      $addFields: {
-        categoryId: { $toObjectId: "$category" },
-        subcategoryId: { $toObjectId: "$subcategories" },
       },
     },
     {
@@ -383,59 +395,85 @@ exports.getVideos = catchAsync(async (req, res, next) => {
       },
     },
     {
+      $addFields: {
+        categoryName: { $arrayElemAt: ["$categoryDetails.name", 0] },
+        subcategoryName: { $arrayElemAt: ["$subcategoryDetails.name", 0] },
+      },
+    },
+    {
+      $match: {
+        // Only include documents that have a valid category and subcategory lookup.
+        // This implicitly filters out documents where categoryId or subcategoryId was null after conversion.
+        "categoryDetails.0": { $exists: true },
+        "subcategoryDetails.0": { $exists: true },
+      },
+    },
+    {
+      $match: {
+        $and: [
+          searchQuery
+            ? {
+              $or: [
+                { title: { $regex: searchQuery, $options: "i" } },
+                { tags: { $regex: searchQuery, $options: "i" } },
+              ],
+            }
+            : {},
+          categoryFilter ? { categoryName: categoryFilter } : {},
+          filetypeFilter ? { filetype: filetypeFilter } : {},
+        ],
+      },
+    },
+    {
       $sort: { createdAt: -1 },
     },
-    {
-      $group: {
-        _id: "$categoryId",
-        categoryName: {
-          $first: { $arrayElemAt: ["$categoryDetails.name", 0] },
-        },
-        videos: {
-          $push: {
-            id: "$_id",
-            path: "$path",
-            filetype: "$filetype",
-            description: "$description",
-            title: "$title",
-            subcategoryName: {
-              $arrayElemAt: ["$subcategoryDetails.name", 0],
-            },
-            thumbnail: "$thumbnail",
-            audioThumbnail: "$audioThumbnail",
-            views: "$views",
-            likes: "$likes",
-            createdAt: "$createdAt",
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        category: "$categoryName",
-        videos: {
-          $slice: ["$videos", 8],
-        },
-      },
-    },
-  ]);
+  ];
 
-  if (videosByCategory.length === 0) {
-    return res.status(404).json({
-      status: "fail",
-      message: "No videos found",
+  // --- (Rest of your code for total count and pagination remains the same) ---
+
+  const countPipeline = [...pipeline];
+  countPipeline.push({ $count: "total" });
+
+  const totalResults = await Video.aggregate(countPipeline);
+  const totalCount = totalResults.length > 0 ? totalResults[0].total : 0;
+
+  pipeline.push({ $skip: skip });
+  pipeline.push({ $limit: limit });
+
+  pipeline.push({
+    $project: {
+      _id: 0,
+      id: "$_id",
+      path: "$path",
+      filetype: "$filetype",
+      description: "$description",
+      title: "$title",
+      category: "$categoryName",
+      subcategory: "$subcategoryName",
+      thumbnail: "$thumbnail",
+      audioThumbnail: "$audioThumbnail",
+      views: "$views",
+      likes: "$likes",
+      createdAt: "$createdAt",
+      tags: "$tags",
+    },
+  });
+
+  const videos = await Video.aggregate(pipeline);
+
+  if (videos.length === 0 && totalCount === 0) {
+    return res.status(200).json({
+      status: "success",
+      message: "No media found matching your criteria.",
+      data: [],
+      totalCount: 0,
     });
   }
 
-  const formattedResponse = {};
-  videosByCategory.forEach((categoryData) => {
-    formattedResponse[categoryData.category] = categoryData.videos;
-  });
-
   return res.status(200).json({
     status: "success",
-    data: formattedResponse,
+    data: videos,
+    totalCount: totalCount,
   });
 });
 
@@ -573,6 +611,30 @@ exports.dashboard = catchAsync(async (req, res, next) => {
 
 const { ObjectId } = require("mongoose").Types;
 
+
+
+exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
+  const userId = req.params.id;
+  const today = req.query.date || getLocalDate();
+  const routine = await Routine.findOne({ userId, date: today });
+  if (!routine) {
+    return res.status(404).json({
+      status: "fail",
+      message: "No routine data found for the specified date.",
+    });
+  }
+  res.status(200).json({
+    status: "success",
+    message: "Routine data fetched successfully.",
+    routine: {
+      health_habits: routine.health_habits || {},
+      hygiene: routine.hygiene || {},
+      holistic_wellness: routine.holistic_wellness || {},
+      what_new_today: routine.what_new_today || {},
+    },
+  });
+});
+
 exports.assign = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -643,28 +705,6 @@ exports.assign = catchAsync(async (req, res, next) => {
       message: `${newAssignments.length} user(s) assigned successfully.`,
       data: newAssignments,
     });
-  });
-});
-
-exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
-  const userId = req.params.id;
-  const today = req.query.date || getLocalDate();
-  const routine = await Routine.findOne({ userId, date: today });
-  if (!routine) {
-    return res.status(404).json({
-      status: "fail",
-      message: "No routine data found for the specified date.",
-    });
-  }
-  res.status(200).json({
-    status: "success",
-    message: "Routine data fetched successfully.",
-    routine: {
-      health_habits: routine.health_habits || {},
-      hygiene: routine.hygiene || {},
-      holistic_wellness: routine.holistic_wellness || {},
-      what_new_today: routine.what_new_today || {},
-    },
   });
 });
 
@@ -814,7 +854,7 @@ exports.createNutrition = async (req, res, next) => {
 
 exports.updateNutrition = async (req, res, next) => {
   try {
-    const { userId, category, items, description ,inventoryId } = req.body;
+    const { userId, category, items, description, inventoryId } = req.body;
 
     if (!items || items.length !== 1) {
       return res.status(400).json({
@@ -1343,9 +1383,8 @@ exports.toggleBannerStatus = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    message: `Banner status updated to ${
-      banner.isActive ? "active" : "inactive"
-    }.`,
+    message: `Banner status updated to ${banner.isActive ? "active" : "inactive"
+      }.`,
     data: banner,
   });
 });
@@ -1862,9 +1901,8 @@ exports.toggleIntroductionStatus = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    message: `Introduction status updated to ${
-      introduction.isActive ? "active" : "inactive"
-    }.`,
+    message: `Introduction status updated to ${introduction.isActive ? "active" : "inactive"
+      }.`,
     data: introduction,
   });
 });
@@ -1883,3 +1921,25 @@ exports.deleteIntroduction = catchAsync(async (req, res, next) => {
     message: "Introduction deleted successfully.",
   });
 });
+
+
+
+exports.unique_categories = catchAsync(async (req, res, next) => {
+  const categoryIds = await Video.distinct('category');
+  const categories = await Promise.all(
+    categoryIds.map(async (categoryId) => {
+      const category = await Category.findById(categoryId).select('name');
+      return category?.name;
+    })
+  );
+  const filteredNames = categories.filter(Boolean);
+
+  res.status(200).json({ categories: filteredNames });
+});
+
+
+exports.unique_filetypes = catchAsync(async (req, res, next) => {
+  const filetypes = await Video.distinct('filetype');
+  res.status(200).json({ filetypes });
+});
+

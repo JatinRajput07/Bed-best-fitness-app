@@ -54,6 +54,8 @@ const {
   getIntroductions,
   toggleIntroductionStatus,
   deleteIntroduction,
+  unique_categories,
+  unique_filetypes,
 } = require("../../controllers/adminController");
 const { uploadFiles, getUserRecommendations, getVideoRecommendations, deleteVideoRecommendation } = require("../../controllers/userController");
 const {
@@ -158,5 +160,10 @@ router.delete("/inventory/delete/:id", Auth, deleteInventory);
 router.post("/inventory/add", Auth, createInventory);
 router.get("/recommendations", Auth, getVideoRecommendations);
 router.delete('/video-recommendation/:recommendationId', deleteVideoRecommendation);
+
+router.get("/unique-categories", unique_categories);
+router.get("/unique-filetypes", unique_filetypes);
+
+
 
 module.exports = router;

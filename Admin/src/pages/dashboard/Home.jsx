@@ -98,7 +98,7 @@ import { useSelector } from "react-redux";
             {
               color: "gray",
               icon: ArchiveBoxIcon,
-              title: "Meal & Nutrition",
+              title: "Meal & Supplements",
               value: data.data.meal + data.data.nutrition,
               footer: {
                 color: "text-green-500",

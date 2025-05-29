@@ -162,14 +162,14 @@ const Nutrition = () => {
           className="bg-gradient-to-r from-blue-600 to-indigo-800 p-6 rounded-t-lg flex justify-between items-center"
         >
           <Typography variant="h5" color="white" className="font-bold">
-            Nutrition Management
+          Supplements Management
           </Typography>
           <Button 
             color="white" 
             onClick={() => setShowForm(true)}
             className="shadow-md hover:shadow-lg transition-all"
           >
-            Add Nutrition Plan
+            Add Supplements Plan
           </Button>
         </CardHeader>
         {!showForm ? (
