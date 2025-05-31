@@ -166,7 +166,8 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   if (user.role !== role) {
-    return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login`, 400));
+    // return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login to `, 400));
+    return next(new AppError(`This email is already exists under associated with a ${getRoleBasedDisplay(user.role)} account`, 400));
   }
 
   if (!(await user.correctPassword(password))) {
@@ -224,7 +225,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     if (user.role !== role) {
       // User found via socialId, but their existing role does not match the requested role.
       // This is a critical conflict.
-      return next(new AppError(`An account with this social ID already exists under the role '${user.role}'`, 403)); // 403 Forbidden
+      return next(new AppError(`This email is already associated with a '${getRoleBasedDisplay(user.role)} account'`, 403)); // 403 Forbidden
     }
 
     // Update existing user's details
