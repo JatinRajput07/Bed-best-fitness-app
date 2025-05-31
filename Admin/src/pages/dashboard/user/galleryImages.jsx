@@ -16,7 +16,7 @@ const Gallery = ({ userId }) => {
   const fetchImages = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await Axios.get(`/api/get-user-images?userId=${userId}&page=${page}&limit=${pagination.limit}`);
+      const response = await Axios.get(`/user/get-user-images?userId=${userId}&page=${page}&limit=${pagination.limit}`);
       setImages(response.data.data);
       setPagination({
         ...pagination,
