@@ -138,22 +138,29 @@ exports.verifyAccount = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password, role, device_type, device_token, phone } = req.body;
-  console.log(req.body);
-  if (!email || !password) {
-    return next(new AppError("Please provide email and password!", 400));
+
+  if (!email && !phone) {
+    return next(new AppError("Please provide email or phone and password!", 400));
+  }
+  if (!password) {
+    return next(new AppError("Please provide password!", 400));
   }
 
-  const user = await User.findOne({ 
-    email, 
-    role,
-    phone 
-  }).select("+password");
-  console.log(
-    user,
-    "=======================jatinderkmr0702@gmail.com==========="
-  );
+  let user;
+  if (email) {
+    user = await User.findOne({ email }).select("+password");
+  } else if (phone) {
+    user = await User.findOne({ phone }).select("+password");
+  }
+
+  if (user) {
+    if (user.role !== role) {
+      return next(new AppError(`Account already exists with role '${user.role}'. Please use the correct app or login method.`, 400));
+    }
+  }
+
   if (!user || !(await user.correctPassword(password))) {
-    return next(new AppError("Incorrect email or password", 401));
+    return next(new AppError("Incorrect email/phone or password", 401));
   }
 
   if (!user.isVerified) {
@@ -165,16 +172,15 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   const token = signToken(user._id);
-  if ((device_type, device_token)) {
+  if (device_type && device_token) {
     await User.findByIdAndUpdate(user?._id, { device_type, device_token });
   }
-  if (user) {
-    return res.json({
-      status: "success",
-      message: "Login Successfull!",
-      data: { ...user.toObject(), token },
-    });
-  }
+  
+  return res.json({
+    status: "success",
+    message: "Login Successful!",
+    data: { ...user.toObject(), token },
+  });
 });
 
 exports.socialLogin = catchAsync(async (req, res, next) => {
@@ -1494,7 +1500,7 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
 
 
 exports.getUserImages = catchAsync(async (req, res, next) => {
-  const userId = req.query.userId;
+  const userId =  req.user.id || req.query.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 9;
   const skip = (page - 1) * limit;

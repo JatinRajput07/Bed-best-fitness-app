@@ -736,10 +736,12 @@ exports.getassign = catchAsync(async (req, res, next) => {
         hostEmail: { $first: "$hostDetails.email" },
         assignedUsers: {
           $push: {
+            _id: "$_id", // Add the assignment's _id
             userId: "$asign_user",
             name: { $arrayElemAt: ["$assignedUserDetails.name", 0] },
             email: { $arrayElemAt: ["$assignedUserDetails.email", 0] },
             assignedAt: "$createdAt",
+            imageUrl: "$imageUrl", // Use the imageUrl from Asign_User schema
           },
         },
       },
@@ -804,6 +806,45 @@ exports.deleteassign = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: "success",
     message,
+  });
+});
+
+exports.assignImageUpdate = catchAsync(async (req, res, next) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res
+        .status(400)
+        .json({ message: "File upload failed.", error: err });
+    }
+
+    const { id } = req.params; // The ID of the Asign_User document
+    let imageUrl = null;
+
+    if (req.files && req.files.length > 0) {
+      imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+    } else {
+      return res.status(400).json({ message: "No image file provided." });
+    }
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid assignment ID." });
+    }
+
+    const updatedAssignment = await Asign_User.findByIdAndUpdate(
+      id,
+      { imageUrl },
+      { new: true, runValidators: true } // Return the updated document and run schema validators
+    );
+
+    if (!updatedAssignment) {
+      return res.status(404).json({ message: "Assignment not found." });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Assignment image updated successfully.",
+      data: updatedAssignment,
+    });
   });
 });
 

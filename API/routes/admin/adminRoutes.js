@@ -56,6 +56,7 @@ const {
   deleteIntroduction,
   unique_categories,
   unique_filetypes,
+  assignImageUpdate,
 } = require("../../controllers/adminController");
 const { uploadFiles, getUserRecommendations, getVideoRecommendations, deleteVideoRecommendation } = require("../../controllers/userController");
 const {
@@ -99,6 +100,7 @@ router.post("/assign", assign);
 router.get("/assignments", getassign);
 router.put("/assign/:id", editassign);
 router.delete("/assign/:id", deleteassign);
+router.patch("/assign-image/:id", assignImageUpdate);
 
 router.post("/meal", Auth, createMeal);
 router.get("/meal", Auth, getMeals);

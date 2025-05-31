@@ -1,5 +1,6 @@
 import Axios from '@/configs/Axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import toast from 'react-hot-toast';
 
 
 export const fetchAssignments = createAsyncThunk('assignUser/fetchAssignments', async () => {
@@ -21,6 +22,18 @@ export const deleteAssignment = createAsyncThunk('assignUser/deleteAssignment', 
     await Axios.delete(`/admin/assign/${id}?type=${type}&userId=${userId || ''}`);
     return id;
 });
+
+export const updateAssignmentImage = createAsyncThunk(
+    'assignUser/updateAssignmentImage',
+    async ({ assignmentId, imageData }) => {
+        const response = await Axios.patch(`/admin/assign-image/${assignmentId}`, imageData, {
+            headers: {
+                'Content-Type': 'multipart/form-data' // Important for file uploads
+            }
+        });
+        return response.data.data;
+    }
+);
 
 const assignUserSlice = createSlice({
     name: 'assignUser',
@@ -54,6 +67,37 @@ const assignUserSlice = createSlice({
             })
             .addCase(deleteAssignment.fulfilled, (state, action) => {
                 state.assignments = state.assignments.filter(a => a._id !== action.payload);
+            }) 
+            .addCase(updateAssignmentImage.fulfilled, (state, action) => {
+                // When an image is updated, find the specific assignment within the nested structure
+                // and update its image URL.
+                const updatedAssignment = action.payload;
+                state.assignments = state.assignments.map(hostAssignment => {
+                    // This assumes `updatedAssignment` refers to an individual assignment entry (asign_user, host, imageUrl)
+                    // and not the grouped host data returned by fetchAssignments.
+                    // The `fetchAssignments` API groups data by host.
+                    // So, we need to iterate through `assignedUsers` to find the correct one.
+
+                    const hostId = hostAssignment._id; // This is the host's ID
+                    const assignedUserIndex = hostAssignment.assignedUsers.findIndex(
+                        user => user.userId === updatedAssignment.asign_user && hostId === updatedAssignment.host
+                    );
+
+                    if (assignedUserIndex !== -1) {
+                        // Create a new array to ensure immutability
+                        const updatedAssignedUsers = [...hostAssignment.assignedUsers];
+                        updatedAssignedUsers[assignedUserIndex] = {
+                            ...updatedAssignedUsers[assignedUserIndex],
+                            assignmentImage: updatedAssignment.imageUrl // Update the image URL
+                        };
+                        return { ...hostAssignment, assignedUsers: updatedAssignedUsers };
+                    }
+                    return hostAssignment;
+                });
+                // toast.success('Assignment image updated successfully!'); // Add toast message here
+            })
+            .addCase(updateAssignmentImage.rejected, (state, action) => {
+                toast.error(`Image update failed: ${action.error.message}`);
             });
     },
 });

@@ -314,3 +314,48 @@ exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
     });
 })
 
+
+exports.AdmingetUserImages = catchAsync(async (req, res, next) => {
+    const userId = req.query.userId;
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const skip = (page - 1) * limit;
+  
+    const [images, total] = await Promise.all([
+      UserFiles.aggregate([
+        {
+          $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
+        },
+        {
+          $project: {
+            _id: 1,
+            path: 1,
+            type: 1,
+            createdAt: 1,
+          },
+        },
+        {
+          $sort: { createdAt: -1 },
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        }
+      ]),
+      UserFiles.countDocuments({ userId: userId, type: "image" })
+    ]);
+  
+    return res.status(200).json({
+      status: "success",
+      data: images,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  });
