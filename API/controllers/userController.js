@@ -1145,7 +1145,8 @@ exports.Home = catchAsync(async (req, res, next) => {
 exports.getVideosByCategory = catchAsync(async (req, res, next) => {
   const { category } = req.params;
 
-  const categoryDoc = await Category.findOne({ name: category });
+  const categoryDoc = await Category.findOne({ name: category }).lean();
+
   if (!categoryDoc) {
     return res.status(404).json({
       status: "fail",
@@ -1153,16 +1154,27 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
     });
   }
 
-  const categoryId = categoryDoc._id.toString();
+  const categoryId = categoryDoc._id;
 
-  const videos = await Video.find({ category: categoryId }).exec();
+  const videos = await Video.find({ category: categoryId }).lean();
 
-  const subcategoryNames = await SubCategory.find({
-    _id: { $in: videos.map((video) => video.subcategories) },
-  }).select("_id name");
+  // Extract valid subcategory IDs from videos (string format)
+  const subcategoryIds = Array.from(
+    new Set(
+      videos
+        .map((video) => video.subcategories)
+        .filter((id) => mongoose.Types.ObjectId.isValid(id)) // ensure they're valid
+    )
+  );
 
-  const subcategoryMap = subcategoryNames.reduce((acc, subcat) => {
-    acc[subcat._id] = subcat.name;
+  const subcategoryDocs = await SubCategory.find({
+    _id: { $in: subcategoryIds.map((id) => new mongoose.Types.ObjectId(id)) },
+  })
+    .select("_id name")
+    .lean();
+
+  const subcategoryMap = subcategoryDocs.reduce((acc, subcat) => {
+    acc[subcat._id.toString()] = subcat.name;
     return acc;
   }, {});
 
@@ -1176,6 +1188,7 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
       if (!videosBySubcategory[subcategoryName]) {
         videosBySubcategory[subcategoryName] = [];
       }
+
       videosBySubcategory[subcategoryName].push({
         id: video._id,
         title: video.title,
@@ -1188,6 +1201,7 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
       });
     }
   });
+
   return res.status(200).json({
     status: "success",
     data: { videos: videosBySubcategory },
