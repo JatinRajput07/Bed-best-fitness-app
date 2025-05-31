@@ -27,6 +27,7 @@ const SubCategory = require("../models/SubCategory");
 const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
 const Meeting = require("../models/Meeting");
+const { getRoleBasedDisplay } = require("../utils/roleBasedDisplay");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -55,37 +56,44 @@ exports.register = catchAsync(async (req, res, next) => {
     joiningDate,
   } = req.body;
   if (role === "admin") {
-    return next(new AppError("Resistration Not Allowed for Role", 400));
+    return next(new AppError("Registration Not Allowed for Role", 400));
   }
 
-  const existingUser = await User.findOne({ email, role });
+  // Check if email or phone exists in either role
+  const existingUser = await User.findOne({
+    $or: [
+      { email },
+      { phone }
+    ]
+  });
+
   if (existingUser) {
-    return next(new AppError(`email already exists`, 400));
+    if (existingUser.email === email && existingUser.role !== role) {
+      return next(new AppError(`Email already exists as ${getRoleBasedDisplay(existingUser.role)}`, 400));
+    }
+    if (existingUser.phone === phone && existingUser.role !== role) {
+      return next(new AppError(`Phone already exists as ${getRoleBasedDisplay(existingUser.role)}`, 400));
+    }
+    if (existingUser.email === email || existingUser.phone === phone) {
+      return next(new AppError(`User already exists`, 400));
+    }
   }
 
-  let newUserData = { email, name, phone, password, device_token, device_type };
+  let newUserData = { email, name, phone, password, device_token, device_type, role };
   if (role === "host") {
-    newUserData = {
-      ...newUserData,
-      role: "host",
-      additionalInfo: {
-        ADS_id,
-        address,
-        batchNo,
-        joiningDate,
-      },
-    };
-  } else {
-    newUserData = {
-      ...newUserData,
-      role: "user",
+    newUserData.additionalInfo = {
+      ADS_id,
+      address,
+      batchNo,
+      joiningDate: joiningDate ? new Date(joiningDate) : undefined,
     };
   }
   const user = await User.create(newUserData);
-  // const token = signToken(user._id);
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
-  await new Email(user, resetToken).welcome();
+  if (email) {
+    await new Email(user, resetToken).welcome();
+  }
 
   return res.status(200).json({
     status: "success",
@@ -153,13 +161,15 @@ exports.login = catchAsync(async (req, res, next) => {
     user = await User.findOne({ phone }).select("+password");
   }
 
-  if (user) {
-    if (user.role !== role) {
-      return next(new AppError(`Account already exists with role '${user.role}'. Please use the correct app or login method.`, 400));
-    }
+  if (!user) {
+    return next(new AppError("Incorrect email/phone or password", 401));
   }
 
-  if (!user || !(await user.correctPassword(password))) {
+  if (user.role !== role) {
+    return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login`, 400));
+  }
+
+  if (!(await user.correctPassword(password))) {
     return next(new AppError("Incorrect email/phone or password", 401));
   }
 
@@ -172,10 +182,14 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   const token = signToken(user._id);
-  if (device_type && device_token) {
-    await User.findByIdAndUpdate(user?._id, { device_type, device_token });
-  }
+  const updateFields = {};
+  if (device_type) updateFields.device_type = device_type;
+  if (device_token) updateFields.device_token = device_token;
   
+  if (Object.keys(updateFields).length > 0) {
+    await User.findByIdAndUpdate(user._id, updateFields);
+  }
+
   return res.json({
     status: "success",
     message: "Login Successful!",
@@ -195,68 +209,63 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     device_token,
   } = req.body;
   if (!socialId || !socialType) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Social ID and socialType are required",
-    });
+    return next(new AppError("Social ID and socialType are required", 400));
   }
 
+  // Check if user exists with same socialId or email/phone
   let user = await User.findOne({
     $or: [
-      { socialId, email },
-      { email },
-      { phone }
-    ],
+      { socialId },
+      ...(email ? [{ email }] : []),
+      ...(phone ? [{ phone }] : [])
+    ]
   });
 
+  // If user found but with different role
+  if (user.role !== role) {
+    return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login`, 400));
+  }
+
+  // Update existing user or create new one
   if (user) {
+    const updateFields = {
+      socialId,
+      socialType,
+      name,
+      device_type,
+      device_token,
+    };
+    
+    if (email && !user.email) updateFields.email = email;
+    if (phone && !user.phone) updateFields.phone = phone;
+
     user = await User.findByIdAndUpdate(
       user._id,
-      {
-        socialId,
-        socialType,
-        email,
-        phone,
-        name,
-        device_type,
-        device_token
-      },
+      updateFields,
       { new: true }
     );
-  }
-  if (!user) {
-    if (!email) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Email required for new user creation",
-      });
+  } else {
+    // For new user, email is required except for Apple login
+    if (!email && socialType !== 'Apple') {
+      return next(new AppError("Email is required for new user creation", 400));
     }
-    user = await User.create({
+
+    const newUserData = {
       socialId,
       socialType,
       email,
-      isVerified: true,
       phone,
+      name,
       role: role || "user",
       device_type,
       device_token,
-      name,
-    });
-  } else {
-    let updated = false;
-    if (device_token && user.device_token !== device_token) {
-      user.device_token = device_token;
-      updated = true;
-    }
-    if (device_type && user.device_type !== device_type) {
-      user.device_type = device_type;
-      updated = true;
-    }
-    if (updated) await user.save();
+      isVerified: true,
+    };
+
+    user = await User.create(newUserData);
   }
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
+
+  const token = signToken(user._id);
 
   res.status(200).json({
     status: "success",
@@ -389,24 +398,53 @@ const filterObj = (obj, ...disallowedFields) => {
 };
 
 exports.updateProfile = catchAsync(async (req, res, next) => {
-  // Fetch current user
   const currentUser = await User.findById(req.user.id);
   if (!currentUser) return next(new AppError("User not found", 404));
 
   // Disallowed fields unless empty in DB
   const restrictedFields = ["email", "AadharNo", "ABHA_No", "password", "role"];
+  
+  // Special handling for Apple login (socialType = 'Apple')
+  const isAppleUser = currentUser.socialType === 'Apple';
+  
+  // Check if phone is being updated
+  if (req.body.phone) {
+    // If phone is being changed from existing value
+    if (req.body.phone !== currentUser.phone) {
+      const phoneExists = await User.findOne({ 
+        phone: req.body.phone,
+        _id: { $ne: currentUser._id }
+      });
+      
+      if (phoneExists) {
+        return next(new AppError("Phone number already exists. Please use another number.", 400));
+      }
+    }
+    
+    // For Apple users, allow phone update even if they don't have email
+    if (isAppleUser && !currentUser.phone) {
+      // Additional validation for phone number format if needed
+      if (!/^[0-9]{10,15}$/.test(req.body.phone)) {
+        return next(new AppError("Please enter a valid phone number", 400));
+      }
+    }
+  }
 
-  // Filter request body to include only fields that exist in req.body
+  // Filter request body
   let filteredBody = filterObj(req.body, ...restrictedFields);
 
   // Allow restricted fields if they're EMPTY in DB
   for (const field of restrictedFields) {
     if (req.body[field] && (!currentUser[field] || currentUser[field] === "")) {
+      // Special case: Apple users might not have email, but we shouldn't allow email update here
+      if (field === 'email' && isAppleUser) {
+        continue;
+      }
       filteredBody[field] = req.body[field];
     }
   }
 
-  // Handle date formatting
+  // Handle date formatting (same as before)
   const dateFields = [
     "DOB",
     "OritationDate",
@@ -432,6 +470,8 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
       }
     }
   }
+
+  // Handle additional fields (same as before)
   const additionalFields = ["ADS_id", "address", "batchNo", "joiningDate"];
   for (const field of additionalFields) {
     if (req.body[field]) {
