@@ -209,62 +209,86 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     device_token,
   } = req.body;
   if (!socialId || !socialType) {
-    return next(new AppError("Social ID and socialType are required", 400));
+    return next(new AppError("Social ID and socialType are required.", 400));
+  }
+  if (!role) {
+    return next(new AppError("Role is required.", 400));
   }
 
-  // Check if user exists with same socialId or email/phone
-  let user = await User.findOne({
-    $or: [
-      { socialId },
-      ...(email ? [{ email }] : []),
-      ...(phone ? [{ phone }] : [])
-    ]
-  });
+  let user = null;
 
-  // If user found but with different role
-  if (user.role !== role) {
-    return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login`, 400));
-  }
+  user = await User.findOne({ socialId, socialType });
 
-  // Update existing user or create new one
+  // 3. If user found by socialId, validate role and update
   if (user) {
-    const updateFields = {
-      socialId,
-      socialType,
-      name,
-      device_type,
-      device_token,
-    };
-    
-    if (email && !user.email) updateFields.email = email;
-    if (phone && !user.phone) updateFields.phone = phone;
-
-    user = await User.findByIdAndUpdate(
-      user._id,
-      updateFields,
-      { new: true }
-    );
-  } else {
-    // For new user, email is required except for Apple login
-    if (!email && socialType !== 'Apple') {
-      return next(new AppError("Email is required for new user creation", 400));
+    if (user.role !== role) {
+      // User found via socialId, but their existing role does not match the requested role.
+      // This is a critical conflict.
+      return next(new AppError(`An account with this social ID already exists under the role '${user.role}'`, 403)); // 403 Forbidden
     }
 
-    const newUserData = {
-      socialId,
-      socialType,
-      email,
-      phone,
-      name,
-      role: role || "user",
-      device_type,
-      device_token,
-      isVerified: true,
+    // Update existing user's details
+    const updateFields = {
+      name: name || user.name, // Update name if new one is provided, else keep existing
+      device_type: device_type || user.device_type,
+      device_token: device_token || user.device_token,
     };
 
-    user = await User.create(newUserData);
+    // Update email/phone if provided by social login and not already set in DB
+    // Or, if your business logic allows updating email/phone from social login if different
+    if (email && user.email !== email) updateFields.email = email;
+    if (phone && user.phone !== phone) updateFields.phone = phone;
+
+    user = await User.findByIdAndUpdate(user._id, updateFields, { new: true });
+
+  } else {
+    // 4. User not found by socialId. Now check by email/phone for the *specific role*.
+    // This handles cases where a user might have registered with email/phone directly
+    // and is now trying to social login with the same email/phone.
+    if (email) {
+      user = await User.findOne({ email, role });
+    }
+    if (!user && phone) { // Only check by phone if not found by email
+      user = await User.findOne({ phone, role });
+    }
+
+    if (user) {
+      // User found by email/phone with the *correct* role.
+      // Link this existing account to the new socialId.
+      const updateFields = {
+        socialId,
+        socialType,
+        name: name || user.name,
+        device_type: device_type || user.device_type,
+        device_token: device_token || user.device_token,
+      };
+
+      user = await User.findByIdAndUpdate(user._id, updateFields, { new: true });
+
+    } else {
+      // 5. User not found by socialId, email, or phone for the requested role. Create a new user.
+      // For new user, email is required unless it's an Apple login (private relay) and no phone.
+      if (!email && socialType !== 'Apple') {
+      return next(new AppError("Email is required for new user creation", 400));
+      }
+
+      const newUserData = {
+        socialId,
+        socialType,
+        email,
+        phone,
+        name,
+        role: role, // Use the provided role, which is already validated
+        isVerified: true, // Social logins are generally considered pre-verified
+        device_type,
+        device_token,
+      };
+
+      user = await User.create(newUserData);
+    }
   }
 
+  // 6. Generate and send token
   const token = signToken(user._id);
 
   res.status(200).json({
