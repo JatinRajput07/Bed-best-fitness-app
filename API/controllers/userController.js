@@ -4,6 +4,7 @@ const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto-js");
+const fs = require("fs");
 const path = require("path");
 const Routine = require("../models/Routine");
 const { upload, generateThumbnail } = require("../utils/UploadFiles");
