@@ -63,14 +63,32 @@ const UploadVideo = () => {
 
     // Validate file type based on category
     if (field === "file" && form.category) {
-      const expectedType = form.category.type;
-      if (!file.type.startsWith(`${expectedType}/`)) {
-        setErrors((prev) => ({
-          ...prev,
-          file: `Please select a ${expectedType} file`,
-        }));
-        setForm((prev) => ({ ...prev, [field]: null })); // Clear file on invalid type
-        return;
+      const categoryNameLower = form.category.name.toLowerCase();
+      const isFlexibleCategory =
+        categoryNameLower.includes("podcast") ||
+        categoryNameLower.includes("story") ||
+        categoryNameLower.includes("recognition");
+
+      if (isFlexibleCategory) {
+        if (!file.type.startsWith("audio/") && !file.type.startsWith("video/")) {
+          setErrors((prev) => ({
+            ...prev,
+            file: `Please select an audio or video file for this category`,
+          }));
+          setForm((prev) => ({ ...prev, [field]: null })); // Clear file on invalid type
+          return;
+        }
+      } else {
+        // Original validation for other categories
+        const expectedType = form.category.type;
+        if (!file.type.startsWith(`${expectedType}/`)) {
+          setErrors((prev) => ({
+            ...prev,
+            file: `Please select a ${expectedType} file`,
+          }));
+          setForm((prev) => ({ ...prev, [field]: null })); // Clear file on invalid type
+          return;
+        }
       }
     }
 
@@ -302,7 +320,18 @@ const UploadVideo = () => {
                 <input
                   type="file"
                   onChange={(e) => handleFileChange(e, "file")}
-                  accept={form.category?.type ? `${form.category.type}/*` : undefined}
+                  accept={(() => {
+                    if (!form.category) return undefined;
+                    const categoryNameLower = form.category.name.toLowerCase();
+                    if (
+                      categoryNameLower.includes("podcast") ||
+                      categoryNameLower.includes("story") ||
+                      categoryNameLower.includes("recognition")
+                    ) {
+                      return "audio/*,video/*";
+                    }
+                    return `${form.category.type}/*`;
+                  })()}
                   className="hidden"
                   id="file-upload"
                 />
@@ -316,7 +345,17 @@ const UploadVideo = () => {
                   </p>
                   {form.category?.type && (
                     <p className="text-xs text-gray-500">
-                      {form.category.type.toUpperCase()} files only
+                      {(() => {
+                        const categoryNameLower = form.category.name.toLowerCase();
+                        if (
+                          categoryNameLower.includes("podcast") ||
+                          categoryNameLower.includes("story") ||
+                          categoryNameLower.includes("recognition")
+                        ) {
+                          return "Audio or Video files only";
+                        }
+                        return `${form.category.type.toUpperCase()} files only`;
+                      })()}
                     </p>
                   )}
                 </label>
@@ -351,8 +390,8 @@ const UploadVideo = () => {
                         : "Click to select a thumbnail"}
                     </p>
                     <p className="text-xs text-gray-500">
-          Required dimensions: 77px × 58px
-        </p>
+                      Required dimensions: 77px × 58px
+                    </p>
                   </label>
                 </div>
                 {form.thumbnail && (

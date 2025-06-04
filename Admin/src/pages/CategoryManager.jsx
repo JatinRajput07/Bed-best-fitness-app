@@ -166,7 +166,7 @@ const CategoryManager = () => {
                 <th className="px-6 py-2">S.No</th>
                 <th className="px-6 py-2">Category</th>
                 <th className="px-6 py-2">Subcategories</th>
-                <th className="px-6 py-2">Actions</th>
+                {/* <th className="px-6 py-2">Actions</th> */}
               </tr>
             </thead>
             <tbody>
@@ -212,7 +212,7 @@ const CategoryManager = () => {
                       "No subcategories"
                     )}
                   </td>
-                  <td className="px-6 py-2">
+                  {/* <td className="px-6 py-2">
                     <Button
                       color="green"
                       className="p-2 mr-1"
@@ -230,7 +230,7 @@ const CategoryManager = () => {
                     <Button className="p-2" color="red" onClick={() => openDeleteConfirmation(category._id)}>
                       Delete
                     </Button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
