@@ -15,6 +15,7 @@ const initSocket = require('./socket');
 require("./reminderScheduler")
 const PORT = process.env.PORT || 3000;
 const morgan = require('morgan');
+const scheduleNotifications = require('./notificationScheduler');
 
 // DATABASE Connection
 connectDB();
@@ -53,7 +54,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ROUTERS
 app.use('/', routes);
-
+scheduleNotifications();
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });

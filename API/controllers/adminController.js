@@ -275,19 +275,19 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
     if (req.body.subcategories && Array.isArray(req.body.subcategories) && req.body.subcategories.length > 0) {
       subcategoryId = req.body.subcategories[0];
     } else if (typeof req.body.subcategories === 'string' && req.body.subcategories) {
-      subcategoryId = req.body.subcategories; 
+      subcategoryId = req.body.subcategories;
     }
 
     const subcategories = Array.isArray(req.body.subcategories)
       ? req.body.subcategories
-      : [req.body.subcategories].filter(Boolean); 
+      : [req.body.subcategories].filter(Boolean);
 
-      if (!category || !subcategoryId) { // Now checking for a single subcategoryId
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Category and at least one subcategory are required.',
-        });
-      }
+    if (!category || !subcategoryId) { // Now checking for a single subcategoryId
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Category and at least one subcategory are required.',
+      });
+    }
 
     const fileType = mainFile.mimetype.split('/')[0];
     const mainFilePath = `http://43.204.2.84:7200/uploads/${fileType}s/${mainFile.filename}`;
@@ -1722,14 +1722,29 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
         usersToNotify = [...usersToNotify, ...coaches];
       }
 
+      // Parse meeting date and time
+      const [year, month, day] = newMeeting.meetingDate.toISOString().split('T')[0].split('-').map(Number);
+      const [hour, minute] = newMeeting.meetingTime.split(':').map(Number);
+      const meetingDateTime = new Date(year, month - 1, day, hour, minute);
+      const now = new Date();
+      const timeDiff = (meetingDateTime - now) / (1000 * 60);
+
+      const reminderMessage = `You have a meeting scheduled on ${newMeeting.meetingDate.toISOString().split('T')[0]} at ${newMeeting.meetingTime}.`;
+
       for (const user of usersToNotify) {
-        const reminderMessage = `You have a meeting scheduled on ${meetingDate} at ${meetingTime}.`;
-        await sendPushNotification(
-          user.device_token,
-          reminderMessage,
-          user._id,
-          "userApp"
-        );
+        const app = roles.includes("coach") && user.role === "coach" ? "partnerApp" : "userApp";
+
+        if (timeDiff <= 30 && timeDiff > 0) {
+          // Send immediate notification if meeting is within or at 30 minutes
+          await sendPushNotification(
+            user.device_token,
+            reminderMessage,
+            user._id,
+            app,
+            "Reminder",
+            { meetingId: newMeeting._id, link: googleMeetLink },
+          );
+        }
       }
 
       return res.status(200).json({

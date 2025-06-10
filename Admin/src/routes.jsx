@@ -16,6 +16,7 @@ import {
 import { ArrowLeftIcon } from "@mui/x-date-pickers";
 import DeleteAccountPolicy from "./pages/dashboard/DeleteAccountPolicy";
 import RecommendedVideos from "./pages/dashboard/RecommendedVideos";
+import CoachPrivacyPolicy from "./pages/dashboard/CoachPrivacyPolicy";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
@@ -222,11 +223,20 @@ export const routes = () => {
         name: "CMS",
         dropdown: [
           {
-            name: "Privacy Policy",
+            name: "Client Privacy Policy",
             path: "/privacy-policy",
             element: (
               <Suspense fallback={<div>Loading...</div>}>
                 <PrivacyPolicy />
+              </Suspense>
+            ),
+          },
+          {
+            name: "Coach Privacy Policy",
+            path: "/coach-privacy-policy",
+            element: (
+              <Suspense fallback={<div>Loading...</div>}>
+                <CoachPrivacyPolicy />
               </Suspense>
             ),
           },
