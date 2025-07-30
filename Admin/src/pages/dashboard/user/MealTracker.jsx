@@ -10,6 +10,8 @@ const MealTracker = ({ userId }) => {
   const [open, setOpen] = useState(null);
   const [currentPage, setCurrentPage] = useState(1); // Track the current page
   const [selectedDate, setSelectedDate] = useState(null); // Track the selected date
+  const [commentInputs, setCommentInputs] = useState({});
+  const [comments, setComments] = useState({});
   const recordsPerPage = 5; // Show 5 records per page
 
   function formatMealName(input) {
@@ -35,6 +37,17 @@ const MealTracker = ({ userId }) => {
       fetchMealsData();
     }
   }, [userId]);
+
+  const handleCommentSubmit = (date, mealType) => {
+    const newComments = { ...comments };
+    const comment = commentInputs[`${date}-${mealType}`] || "";
+    if (!newComments[`${date}-${mealType}`]) {
+      newComments[`${date}-${mealType}`] = [];
+    }
+    newComments[`${date}-${mealType}`].push(comment);
+    setComments(newComments);
+    setCommentInputs({ ...commentInputs, [`${date}-${mealType}`]: "" });
+  };
 
   const mealPlan = data?.meals || [];
 
@@ -168,6 +181,37 @@ const MealTracker = ({ userId }) => {
                               {formatDateTime(mealDetails.image_uploaded_at)}
                             </p>
                           )}
+                        </div>
+                        <div className="mt-4">
+                          <h4 className="text-md font-semibold text-gray-700">Comments</h4>
+                          <div className="mt-2">
+                            <textarea
+                              rows="3"
+                              className="w-full p-2 border border-gray-300 rounded-md"
+                              placeholder="Add a comment..."
+                              value={commentInputs[`${day.date}-${mealType}`] || ""}
+                              onChange={(e) =>
+                                setCommentInputs({
+                                  ...commentInputs,
+                                  [`${day.date}-${mealType}`]: e.target.value,
+                                })
+                              }
+                            ></textarea>
+                            <button
+                              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+                              onClick={() => handleCommentSubmit(day.date, mealType)}
+                            >
+                              Add Comment
+                            </button>
+                          </div>
+                          <div className="mt-4">
+                            {comments[`${day.date}-${mealType}`] &&
+                              comments[`${day.date}-${mealType}`].map((c, i) => (
+                                <div key={i} className="p-2 border-b border-gray-200">
+                                  {c}
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       </div>
                     ))

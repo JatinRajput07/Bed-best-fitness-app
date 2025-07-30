@@ -191,7 +191,7 @@ const ChatComponent = () => {
 
                                 {/* Messages */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
-                                    {messages.map((message, index) => (
+                                    {messages.length > 0 && messages.map((message, index) => (
                                         <div
                                             key={index}
                                             className={`flex ${message.sender._id === id ? "justify-end" : "justify-start"
@@ -224,7 +224,7 @@ const ChatComponent = () => {
 
                                 {/* Input Box */}
                                 <div className="p-4 border-t bg-gray-50 flex gap-2">
-                                    <Input
+                                    {/* <Input
                                         type="text"
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
@@ -236,7 +236,7 @@ const ChatComponent = () => {
                                     />
                                     <Button color="blue" onClick={handleSendMessage}>
                                         Send
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             </div>
                         ) : (

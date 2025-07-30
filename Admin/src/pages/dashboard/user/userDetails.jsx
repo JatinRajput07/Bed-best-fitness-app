@@ -196,9 +196,9 @@ export function Profile({ id, closeModal }) {
                     Workout Session
                   </Tab>
 
-                  <Tab value="bodydata" onClick={() => handleTabClick("bodydata")}>
+                  {/* <Tab value="bodydata" onClick={() => handleTabClick("bodydata")}>
                     Body Data
-                  </Tab>
+                  </Tab> */}
 
                   <Tab value="BodyMeasurement" onClick={() => handleTabClick("BodyMeasurement")}>
                     Body Measurement
@@ -208,17 +208,17 @@ export function Profile({ id, closeModal }) {
                     Health Habits
                   </Tab>
 
-                  <Tab value="HygieneTracker" onClick={() => handleTabClick("HygieneTracker")}>
+                  {/* <Tab value="HygieneTracker" onClick={() => handleTabClick("HygieneTracker")}>
                     Hygiene
-                  </Tab>
+                  </Tab> */}
 
-                  <Tab value="HolisticWellnessTracker" onClick={() => handleTabClick("HolisticWellnessTracker")}>
+                  {/* <Tab value="HolisticWellnessTracker" onClick={() => handleTabClick("HolisticWellnessTracker")}>
                     Holistic Wellness
-                  </Tab>
+                  </Tab> */}
 
-                  <Tab value="WhatsNewTodayTracker" onClick={() => handleTabClick("WhatsNewTodayTracker")}>
+                  {/* <Tab value="WhatsNewTodayTracker" onClick={() => handleTabClick("WhatsNewTodayTracker")}>
                     Whats New Today
-                  </Tab>
+                  </Tab> */}
 
 
                   <Tab value="reminders" onClick={() => handleTabClick("reminders")}>
