@@ -259,8 +259,8 @@ export const routes = () => {
             ),
           },
           {
-            name: "Help and Support",
-            path: "/help-and-support",
+            name: "Help & Support",
+            path: "/help&support",
             element: (
               <Suspense fallback={<div>Loading...</div>}>
                 <HelpAndSupport />

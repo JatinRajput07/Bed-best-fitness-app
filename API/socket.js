@@ -130,14 +130,16 @@ module.exports = (io) => {
 
 
         socket.on("chatList", async ({ senderId, receiverId, skip = 0, limit = 20 }) => {
+           
+
+            console.log('hiiiiiiiiiiiiiiiiiiii')
             if (senderId && receiverId) {
                 try {
                     const conversation = await Conversation.findOne({
                         participants: { $all: [senderId, receiverId] },
                     });
 
-
-
+                    // console.log(conversation)
                     if (conversation) {
                         const messages = await Message.find({
                             conversationId: conversation._id,
@@ -151,7 +153,6 @@ module.exports = (io) => {
                         const totalMessages = await Message.countDocuments({
                             conversationId: conversation._id
                         });
-
                         socket.emit("myChatList", {
                             messages,
                             pagination: {
@@ -213,7 +214,7 @@ module.exports = (io) => {
                     })
                 );
 
-                console.log(userChats, '===d==d==f=f=f=')
+                // console.log(userChats, '===d==d==f=f=f=')
 
                 socket.emit("myChatUserList", userChats);
             } catch (error) {

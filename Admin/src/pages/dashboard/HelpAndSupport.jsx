@@ -9,7 +9,7 @@ const HelpAndSupport = () => {
   const dispatch = useDispatch();
   const helpContent = useSelector((state) => state.cms.content);
 
-  const [title, setTitle] = useState("Help and Support");
+  const [title, setTitle] = useState("Help & Support");
   const [content, setContent] = useState("");
   const [isModified, setIsModified] = useState(false);
 
@@ -19,7 +19,7 @@ const HelpAndSupport = () => {
 
   useEffect(() => {
     if (helpContent) {
-      setTitle(helpContent?.title || "Help and Support");
+      setTitle(helpContent?.title || "Help & Support");
       setContent(helpContent?.content || "");
     }
   }, [helpContent]);
@@ -33,7 +33,7 @@ const HelpAndSupport = () => {
 
   const handleSave = () => {
     dispatch(updateCms({ title: "help-and-support", content }));
-    alert("Help and Support updated successfully!");
+    alert("Help & Support updated successfully!");
     setIsModified(false);
   };
 
@@ -42,7 +42,7 @@ const HelpAndSupport = () => {
       <Card>
         <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
           <Typography variant="h6" color="white">
-            Help and Support
+            Help & Support
           </Typography>
         </CardHeader>
         <CardBody className="p-6">

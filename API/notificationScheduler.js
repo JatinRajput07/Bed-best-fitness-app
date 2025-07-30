@@ -70,7 +70,7 @@ const scheduleNotifications = async () => {
         }
       }
     }
-    console.log('Checked for meeting notifications at', now.toISOString());
+    // console.log('Checked for meeting notifications at', now.toISOString());
   } catch (error) {
     console.error('Error checking notifications:', error);
   }
