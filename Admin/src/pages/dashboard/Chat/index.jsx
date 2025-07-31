@@ -25,7 +25,7 @@ const ChatComponent = () => {
 
     // Initialize socket connection
     useEffect(() => {
-        const socket = io("http://localhost:7200", {
+        const socket = io("http://43.204.2.84:7200", {
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
             timeout: 10000,
