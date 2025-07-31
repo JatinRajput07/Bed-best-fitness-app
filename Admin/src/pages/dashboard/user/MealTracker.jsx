@@ -1,18 +1,20 @@
 import Axios from "@/configs/Axios";
 import { formatDate, formatDateTime } from "@/utilService";
+import { CornerDownLeft } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const DEFAULT_IMAGE_URL = '/img/fb88eeb5.jpg';
 
-const MealTracker = ({ userId }) => {
+const MealTracker = ({ userId, loginUser }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1); // Track the current page
-  const [selectedDate, setSelectedDate] = useState(null); // Track the selected date
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [commentInputs, setCommentInputs] = useState({});
-  const [comments, setComments] = useState({});
-  const recordsPerPage = 5; // Show 5 records per page
+
+  const recordsPerPage = 5;
 
   function formatMealName(input) {
     return input
@@ -38,20 +40,32 @@ const MealTracker = ({ userId }) => {
     }
   }, [userId]);
 
-  const handleCommentSubmit = (date, mealType) => {
-    const newComments = { ...comments };
+  const handleCommentSubmit = async (date, mealType) => {
     const comment = commentInputs[`${date}-${mealType}`] || "";
-    if (!newComments[`${date}-${mealType}`]) {
-      newComments[`${date}-${mealType}`] = [];
+    if (!comment) {
+      alert("Please enter a comment!");
+      return;
     }
-    newComments[`${date}-${mealType}`].push(comment);
-    setComments(newComments);
-    setCommentInputs({ ...commentInputs, [`${date}-${mealType}`]: "" });
+
+    try {
+      const response = await Axios.post(`/user/routine/${userId}/${date}/${mealType}/comment`, {
+        text: comment,
+        loginUser,
+      });
+      if (response.status === 200) {
+        // Refresh data to get updated comments
+        const refreshedResponse = await Axios.get(`/user/getMealsData/${userId}/getMealsData`);
+        setData(refreshedResponse.data);
+        setCommentInputs({ ...commentInputs, [`${date}-${mealType}`]: "" });
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment. Please try again.");
+    }
   };
 
   const mealPlan = data?.meals || [];
 
-  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = mealPlan.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -64,14 +78,14 @@ const MealTracker = ({ userId }) => {
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      setOpen(null); // Close expanded day on page change
+      setOpen(null);
       setCurrentPage((prev) => prev + 1);
     }
   };
 
   const goToPreviousPage = () => {
     if (currentPage > 1) {
-      setOpen(null); // Close expanded day on page change
+      setOpen(null);
       setCurrentPage((prev) => prev - 1);
     }
   };
@@ -80,17 +94,11 @@ const MealTracker = ({ userId }) => {
     const selectedDate = event.target.value;
     setSelectedDate(selectedDate);
 
-    // Find the index of the selected date in the meal plan
     const dateIndex = mealPlan.findIndex((day) => day.date === selectedDate);
     if (dateIndex !== -1) {
-      // Determine which page contains the selected date
-      const page = Math.floor(dateIndex / recordsPerPage) + 1; // 0-indexed, so add 1 for page number
+      const page = Math.floor(dateIndex / recordsPerPage) + 1;
       setCurrentPage(page);
-
-      // Calculate the relative index of the selected date in the new page
       const relativeIndex = dateIndex - (page - 1) * recordsPerPage;
-
-      // Open the accordion for the selected date (set open state to the relative index)
       setOpen(relativeIndex);
     }
   };
@@ -107,7 +115,6 @@ const MealTracker = ({ userId }) => {
     <div className="max-w-full mx-auto p-6 shadow-lg bg-white rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Meal Tracker</h2>
 
-      {/* Dropdown for selecting date */}
       <div className="mb-6">
         <label htmlFor="meal-date" className="block text-lg font-semibold text-gray-700">
           Select a Date:
@@ -144,9 +151,9 @@ const MealTracker = ({ userId }) => {
                     Object.entries(day?.value).map(([mealType, mealDetails], mealIndex) => (
                       <div
                         key={mealIndex}
-                        className="border rounded-lg p-4 flex items-center gap-4 shadow-sm bg-gray-50"
+                        className="border rounded-lg p-4 flex items-start gap-4 shadow-sm bg-gray-50"
                       >
-                        {/* Meal Image */}
+                        {/* Meal details section (keep this the same) */}
                         <div className="w-24 h-24 rounded-lg overflow-hidden">
                           <img
                             src={mealDetails.image || DEFAULT_IMAGE_URL}
@@ -155,15 +162,13 @@ const MealTracker = ({ userId }) => {
                           />
                         </div>
 
-                        {/* Meal Details */}
                         <div className="flex-1">
                           <h3 className="text-lg font-bold text-gray-800 capitalize">{formatMealName(mealType)}</h3>
                           <p className="text-sm text-gray-600">
                             <span className="font-semibold">Status:</span>{" "}
                             <span
-                              className={`font-bold ${
-                                mealDetails.status === "take" ? "text-green-600" : "text-red-600"
-                              }`}
+                              className={`font-bold ${mealDetails.status === "take" ? "text-green-600" : "text-red-600"
+                                }`}
                             >
                               {mealDetails.status === "take" ? "Taken" : "Skipped"}
                             </span>
@@ -182,35 +187,56 @@ const MealTracker = ({ userId }) => {
                             </p>
                           )}
                         </div>
-                        <div className="mt-4">
-                          <h4 className="text-md font-semibold text-gray-700">Comments</h4>
-                          <div className="mt-2">
-                            <textarea
-                              rows="3"
-                              className="w-full p-2 border border-gray-300 rounded-md"
-                              placeholder="Add a comment..."
-                              value={commentInputs[`${day.date}-${mealType}`] || ""}
-                              onChange={(e) =>
-                                setCommentInputs({
-                                  ...commentInputs,
-                                  [`${day.date}-${mealType}`]: e.target.value,
-                                })
-                              }
-                            ></textarea>
+
+                        {/* Improved Comment Section */}
+                        <div className="w-80 border-l pl-4">
+                          <h4 className="text-md font-semibold text-gray-700 mb-3 pb-2 border-b">Comments</h4>
+
+                          {/* Comment List */}
+                          <div className="max-h-48 overflow-y-auto pr-2 mb-4 space-y-3">
+                            {mealDetails.comments?.length > 0 ? (
+                              mealDetails.comments.map((comment, i) => (
+                                <div key={i} className="p-3 bg-white rounded-lg shadow-xs border">
+                                  <p className="text-sm text-gray-800">{comment.text}</p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {formatDateTime(comment.created_at)}
+                                  </p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-gray-500 italic">No comments yet</p>
+                            )}
+                          </div>
+
+                          {/* Comment Input */}
+                          <div className="mt-4 border-t pt-3">
+                            <div className="relative">
+                              <textarea
+                                rows="2"
+                                className="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Write your comment..."
+                                value={commentInputs[`${day.date}-${mealType}`] || ""}
+                                onChange={(e) =>
+                                  setCommentInputs({
+                                    ...commentInputs,
+                                    [`${day.date}-${mealType}`]: e.target.value,
+                                  })
+                                }
+                              />
+                              {/* <button
+                                className="absolute right-2 bottom-2 p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                onClick={() => handleCommentSubmit(day.date, mealType)}
+                                title="Add comment"
+                              >
+                                <CornerDownLeft size={18} />
+                              </button> */}
+                            </div>
                             <button
-                              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+                              className="mt-2 w-full py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors"
                               onClick={() => handleCommentSubmit(day.date, mealType)}
                             >
-                              Add Comment
+                              Post Comment
                             </button>
-                          </div>
-                          <div className="mt-4">
-                            {comments[`${day.date}-${mealType}`] &&
-                              comments[`${day.date}-${mealType}`].map((c, i) => (
-                                <div key={i} className="p-2 border-b border-gray-200">
-                                  {c}
-                                </div>
-                              ))}
                           </div>
                         </div>
                       </div>
@@ -227,7 +253,6 @@ const MealTracker = ({ userId }) => {
         )}
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex items-center justify-between mt-6">
         <button
           onClick={goToPreviousPage}
@@ -242,9 +267,8 @@ const MealTracker = ({ userId }) => {
         <button
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === totalPages ? "bg-gray-300" : "bg-blue-500 text-white"
-          }`}
+          className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? "bg-gray-300" : "bg-blue-500 text-white"
+            }`}
         >
           Next
         </button>

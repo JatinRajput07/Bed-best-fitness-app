@@ -692,6 +692,18 @@ exports.assign = catchAsync(async (req, res, next) => {
         type: "Appointed a coach",
         status: "sent",
       });
+
+      const userData = await User.findById(userId);
+      if (userData.device_token) {
+        await sendPushNotification(
+          userData.device_token,
+          `You have been appointed ${hostData.name} as your coach.`,
+          userId,
+          "userApp",
+          "assign",
+          { hostId: hostData._id }
+        );
+      }
     }
 
     if (newAssignments.length === 0) {

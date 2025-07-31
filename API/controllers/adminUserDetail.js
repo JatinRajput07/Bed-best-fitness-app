@@ -11,7 +11,7 @@ exports.getWaterTracking = catchAsync(async (req, res, next) => {
     const routineData = await Routine.find({ userId }, 'water date -_id').sort({ date: -1 });
     const waterAchive = routineData.filter(r => r.water).map(r => ({ date: r.date, value: r.water }));
 
-    console.log(waterAchive,'===waterAchive==')
+    console.log(waterAchive, '===waterAchive==')
 
     res.status(200).json({
         status: "success",
@@ -90,6 +90,7 @@ exports.getMealsData = catchAsync(async (req, res, next) => {
                             $mergeObjects: [
                                 "$meal.v",
                                 { items: { $map: { input: "$mealItems", as: "item", in: "$$item.item" } } },
+                                { comments: "$meal.v.comments" }
                             ],
                         },
                     },
@@ -317,45 +318,69 @@ exports.deleteUserUploadFiles = catchAsync(async (req, res, next) => {
 
 exports.AdmingetUserImages = catchAsync(async (req, res, next) => {
     const userId = req.query.userId;
-    
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 9;
     const skip = (page - 1) * limit;
-  
+
     const [images, total] = await Promise.all([
-      UserFiles.aggregate([
-        {
-          $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
-        },
-        {
-          $project: {
-            _id: 1,
-            path: 1,
-            type: 1,
-            createdAt: 1,
-          },
-        },
-        {
-          $sort: { createdAt: -1 },
-        },
-        {
-          $skip: skip
-        },
-        {
-          $limit: limit
-        }
-      ]),
-      UserFiles.countDocuments({ userId: userId, type: "image" })
+        UserFiles.aggregate([
+            {
+                $match: { userId: new mongoose.Types.ObjectId(userId), type: "image" },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    path: 1,
+                    type: 1,
+                    createdAt: 1,
+                },
+            },
+            {
+                $sort: { createdAt: -1 },
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
+            }
+        ]),
+        UserFiles.countDocuments({ userId: userId, type: "image" })
     ]);
-  
+
     return res.status(200).json({
-      status: "success",
-      data: images,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
+        status: "success",
+        data: images,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
     });
-  });
+});
+
+
+exports.comment_meal = catchAsync(async (req, res) => {
+    const { userId, date, mealType } = req.params;
+    const { text, loginUser } = req.body;
+
+    console.log(userId, date, mealType, '========== userId, date, mealType =======')
+    console.log(text, '======================text==============')
+
+    if (!text) {
+        return res.status(400).json({ message: 'Comment text is required' });
+    }
+    const routine = await Routine.findOneAndUpdate(
+        { date, userId },
+        {
+            $push: {
+                [`meal.${mealType}.comments`]: { userId: loginUser, text, created_at: new Date() }
+            }
+        },
+        { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({ message: 'Comment added successfully', routine });
+})

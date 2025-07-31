@@ -1,5 +1,5 @@
 const express = require('express');
-const { getWaterTracking, getStepTracking, getSleepData, getMealsData, getNutritionData, getWorkoutData, getBodyData, getBodyMeasurementParameters, getHygieneData, getWhatNewToday, getHolisticWellness, getHealthHabits, getknowledgeData, AdmingetUserImages } = require('../../controllers/adminUserDetail');
+const { getWaterTracking, getStepTracking, getSleepData, getMealsData, getNutritionData, getWorkoutData, getBodyData, getBodyMeasurementParameters, getHygieneData, getWhatNewToday, getHolisticWellness, getHealthHabits, getknowledgeData, AdmingetUserImages, comment_meal, get_comment_meal } = require('../../controllers/adminUserDetail');
 const router = express.Router();
 
 router.get("/getWaterTracking/:userId/getWaterTracking", getWaterTracking)
@@ -21,6 +21,9 @@ router.get("/getHolisticWellness/:userId/getHolisticWellness", getHolisticWellne
 router.get("/getWhatNewToday/:userId/getWhatNewToday", getWhatNewToday)
 
 router.get('/get-user-images', AdmingetUserImages);
+
+router.post('/routine/:userId/:date/:mealType/comment', comment_meal);
+// router.get('/routine/:userId/:date/:mealType/comments', get_comment_meal);
 
 
 module.exports = router;

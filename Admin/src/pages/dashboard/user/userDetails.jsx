@@ -6,7 +6,7 @@ import {
   TabPanel, CardFooter, Avatar, Typography, Tabs, Switch, Tooltip, Button, Progress,
   Spinner,  // Add this import
 } from "@material-tailwind/react";
-import { HomeIcon, ArrowLeftIcon,ArrowPathIcon,ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, ArrowLeftIcon, ArrowPathIcon, ChatBubbleLeftEllipsisIcon, Cog6ToothIcon, PencilIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import { ProfileInfoCard, MessageCard } from "@/widgets/cards";
 import { platformSettingsData, conversationsData, projectsData } from "@/data";
@@ -47,6 +47,8 @@ export function Profile({ id, closeModal }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { id : loginUser } = useSelector((state) => state.auth);
+  // console.log(loginUser,'====d==f=f=f')
 
   const [fileToDelete, setFileToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -166,7 +168,7 @@ export function Profile({ id, closeModal }) {
 
           {userProfile?.user?.role === "user" && (
             <Tabs id="custom-animation" value={activeTab}>
-              <TabsHeader  className="gap-4 py-4" style={{ overflowX: "auto", whiteSpace: "nowrap", display: "flex" }} >
+              <TabsHeader className="gap-4 py-4" style={{ overflowX: "auto", whiteSpace: "nowrap", display: "flex" }} >
 
                 <>
                   <Tab value="Weight" onClick={() => handleTabClick("Weight")}>
@@ -265,7 +267,7 @@ export function Profile({ id, closeModal }) {
                 )}
                 {activeTab === "meals" && (
                   <TabPanel value="meals">
-                    <MealTracker userId={userProfile?.user?._id} />
+                    <MealTracker userId={userProfile?.user?._id} loginUser={loginUser}/>
                   </TabPanel>
                 )}
                 {activeTab === "nutritions" && (

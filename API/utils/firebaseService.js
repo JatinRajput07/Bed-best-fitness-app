@@ -8,7 +8,7 @@ exports.sendPushNotification = async (deviceToken, msg, userId, app, type = "",n
   try {
     const message = {
       notification: {
-        title: `${type === "chat" ? "New Message" : "Reminder"}`,
+        title: `${type === "chat" ? "New Message" : type === "assign" ? "assign" : "Reminder"}`,
         body: msg,
         // type: type
       },
