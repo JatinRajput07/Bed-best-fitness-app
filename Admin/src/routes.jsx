@@ -17,6 +17,7 @@ import { ArrowLeftIcon } from "@mui/x-date-pickers";
 import DeleteAccountPolicy from "./pages/dashboard/DeleteAccountPolicy";
 import RecommendedVideos from "./pages/dashboard/RecommendedVideos";
 import CoachPrivacyPolicy from "./pages/dashboard/CoachPrivacyPolicy";
+import { HRADataTable } from "./pages/dashboard/HealthAssessments";
 // import { Home, Profile, Notifications, UserList } from "@/pages/dashboard";
 // Lazy load components
 
@@ -215,6 +216,16 @@ export const routes = () => {
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <CategoryManager />
+          </Suspense>
+        ),
+      },
+      {
+        icon: <StopIcon {...icon} />,
+        name: "Health Assessments",
+        path: "/health-assessments",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <HRADataTable />
           </Suspense>
         ),
       },
