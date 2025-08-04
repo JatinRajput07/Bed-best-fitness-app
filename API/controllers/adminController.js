@@ -1680,95 +1680,106 @@ exports.getuserAndCoachStats = catchAsync(async (req, res, next) => {
 
 exports.createMeeting = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      return next(new AppError(err.message, 400));
-    } else if (err) {
-      return next(new AppError(err.message, 400));
-    }
+    try {
+      // Error handling for file upload
+      if (err) {
+        return next(new AppError(err.message, 400));
+      }
 
-    if (!req.files || req.files.length === 0) {
-      return next(new AppError("No files uploaded.", 400));
-    }
+      if (!req.files?.length) {
+        return next(new AppError("No files uploaded.", 400));
+      }
 
-    const { googleMeetLink, roles, meetingDate, meetingTime, category } =
-      req.body; // Add category
-    if (!googleMeetLink || !roles || roles.length === 0 || !category) {
-      // Validate category
-      return res.status(400).json({
-        status: "fail",
-        message: "Meet link, roles, and category are required.",
+      // Destructure and validate request body
+      const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body;
+
+      if (!googleMeetLink || !roles || !category) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Meet link, roles, and category are required.",
+        });
+      }
+
+      // Process uploaded files
+      const uploadedFiles = await Promise.all(
+        req.files.map(async (file) => {
+          const fileType = file.mimetype.split("/")[0];
+          return {
+            fileName: file.filename,
+            path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
+            mimeType: fileType,
+          };
+        })
+      );
+
+      // Normalize roles (handle both string and array formats)
+      const rolesArray = typeof roles === 'string'
+        ? roles.split(',').map(r => r.trim())
+        : Array.isArray(roles)
+          ? roles
+          : [roles];
+
+      // Create meeting record
+      const newMeeting = await Meeting.create({
+        googleMeetLink,
+        image: uploadedFiles[0].path,
+        roles: rolesArray,
+        meetingDate,
+        meetingTime,
+        category,
       });
-    }
 
-    const uploadedFiles = await Promise.all(
-      req.files.map(async (file) => {
-        const fileType = file.mimetype.split("/")[0];
-        const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
-        const fileData = {
-          fileName: file.filename,
-          path: filePath,
-          mimeType: fileType,
-        };
-        return fileData;
-      })
-    );
-
-    const newMeeting = await Meeting.create({
-      googleMeetLink,
-      image: uploadedFiles[0].path,
-      roles,
-      meetingDate,
-      meetingTime,
-      category, // Include category
-    });
-
-    if (newMeeting) {
-      let usersToNotify = [];
-      if (roles.includes("user")) {
-        const users = await User.find({ role: "user" });
-        usersToNotify = [...usersToNotify, ...users];
+      if (!newMeeting) {
+        return res.status(500).json({
+          status: "fail",
+          message: "Failed to create the meeting.",
+        });
       }
 
-      if (roles.includes("coach")) {
-        const coaches = await User.find({ role: "coach" });
-        usersToNotify = [...usersToNotify, ...coaches];
-      }
+      // Find users to notify based on roles
+      const rolesToFind = [];
+      if (rolesArray.includes("user")) rolesToFind.push("user");
+      if (rolesArray.includes("coach")) rolesToFind.push("host");
 
-      // Parse meeting date and time
-      const [year, month, day] = newMeeting.meetingDate.toISOString().split('T')[0].split('-').map(Number);
-      const [hour, minute] = newMeeting.meetingTime.split(':').map(Number);
+      const usersToNotify = rolesToFind.length
+        ? await User.find({ role: { $in: rolesToFind } })
+        : [];
+
+      // Calculate meeting time and reminder logic
+      const [year, month, day] = meetingDate.split('-').map(Number);
+      const [hour, minute] = meetingTime.split(':').map(Number);
       const meetingDateTime = new Date(year, month - 1, day, hour, minute);
       const now = new Date();
       const timeDiff = (meetingDateTime - now) / (1000 * 60);
 
-      const reminderMessage = `You have a meeting scheduled on ${newMeeting.meetingDate.toISOString().split('T')[0]} at ${newMeeting.meetingTime}.`;
+      const reminderMessage = `You have a meeting scheduled on ${meetingDate} at ${meetingTime}.`;
 
-      for (const user of usersToNotify) {
-        const app = roles.includes("coach") && user.role === "coach" ? "partnerApp" : "userApp";
-
-        if (timeDiff <= 30 && timeDiff > 0) {
-          // Send immediate notification if meeting is within or at 30 minutes
-          await sendPushNotification(
-            user.device_token,
-            reminderMessage,
-            user._id,
-            app,
-            "Reminder",
-            { meetingId: newMeeting._id, link: googleMeetLink },
-          );
-        }
+      // Send notifications if meeting is within 30 minutes
+      if (timeDiff <= 30 && timeDiff > 0) {
+        await Promise.all(
+          usersToNotify.map(async (user) => {
+            const app = user.role === "host" ? "partnerApp" : "userApp";
+            await sendPushNotification(
+              user.device_token,
+              reminderMessage,
+              user._id,
+              app,
+              "Reminder",
+              { meetingId: newMeeting._id, link: googleMeetLink },
+            );
+          })
+        );
       }
 
-      return res.status(200).json({
+      return res.status(201).json({
         status: "success",
-        message: "Meeting created and notifications sent successfully.",
+        message: "Meeting created successfully.",
         meeting: newMeeting,
+        notificationsSent: usersToNotify.length,
       });
-    } else {
-      return res.status(500).json({
-        status: "fail",
-        message: "Failed to create the meeting.",
-      });
+
+    } catch (error) {
+      return next(new AppError(error.message, 500));
     }
   });
 });
@@ -1785,67 +1796,108 @@ exports.getMeeting = catchAsync(async (req, res, next) => {
 
 exports.updateMeeting = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      return next(new AppError(err.message, 400));
-    } else if (err) {
-      return next(new AppError(err.message, 400));
-    }
+    try {
+      // Error handling for file upload
+      if (err) {
+        return next(new AppError(err.message, 400));
+      }
 
-    const meetingId = req.params.id;
-    const { googleMeetLink, roles, meetingDate, meetingTime, category } =
-      req.body; // Add category
+      const meetingId = req.params.id;
+      const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body;
 
-    if (!googleMeetLink || !roles || roles.length === 0 || !category) {
-      // Validate category
-      return res.status(400).json({
-        status: "fail",
-        message: "Meet link, roles, and category are required.",
-      });
-    }
+      // Validate required fields
+      if (!googleMeetLink || !roles || !category) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Meet link, roles, and category are required.",
+        });
+      }
 
-    let updatedData = {
-      googleMeetLink,
-      roles,
-      meetingDate,
-      meetingTime,
-      category, // Include category
-    };
+      // Normalize roles (handle both string and array formats)
+      const rolesArray = typeof roles === 'string'
+        ? roles.split(',').map(r => r.trim())
+        : Array.isArray(roles)
+          ? roles
+          : [roles];
 
-    if (req.files && req.files.length > 0) {
-      const uploadedFiles = await Promise.all(
-        req.files.map(async (file) => {
-          const fileType = file.mimetype.split("/")[0];
-          const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
-          return {
-            fileName: file.filename,
-            path: filePath,
-            mimeType: fileType,
-          };
+      // Prepare update data
+      const updatedData = {
+        googleMeetLink,
+        roles,
+        meetingDate: meetingDate.split('T')[0],
+        meetingTime,
+        category,
+      };
+
+      // Process uploaded files if any
+      if (req.files?.length) {
+        const uploadedFiles = await Promise.all(
+          req.files.map(async (file) => {
+            const fileType = file.mimetype.split("/")[0];
+            return {
+              fileName: file.filename,
+              path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
+              mimeType: fileType,
+            };
+          })
+        );
+        updatedData.image = uploadedFiles[0].path;
+      }
+
+      // Update meeting record
+      const updatedMeeting = await Meeting.findByIdAndUpdate(
+        meetingId,
+        updatedData,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedMeeting) {
+        return res.status(404).json({
+          status: "fail",
+          message: "Meeting not found.",
+        });
+      }
+
+      // Find users to notify based on roles
+      const rolesToFind = [];
+      if (rolesArray.includes("user")) rolesToFind.push("user");
+      if (rolesArray.includes("coach")) rolesToFind.push("host");
+
+      const usersToNotify = rolesToFind.length
+        ? await User.find({ role: { $in: rolesToFind } })
+        : [];
+
+      const [year, month, day] = updatedMeeting.meetingDate.toISOString().split('T')[0].split('-').map(Number);
+      const [hour, minute] = updatedMeeting.meetingTime.split(':').map(Number);
+      const meetingDateTime = new Date(year, month - 1, day, hour, minute);
+      const now = new Date();
+      const timeDiff = (meetingDateTime - now) / (1000 * 60);
+
+      const notificationMessage = `Your meeting has been updated. New schedule: ${updatedMeeting.meetingDate.toISOString().split('T')[0]} at ${updatedMeeting.meetingTime}.`;
+
+      await Promise.all(
+        usersToNotify.map(async (user) => {
+          const app = user.role === "host" ? "partnerApp" : "userApp";
+          await sendPushNotification(
+            user.device_token,
+            notificationMessage,
+            user._id,
+            app,
+            "Meeting Updated",
+            { meetingId: updatedMeeting._id, link: googleMeetLink },
+          );
         })
       );
-      updatedData.image = uploadedFiles[0].path;
-    }
 
-    const updatedMeeting = await Meeting.findByIdAndUpdate(
-      meetingId,
-      updatedData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (updatedMeeting) {
       return res.status(200).json({
         status: "success",
-        message: "Meeting updated successfully.",
+        message: "Meeting updated and notifications sent successfully.",
         meeting: updatedMeeting,
+        notificationsSent: usersToNotify.length,
       });
-    } else {
-      return res.status(404).json({
-        status: "fail",
-        message: "Meeting not found.",
-      });
+
+    } catch (error) {
+      return next(new AppError(error.message, 500));
     }
   });
 });

@@ -247,8 +247,8 @@ const Meeting = () => {
                                             />
                                         </TableCell>
                                         <TableCell className="max-w-xs truncate">{meeting.googleMeetLink}</TableCell>
-                                        <TableCell>{new Date(meeting.createdAt).toLocaleDateString()}</TableCell>
-                                        <TableCell>{new Date(meeting.createdAt).toLocaleTimeString()}</TableCell>
+                                        <TableCell>{new Date(meeting.meetingDate).toLocaleDateString()}</TableCell>
+                                        <TableCell>{(meeting.meetingTime)}</TableCell>
                                         <TableCell>
                                             <div className="flex gap-1 flex-wrap">
                                                 {meeting.roles.map(role => (
