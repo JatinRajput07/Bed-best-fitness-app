@@ -1,6 +1,6 @@
 import Axios from "@/configs/Axios";
 import { formatDate, formatDateTime } from "@/utilService";
-import { CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -61,6 +61,21 @@ const MealTracker = ({ userId, loginUser }) => {
     } catch (error) {
       console.error("Error adding comment:", error);
       alert("Failed to add comment. Please try again.");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        const response = await Axios.delete(`/user/routine/comments/${commentId}`);
+        if (response.status === 200) {
+          const refreshedResponse = await Axios.get(`/user/getMealsData/${userId}/getMealsData`);
+          setData(refreshedResponse.data);
+        }
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        alert("Failed to delete comment. Please try again.");
+      }
     }
   };
 
@@ -197,7 +212,16 @@ const MealTracker = ({ userId, loginUser }) => {
                             {mealDetails.comments?.length > 0 ? (
                               mealDetails.comments.map((comment, i) => (
                                 <div key={i} className="p-3 bg-white rounded-lg shadow-xs border">
-                                  <p className="text-sm text-gray-800">{comment.text}</p>
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm text-gray-800">{comment.text}</p>
+                                    <button
+                                      onClick={() => handleDeleteComment(comment._id)}
+                                      className="text-gray-500 hover:text-red-500"
+                                      title="Delete comment"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
                                   <p className="text-xs text-gray-500 mt-1">
                                     {formatDateTime(comment.created_at)}
                                   </p>

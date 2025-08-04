@@ -697,7 +697,7 @@ exports.assign = catchAsync(async (req, res, next) => {
       if (userData.device_token) {
         await sendPushNotification(
           userData.device_token,
-          `You have been appointed ${hostData.name} as your coach.`,
+          `You have been appointed ${hostData.name} as your host.`,
           userId,
           "userApp",
           "assign",

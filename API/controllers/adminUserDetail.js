@@ -384,3 +384,46 @@ exports.comment_meal = catchAsync(async (req, res) => {
 
     return res.status(200).json({ message: 'Comment added successfully', routine });
 })
+
+exports.delete_meal_comment = catchAsync(async (req, res) => {
+    const { commentId } = req.params;
+
+    if (!commentId) {
+        return res.status(400).json({ message: 'Comment ID is required' });
+    }
+
+    const routine = await Routine.findOne({
+        $or: [
+            { "meal.wake_up_food.comments._id": commentId },
+            { "meal.breakfast.comments._id": commentId },
+            { "meal.morning_snacks.comments._id": commentId },
+            { "meal.lunch.comments._id": commentId },
+            { "meal.evening_snacks.comments._id": commentId },
+            { "meal.dinner.comments._id": commentId },
+        ]
+    });
+
+    if (!routine) {
+        return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const mealType = Object.keys(routine.meal).find(type =>
+        routine.meal[type].comments.some(comment => comment._id.toString() === commentId)
+    );
+
+    if (!mealType) {
+        return res.status(404).json({ message: 'Comment not found in any meal type' });
+    }
+
+    await Routine.findOneAndUpdate(
+        { _id: routine._id },
+        {
+            $pull: {
+                [`meal.${mealType}.comments`]: { _id: commentId }
+            }
+        },
+        { new: true }
+    );
+
+    return res.status(200).json({ message: 'Comment deleted successfully' });
+});
