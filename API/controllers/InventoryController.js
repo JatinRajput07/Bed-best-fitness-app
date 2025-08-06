@@ -28,9 +28,10 @@ exports.createInventory = catchAsync(async (req, res, next) => {
 });
 
 exports.getInventory = catchAsync(async (req, res, next) => {
-  const goal = await Inventory.find({
-    userId: req.params.userId,
-  });
+  // const goal = await Inventory.find({
+  //   userId: req.params.userId,
+  // });
+  const goal = await Inventory.find();
   res.status(200).json({
     status: "success",
     data: goal,
@@ -52,7 +53,7 @@ exports.deleteInventory = catchAsync(async (req, res, next) => {
         "First, you need to delete Nutrition before you can delete Inventory.",
     });
   }
-  
+
   await Inventory.findByIdAndDelete(req.params.id);
   res.status(200).json({
     status: "success",
