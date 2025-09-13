@@ -149,10 +149,10 @@ exports.login = catchAsync(async (req, res, next) => {
   const { email, password, role, device_type, device_token, phone } = req.body;
 
   if (!email && !phone) {
-    return next(new AppError("Please provide email or phone and password!", 400));
+    return next(new AppError("Please provide email or phone and password!", 200));
   }
   if (!password) {
-    return next(new AppError("Please provide password!", 400));
+    return next(new AppError("Please provide password!", 200));
   }
 
   let user;
@@ -163,20 +163,20 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   if (!user) {
-    return next(new AppError("Incorrect email/phone or password", 401));
+    return next(new AppError("Incorrect email/phone or password", 200));
   }
 
   if (user.role !== role) {
     // return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login to `, 400));
-    return next(new AppError(`This email is already exists under associated with a ${getRoleBasedDisplay(user.role)} account`, 400));
+    return next(new AppError(`This email is already exists under associated with a ${getRoleBasedDisplay(user.role)} account`, 200));
   }
 
   if (!(await user.correctPassword(password))) {
-    return next(new AppError("Incorrect email/phone or password", 401));
+    return next(new AppError("Incorrect email/phone or password", 200));
   }
 
   if (!user.isVerified) {
-    return res.status(400).json({
+    return res.status(200).json({
       status: "fail",
       message: "Account is not verified",
       isVerified: false,
