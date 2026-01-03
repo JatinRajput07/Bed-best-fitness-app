@@ -5,12 +5,16 @@ const inventorySchema = new mongoose.Schema(
     coachId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
+    },
+    isAdminAdded: {
+      type: Boolean,
+      default: false,
     },
     quantity: {
       type: Number,

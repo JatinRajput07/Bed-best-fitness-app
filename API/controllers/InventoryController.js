@@ -4,19 +4,21 @@ const Nutrition = require("../models/Nutrition");
 const catchAsync = require("../utils/catchAsync");
 
 exports.createInventory = catchAsync(async (req, res, next) => {
-  if (!req.body.userId || !req.body.title) {
+  //if (!req.body.userId || !req.body.title) {
+  console.log(req.body ,"req.body---------------------------");
+  if (!req.body.title) {
     return res.status(400).json({ message: "Validation are required" });
   }
+console.log(req.body ,"req.body-------ffffffffffff--------------------");
+  // let getUser = await Asign_user.findOne({ asign_user: req.body.userId });
+  // if (!getUser) {
+  //   return res.status(400).json({
+  //     message:
+  //       "Please assign a coach to the user. After that, you can create Nutrition.",
+  //   });
+  // }
 
-  let getUser = await Asign_user.findOne({ asign_user: req.body.userId });
-  if (!getUser) {
-    return res.status(400).json({
-      message:
-        "Please assign a coach to the user. After that, you can create Nutrition.",
-    });
-  }
-
-  req.body.coachId = getUser.host;
+  // req.body.coachId = getUser.host;
   if (req.body.inventoryId) {
     await Inventory.findByIdAndUpdate(req.body.inventoryId, req.body);
   } else {

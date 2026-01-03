@@ -157,7 +157,7 @@ router.get("/introduction", getIntroductions);
 router.delete("/introduction/:introductionId", deleteIntroduction);
 router.patch("/introduction/:introductionId/status", toggleIntroductionStatus);
 
-router.get("/inventory/:userId", Auth, getInventory);
+router.get("/inventory", Auth, getInventory);
 router.delete("/inventory/delete/:id", Auth, deleteInventory);
 router.post("/inventory/add", Auth, createInventory);
 router.get("/recommendations", Auth, getVideoRecommendations);
