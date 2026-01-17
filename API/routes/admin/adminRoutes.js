@@ -58,11 +58,16 @@ const {
   unique_filetypes,
   assignImageUpdate,
 } = require("../../controllers/adminController");
-const { uploadFiles, getUserRecommendations, getVideoRecommendations, deleteVideoRecommendation } = require("../../controllers/userController");
+const {
+  uploadFiles,
+  getUserRecommendations,
+  getVideoRecommendations,
+  deleteVideoRecommendation,
+} = require("../../controllers/userController");
 const {
   createInventory,
   getInventory,
-  deleteInventory
+  deleteInventory,
 } = require("../../controllers/InventoryController");
 const Auth = require("../../middleware/Auth");
 const { deleteUserUploadFiles } = require("../../controllers/adminUserDetail");
@@ -92,7 +97,7 @@ router.post("/upload-videos", uploadVideos);
 router.get("/video-list", getVideos);
 router.get(
   "/video-list-byCategory/:category",
-  getVideosByCategoryAndSubcategory
+  getVideosByCategoryAndSubcategory,
 );
 router.delete("/video-list/:id", deleteVideo);
 
@@ -122,7 +127,7 @@ router.delete("/highlights/:id", deleteHighlight);
 
 router.delete(
   "/user-upload-file/:id/delete_blood_report",
-  deleteUserUploadFiles
+  deleteUserUploadFiles,
 );
 
 // Category Routes
@@ -161,11 +166,12 @@ router.get("/inventory", Auth, getInventory);
 router.delete("/inventory/delete/:id", Auth, deleteInventory);
 router.post("/inventory/add", Auth, createInventory);
 router.get("/recommendations", Auth, getVideoRecommendations);
-router.delete('/video-recommendation/:recommendationId', deleteVideoRecommendation);
+router.delete(
+  "/video-recommendation/:recommendationId",
+  deleteVideoRecommendation,
+);
 
 router.get("/unique-categories", unique_categories);
 router.get("/unique-filetypes", unique_filetypes);
-
-
 
 module.exports = router;

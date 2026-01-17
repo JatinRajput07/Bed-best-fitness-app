@@ -187,7 +187,7 @@ exports.getUserRoutine = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
   const goalData = await Goal.findOne(
     { userId },
-    "weightGoal dailyWaterGoal dailyStepsGoal -_id"
+    "weightGoal dailyWaterGoal dailyStepsGoal -_id",
   );
   res.status(200).json({
     status: "success",
@@ -215,7 +215,7 @@ exports.updateCms = catchAsync(async (req, res, next) => {
   const cmsContent = await Cms.findOneAndUpdate(
     { title },
     { content },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   return res.status(200).json({
@@ -261,20 +261,27 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
     let thumbnailFile = null;
 
     if (req.files && Array.isArray(req.files)) {
-      mainFile = req.files.find(f => f.fieldname === 'file');
-      thumbnailFile = req.files.find(f => f.fieldname === 'thumbnail');
+      mainFile = req.files.find((f) => f.fieldname === "file");
+      thumbnailFile = req.files.find((f) => f.fieldname === "thumbnail");
     }
 
     if (!mainFile) {
-      return next(new AppError('No main content file uploaded.', 400));
+      return next(new AppError("No main content file uploaded.", 400));
     }
 
     const { title, category, description } = req.body;
 
     let subcategoryId = null;
-    if (req.body.subcategories && Array.isArray(req.body.subcategories) && req.body.subcategories.length > 0) {
+    if (
+      req.body.subcategories &&
+      Array.isArray(req.body.subcategories) &&
+      req.body.subcategories.length > 0
+    ) {
       subcategoryId = req.body.subcategories[0];
-    } else if (typeof req.body.subcategories === 'string' && req.body.subcategories) {
+    } else if (
+      typeof req.body.subcategories === "string" &&
+      req.body.subcategories
+    ) {
       subcategoryId = req.body.subcategories;
     }
 
@@ -282,48 +289,52 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
       ? req.body.subcategories
       : [req.body.subcategories].filter(Boolean);
 
-    if (!category || !subcategoryId) { // Now checking for a single subcategoryId
+    if (!category || !subcategoryId) {
+      // Now checking for a single subcategoryId
       return res.status(400).json({
-        status: 'fail',
-        message: 'Category and at least one subcategory are required.',
+        status: "fail",
+        message: "Category and at least one subcategory are required.",
       });
     }
 
-    const fileType = mainFile.mimetype.split('/')[0];
+    const fileType = mainFile.mimetype.split("/")[0];
     const mainFilePath = `http://43.204.2.84:7200/uploads/${fileType}s/${mainFile.filename}`;
 
     let videoThumbnailPath = null;
     let audioThumbnailPath = null;
 
     if (thumbnailFile) {
-      const thumbFileType = thumbnailFile.mimetype.split('/')[0];
+      const thumbFileType = thumbnailFile.mimetype.split("/")[0];
       const thumbPath = `http://43.204.2.84:7200/uploads/images/${thumbnailFile.filename}`;
 
-      if (fileType === 'video') {
+      if (fileType === "video") {
         videoThumbnailPath = thumbPath;
-      } else if (fileType === 'audio') {
+      } else if (fileType === "audio") {
         audioThumbnailPath = thumbPath;
       }
     }
 
-    console.log({
-      title,
-      mainFilePath,
-      category,
-      subcategories : subcategoryId,
-      description,
-      fileType,
-      videoThumbnailPath,
-      audioThumbnailPath,
-      // Add other relevant data for debugging
-    }, "[---------------------Processed File Data------------------]");
+    console.log(
+      {
+        title,
+        mainFilePath,
+        category,
+        subcategories: subcategoryId,
+        description,
+        fileType,
+        videoThumbnailPath,
+        audioThumbnailPath,
+        // Add other relevant data for debugging
+      },
+      "[---------------------Processed File Data------------------]",
+    );
 
     // Create a new entry in the database using your Video model
     const media = await Video.create({
       title,
       path: mainFilePath, // Path to the main content file
       category, // Category ID
-      subcategories:subcategoryId, // Array of subcategory IDs
+      subcategories: subcategoryId, // Array of subcategory IDs
       description,
       filetype: fileType, // Derived file type (video, audio, application)
       thumbnail: videoThumbnailPath, // Thumbnail for video (if applicable)
@@ -333,14 +344,14 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
     // Send success response if media creation was successful
     if (media) {
       return res.status(200).json({
-        status: 'success',
+        status: "success",
         media, // Return the created media object
       });
     } else {
       // Fallback for unexpected failure in media creation
       return res.status(500).json({
-        status: 'fail',
-        message: 'Failed to create media.',
+        status: "fail",
+        message: "Failed to create media.",
       });
     }
   });
@@ -413,11 +424,11 @@ exports.getVideos = catchAsync(async (req, res, next) => {
         $and: [
           searchQuery
             ? {
-              $or: [
-                { title: { $regex: searchQuery, $options: "i" } },
-                { tags: { $regex: searchQuery, $options: "i" } },
-              ],
-            }
+                $or: [
+                  { title: { $regex: searchQuery, $options: "i" } },
+                  { tags: { $regex: searchQuery, $options: "i" } },
+                ],
+              }
             : {},
           categoryFilter ? { categoryName: categoryFilter } : {},
           filetypeFilter ? { filetype: filetypeFilter } : {},
@@ -566,7 +577,7 @@ exports.getVideosByCategoryAndSubcategory = catchAsync(
       status: "success",
       data: formattedResponse,
     });
-  }
+  },
 );
 
 exports.dashboard = catchAsync(async (req, res, next) => {
@@ -610,8 +621,6 @@ exports.dashboard = catchAsync(async (req, res, next) => {
 });
 
 const { ObjectId } = require("mongoose").Types;
-
-
 
 exports.getHealthOtherdata = catchAsync(async (req, res, next) => {
   const userId = req.params.id;
@@ -701,7 +710,7 @@ exports.assign = catchAsync(async (req, res, next) => {
           userId,
           "userApp",
           "assign",
-          { hostId: hostData._id }
+          { hostId: hostData._id },
         );
       }
     }
@@ -778,7 +787,7 @@ exports.editassign = catchAsync(async (req, res, next) => {
   const updatedAssignment = await Asign_User.findByIdAndUpdate(
     id,
     { asign_user, host },
-    { new: true }
+    { new: true },
   );
 
   if (!updatedAssignment) {
@@ -845,7 +854,7 @@ exports.assignImageUpdate = catchAsync(async (req, res, next) => {
     const updatedAssignment = await Asign_User.findByIdAndUpdate(
       id,
       { imageUrl },
-      { new: true, runValidators: true } // Return the updated document and run schema validators
+      { new: true, runValidators: true }, // Return the updated document and run schema validators
     );
 
     if (!updatedAssignment) {
@@ -872,7 +881,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.params.id,
     { name, email, role, permissions },
-    { new: true }
+    { new: true },
   );
   res
     .status(200)
@@ -929,7 +938,7 @@ exports.updateNutrition = async (req, res, next) => {
     const nutrition = await Nutrition.findByIdAndUpdate(
       req.params.id,
       updatedData,
-      { new: true }
+      { new: true },
     );
 
     if (!nutrition) {
@@ -1074,9 +1083,6 @@ exports.getNutritions = async (req, res, next) => {
       groupedByUser.map(async (userGroup) => {
         const userId = userGroup._id;
         const userDetails = await User.findById(userId);
-        const getStockQuantity = await Inventory.findOne({ userId }).sort({
-          createdAt: -1,
-        });
 
         const groupedByMealTime = userGroup.nutritions.reduce(
           (acc, nutrition) => {
@@ -1087,7 +1093,7 @@ exports.getNutritions = async (req, res, next) => {
             acc[mealTime].push(nutrition);
             return acc;
           },
-          {}
+          {},
         );
 
         const mealTimeGroups = await Promise.all(
@@ -1097,7 +1103,7 @@ exports.getNutritions = async (req, res, next) => {
                 nutritions.map(async (nutrition) => {
                   const userRoutines = routines.filter(
                     (routine) =>
-                      routine.userId.toString() === nutrition.userId.toString()
+                      routine.userId.toString() === nutrition.userId.toString(),
                   );
                   let takenCount = 0;
                   let skippedCount = 0;
@@ -1125,10 +1131,15 @@ exports.getNutritions = async (req, res, next) => {
                   if (isCompleted) {
                     await Nutrition.updateOne(
                       { _id: nutrition._id },
-                      { status: 1 }
+                      { status: 1 },
                     );
                   }
 
+                  const getStockQuantity = await Inventory.findOne({
+                    title: nutrition?.name,
+                  }).sort({
+                    createdAt: -1,
+                  });
                   return {
                     _id: nutrition._id,
                     mealTime: nutrition.mealTime,
@@ -1142,15 +1153,15 @@ exports.getNutritions = async (req, res, next) => {
                     isCompleted,
                     stockQuantity: getStockQuantity?.quantity || 0,
                   };
-                })
+                }),
               );
 
               return {
                 mealTime,
                 nutritionDetails: processedNutritions,
               };
-            }
-          )
+            },
+          ),
         );
 
         return {
@@ -1161,7 +1172,7 @@ exports.getNutritions = async (req, res, next) => {
           userId,
           mealTimeGroups,
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -1213,7 +1224,7 @@ exports.getMeals = async (req, res, next) => {
     const result = mealsByUserAndCategory.reduce(
       (acc, { _id: { userId, userName, userEmail, category }, meals }) => {
         let userEntry = acc.find(
-          (user) => user.userId.toString() === userId.toString()
+          (user) => user.userId.toString() === userId.toString(),
         );
         if (!userEntry) {
           userEntry = {
@@ -1232,7 +1243,7 @@ exports.getMeals = async (req, res, next) => {
 
         return acc;
       },
-      []
+      [],
     );
 
     res.status(200).json({
@@ -1282,7 +1293,7 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
   const updatedCategory = await Category.findByIdAndUpdate(
     req.params.id,
     { name, type },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!updatedCategory) {
@@ -1316,7 +1327,7 @@ exports.createSubCategory = catchAsync(async (req, res, next) => {
 
   if (!name || !categoryId) {
     return next(
-      new AppError("Both SubCategory name and Category ID are required", 400)
+      new AppError("Both SubCategory name and Category ID are required", 400),
     );
   }
 
@@ -1348,7 +1359,7 @@ exports.updateSubCategory = catchAsync(async (req, res, next) => {
   const updatedSubCategory = await SubCategory.findByIdAndUpdate(
     req.params.id,
     { name },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!updatedSubCategory) {
@@ -1436,8 +1447,9 @@ exports.toggleBannerStatus = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    message: `Banner status updated to ${banner.isActive ? "active" : "inactive"
-      }.`,
+    message: `Banner status updated to ${
+      banner.isActive ? "active" : "inactive"
+    }.`,
     data: banner,
   });
 });
@@ -1591,12 +1603,12 @@ exports.getGoalAnalytics = catchAsync(async (req, res, next) => {
 
     const bodyFatPercentage = calculatePercentage(
       parseFloat(body_fat),
-      targetBodyFat
+      targetBodyFat,
     );
     const bmiPercentage = calculatePercentage(parseFloat(bmi), targetBMI);
     const muscleMassPercentage = calculatePercentage(
       parseFloat(muscle_mass),
-      targetMuscleMass
+      targetMuscleMass,
     );
 
     // You can combine these percentages based on your logic for achieving the goal
@@ -1691,7 +1703,8 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
       }
 
       // Destructure and validate request body
-      const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body;
+      const { googleMeetLink, roles, meetingDate, meetingTime, category } =
+        req.body;
 
       if (!googleMeetLink || !roles || !category) {
         return res.status(400).json({
@@ -1709,15 +1722,16 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
             path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
             mimeType: fileType,
           };
-        })
+        }),
       );
 
       // Normalize roles (handle both string and array formats)
-      const rolesArray = typeof roles === 'string'
-        ? roles.split(',').map(r => r.trim())
-        : Array.isArray(roles)
-          ? roles
-          : [roles];
+      const rolesArray =
+        typeof roles === "string"
+          ? roles.split(",").map((r) => r.trim())
+          : Array.isArray(roles)
+            ? roles
+            : [roles];
 
       // Create meeting record
       const newMeeting = await Meeting.create({
@@ -1746,8 +1760,8 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
         : [];
 
       // Calculate meeting time and reminder logic
-      const [year, month, day] = meetingDate.split('-').map(Number);
-      const [hour, minute] = meetingTime.split(':').map(Number);
+      const [year, month, day] = meetingDate.split("-").map(Number);
+      const [hour, minute] = meetingTime.split(":").map(Number);
       const meetingDateTime = new Date(year, month - 1, day, hour, minute);
       const now = new Date();
       const timeDiff = (meetingDateTime - now) / (1000 * 60);
@@ -1767,7 +1781,7 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
               "Reminder",
               { meetingId: newMeeting._id, link: googleMeetLink },
             );
-          })
+          }),
         );
       }
 
@@ -1777,7 +1791,6 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
         meeting: newMeeting,
         notificationsSent: usersToNotify.length,
       });
-
     } catch (error) {
       return next(new AppError(error.message, 500));
     }
@@ -1803,7 +1816,8 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
       }
 
       const meetingId = req.params.id;
-      const { googleMeetLink, roles, meetingDate, meetingTime, category } = req.body;
+      const { googleMeetLink, roles, meetingDate, meetingTime, category } =
+        req.body;
 
       // Validate required fields
       if (!googleMeetLink || !roles || !category) {
@@ -1814,17 +1828,18 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
       }
 
       // Normalize roles (handle both string and array formats)
-      const rolesArray = typeof roles === 'string'
-        ? roles.split(',').map(r => r.trim())
-        : Array.isArray(roles)
-          ? roles
-          : [roles];
+      const rolesArray =
+        typeof roles === "string"
+          ? roles.split(",").map((r) => r.trim())
+          : Array.isArray(roles)
+            ? roles
+            : [roles];
 
       // Prepare update data
       const updatedData = {
         googleMeetLink,
         roles,
-        meetingDate: meetingDate.split('T')[0],
+        meetingDate: meetingDate.split("T")[0],
         meetingTime,
         category,
       };
@@ -1839,7 +1854,7 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
               path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
               mimeType: fileType,
             };
-          })
+          }),
         );
         updatedData.image = uploadedFiles[0].path;
       }
@@ -1848,7 +1863,7 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
       const updatedMeeting = await Meeting.findByIdAndUpdate(
         meetingId,
         updatedData,
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!updatedMeeting) {
@@ -1867,13 +1882,17 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         ? await User.find({ role: { $in: rolesToFind } })
         : [];
 
-      const [year, month, day] = updatedMeeting.meetingDate.toISOString().split('T')[0].split('-').map(Number);
-      const [hour, minute] = updatedMeeting.meetingTime.split(':').map(Number);
+      const [year, month, day] = updatedMeeting.meetingDate
+        .toISOString()
+        .split("T")[0]
+        .split("-")
+        .map(Number);
+      const [hour, minute] = updatedMeeting.meetingTime.split(":").map(Number);
       const meetingDateTime = new Date(year, month - 1, day, hour, minute);
       const now = new Date();
       const timeDiff = (meetingDateTime - now) / (1000 * 60);
 
-      const notificationMessage = `Your meeting has been updated. New schedule: ${updatedMeeting.meetingDate.toISOString().split('T')[0]} at ${updatedMeeting.meetingTime}.`;
+      const notificationMessage = `Your meeting has been updated. New schedule: ${updatedMeeting.meetingDate.toISOString().split("T")[0]} at ${updatedMeeting.meetingTime}.`;
 
       await Promise.all(
         usersToNotify.map(async (user) => {
@@ -1886,7 +1905,7 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
             "Meeting Updated",
             { meetingId: updatedMeeting._id, link: googleMeetLink },
           );
-        })
+        }),
       );
 
       return res.status(200).json({
@@ -1895,7 +1914,6 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         meeting: updatedMeeting,
         notificationsSent: usersToNotify.length,
       });
-
     } catch (error) {
       return next(new AppError(error.message, 500));
     }
@@ -2021,8 +2039,9 @@ exports.toggleIntroductionStatus = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    message: `Introduction status updated to ${introduction.isActive ? "active" : "inactive"
-      }.`,
+    message: `Introduction status updated to ${
+      introduction.isActive ? "active" : "inactive"
+    }.`,
     data: introduction,
   });
 });
@@ -2042,24 +2061,20 @@ exports.deleteIntroduction = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.unique_categories = catchAsync(async (req, res, next) => {
-  const categoryIds = await Video.distinct('category');
+  const categoryIds = await Video.distinct("category");
   const categories = await Promise.all(
     categoryIds.map(async (categoryId) => {
-      const category = await Category.findById(categoryId).select('name');
+      const category = await Category.findById(categoryId).select("name");
       return category?.name;
-    })
+    }),
   );
   const filteredNames = categories.filter(Boolean);
 
   res.status(200).json({ categories: filteredNames });
 });
 
-
 exports.unique_filetypes = catchAsync(async (req, res, next) => {
-  const filetypes = await Video.distinct('filetype');
+  const filetypes = await Video.distinct("filetype");
   res.status(200).json({ filetypes });
 });
-
