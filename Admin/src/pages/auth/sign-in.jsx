@@ -4,7 +4,6 @@ import { useState } from "react";
 import { login } from "@/redux/authSlice";
 import { useDispatch } from "react-redux";
 import { utilService } from "@/utilService";
-import Cookies from "js-cookie";
 
 export function SignIn() {
   const dispatch = useDispatch();

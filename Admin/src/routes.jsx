@@ -119,6 +119,8 @@ export const routes = () => {
             </Suspense>
           ),
         },
+        ...(role === "admin"
+    ? [
         {
           name: "Upload Audio/video",
           path: "/video-upload",
@@ -128,6 +130,8 @@ export const routes = () => {
             </Suspense>
           ),
         },
+      ]
+    : []),
         {
           name: "Recommended Videos",
           path: "/recommended-videos",

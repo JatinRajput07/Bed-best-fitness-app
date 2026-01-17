@@ -8,6 +8,7 @@ import AddNutritionForm from "./AddNutritionForm";
 import toast from "react-hot-toast";
 
 const Nutrition = () => {
+    const { role } = useSelector((state) => state.auth);
   const [nutritionData, setNutritionData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,6 +165,7 @@ const Nutrition = () => {
           <Typography variant="h5" color="white" className="font-bold">
           Supplements Management
           </Typography>
+          {role === "admin" && (
           <Button 
             color="white" 
             onClick={() => setShowForm(true)}
@@ -171,6 +173,7 @@ const Nutrition = () => {
           >
             Add Supplements Plan
           </Button>
+            )}
         </CardHeader>
         {!showForm ? (
           <div className="flex flex-col md:flex-row">
