@@ -29,6 +29,17 @@ const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
 const Meeting = require("../models/Meeting");
 const { getRoleBasedDisplay } = require("../utils/roleBasedDisplay");
+const { uploadFileToS3, uploadNewFileToS3 } = require("../utils/S3/upload-to-s3");
+
+const getS3FolderByMimeType = (file) => {
+  const fileType = file.mimetype.split("/")[0];
+  return `${fileType === "application" ? "pdf" : fileType}s`;
+};
+
+const getS3UrlForFile = async (file) => {
+  const uploadedFile = await uploadFileToS3(getS3FolderByMimeType(file), file);
+  return uploadedFile.fileUrl;
+};
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -612,8 +623,7 @@ exports.uploadProfilePicture = catchAsync(async (req, res, next) => {
       }
     }
 
-    const filename = req.files[0].filename;
-    const imageUrl = `http://43.204.2.84:7200/uploads/images/${filename}`;
+    const imageUrl = await getS3UrlForFile(req.files[0]);
 
     user.profilePicture = imageUrl;
     await user.save();
@@ -885,20 +895,25 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
     const uploadedFiles = await Promise.all(
       req.files.map(async (file) => {
         const fileType = file.mimetype.split("/")[0];
-        const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+        const filePath = await getS3UrlForFile(file);
 
         const fileData = {
-          fileName: file.filename,
+          fileName: file.filename || file.originalname,
           path: filePath,
           mimeType: file.mimetype,
         };
 
         if (fileType === "video") {
           try {
-            const thumbnailPath = await generateThumbnail(file.path);
-            fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(
+            const thumbnailPath = await generateThumbnail(file);
+            const thumbnailUpload = await uploadNewFileToS3(
+              "thumbnails",
               thumbnailPath
-            )}`;
+            );
+            fileData.thumbnail = thumbnailUpload.fileUrl;
+            if (fs.existsSync(thumbnailPath)) {
+              fs.unlinkSync(thumbnailPath);
+            }
           } catch (error) {
             console.error("Error generating thumbnail:", error);
           }
@@ -1454,20 +1469,25 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
     const uploadedFiles = await Promise.all(
       req.files.map(async (file) => {
         const fileType = file.mimetype.split("/")[0];
-        const filePath = `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`;
+        const filePath = await getS3UrlForFile(file);
 
         const fileData = {
-          fileName: file.filename,
+          fileName: file.filename || file.originalname,
           path: filePath,
           mimeType: fileType,
         };
 
         if (fileType === "video") {
           try {
-            const thumbnailPath = await generateThumbnail(file.path);
-            fileData.thumbnail = `http://43.204.2.84:7200/uploads/thumbnails/${path.basename(
+            const thumbnailPath = await generateThumbnail(file);
+            const thumbnailUpload = await uploadNewFileToS3(
+              "thumbnails",
               thumbnailPath
-            )}`;
+            );
+            fileData.thumbnail = thumbnailUpload.fileUrl;
+            if (fs.existsSync(thumbnailPath)) {
+              fs.unlinkSync(thumbnailPath);
+            }
           } catch (error) {
             console.error("Error generating thumbnail:", error);
           }
@@ -1510,16 +1530,16 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
         let filePath
 
         if (req?.body?.fileType && req?.body?.fileType === "image") {
-          filePath = `http://43.204.2.84:7200/uploads/images/${file.filename}`;
+          filePath = (await uploadFileToS3("images", file)).fileUrl;
         } else {
-          filePath = `http://43.204.2.84:7200/uploads/pdfs/${file.filename}`;
+          filePath = (await uploadFileToS3("pdfs", file)).fileUrl;
         }
 
 
         console.log(filePath, '=========================')
 
         const fileData = {
-          fileName: file.filename,
+          fileName: file.filename || file.originalname,
           path: filePath,
           mimeType: fileType == "application" ? "pdf" : fileType,
         };

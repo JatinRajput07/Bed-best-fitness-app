@@ -1,22 +1,10 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { exec } = require('child_process');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        console.log(file,'========================create_banner==============')
-        const fileType = file.mimetype.split('/')[0];
-        console.log(fileType,'========================fileType==============')
-        const folder = `./public/uploads/${fileType == "application" ? "pdf" : fileType}s`;
-
-        fs.mkdirSync(folder, { recursive: true });
-        cb(null, folder);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
+const storage = multer.memoryStorage();
 
 exports.upload = multer({
     storage: storage
@@ -24,15 +12,27 @@ exports.upload = multer({
 
 
 
-exports.generateThumbnail = (videoPath) => {
+exports.generateThumbnail = (videoInput) => {
     return new Promise((resolve, reject) => {
-        const thumbnailDir = './public/uploads/thumbnails';
+        const thumbnailDir = path.join(os.tmpdir(), 'bed-best-thumbnails');
         fs.mkdirSync(thumbnailDir, { recursive: true });
 
+        let videoPath = videoInput;
+        let tempVideoPath = null;
+
+        if (videoInput && videoInput.buffer) {
+            tempVideoPath = path.join(os.tmpdir(), `${Date.now()}-${videoInput.originalname}`);
+            fs.writeFileSync(tempVideoPath, videoInput.buffer);
+            videoPath = tempVideoPath;
+        }
+
         const outputThumbnail = path.join(thumbnailDir, `thumbnail-${Date.now()}.png`);
-        const ffmpegCommand = `ffmpeg -i ${videoPath} -ss 00:00:01 -vframes 1 ${outputThumbnail}`;
+        const ffmpegCommand = `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 "${outputThumbnail}"`;
 
         exec(ffmpegCommand, (error) => {
+            if (tempVideoPath && fs.existsSync(tempVideoPath)) {
+                fs.unlinkSync(tempVideoPath);
+            }
             if (error) {
                 return reject(error);
             }

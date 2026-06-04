@@ -30,6 +30,17 @@ const Notification = require("../models/Notification");
 const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
 const Inventory = require("../models/Inventory");
+const { uploadFileToS3 } = require("../utils/S3/upload-to-s3");
+
+const getS3FolderByMimeType = (file) => {
+  const fileType = file.mimetype.split("/")[0];
+  return `${fileType === "application" ? "pdf" : fileType}s`;
+};
+
+const getS3UrlForFile = async (file) => {
+  const uploadedFile = await uploadFileToS3(getS3FolderByMimeType(file), file);
+  return uploadedFile.fileUrl;
+};
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -298,14 +309,13 @@ exports.uploadVideos = catchAsync(async (req, res, next) => {
     }
 
     const fileType = mainFile.mimetype.split("/")[0];
-    const mainFilePath = `http://43.204.2.84:7200/uploads/${fileType}s/${mainFile.filename}`;
+    const mainFilePath = await getS3UrlForFile(mainFile);
 
     let videoThumbnailPath = null;
     let audioThumbnailPath = null;
 
     if (thumbnailFile) {
-      const thumbFileType = thumbnailFile.mimetype.split("/")[0];
-      const thumbPath = `http://43.204.2.84:7200/uploads/images/${thumbnailFile.filename}`;
+      const thumbPath = await getS3UrlForFile(thumbnailFile);
 
       if (fileType === "video") {
         videoThumbnailPath = thumbPath;
@@ -654,7 +664,7 @@ exports.assign = catchAsync(async (req, res, next) => {
 
     let imageUrl = null;
     if (req.files && req.files.length > 0) {
-      imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+      imageUrl = await getS3UrlForFile(req.files[0]);
     }
     const { host } = req.body;
     let { asign_user } = req.body;
@@ -842,7 +852,7 @@ exports.assignImageUpdate = catchAsync(async (req, res, next) => {
     let imageUrl = null;
 
     if (req.files && req.files.length > 0) {
-      imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+      imageUrl = await getS3UrlForFile(req.files[0]);
     } else {
       return res.status(400).json({ message: "No image file provided." });
     }
@@ -1406,7 +1416,7 @@ exports.createBanner = catchAsync(async (req, res, next) => {
     }
 
     const { title, description, link } = req.body;
-    const imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+    const imageUrl = await getS3UrlForFile(req.files[0]);
     const newBanner = await Banner.create({
       title,
       description,
@@ -1717,9 +1727,10 @@ exports.createMeeting = catchAsync(async (req, res, next) => {
       const uploadedFiles = await Promise.all(
         req.files.map(async (file) => {
           const fileType = file.mimetype.split("/")[0];
+          const fileUrl = await getS3UrlForFile(file);
           return {
-            fileName: file.filename,
-            path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
+            fileName: file.filename || file.originalname,
+            path: fileUrl,
             mimeType: fileType,
           };
         }),
@@ -1849,9 +1860,10 @@ exports.updateMeeting = catchAsync(async (req, res, next) => {
         const uploadedFiles = await Promise.all(
           req.files.map(async (file) => {
             const fileType = file.mimetype.split("/")[0];
+            const fileUrl = await getS3UrlForFile(file);
             return {
-              fileName: file.filename,
-              path: `http://43.204.2.84:7200/uploads/${fileType}s/${file.filename}`,
+              fileName: file.filename || file.originalname,
+              path: fileUrl,
               mimeType: fileType,
             };
           }),
@@ -1952,7 +1964,7 @@ exports.addHighlight = catchAsync(async (req, res, next) => {
       return next(new AppError("No files uploaded.", 400));
     }
 
-    const filePath = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+    const filePath = await getS3UrlForFile(req.files[0]);
     const newHighlight = await Highlight.create({ url: filePath });
     res.status(201).json({
       status: "success",
@@ -1997,7 +2009,7 @@ exports.createIntroduction = catchAsync(async (req, res, next) => {
     }
 
     const { title, description } = req.body;
-    const imageUrl = `http://43.204.2.84:7200/uploads/images/${req.files[0].filename}`;
+    const imageUrl = await getS3UrlForFile(req.files[0]);
     const newIntroduction = await Introduction.create({
       title,
       description,
