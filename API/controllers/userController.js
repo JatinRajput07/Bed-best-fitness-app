@@ -29,7 +29,10 @@ const Highlight = require("../models/Highlight");
 const Introduction = require("../models/Introduction");
 const Meeting = require("../models/Meeting");
 const { getRoleBasedDisplay } = require("../utils/roleBasedDisplay");
-const { uploadFileToS3, uploadNewFileToS3 } = require("../utils/S3/upload-to-s3");
+const {
+  uploadFileToS3,
+  uploadNewFileToS3,
+} = require("../utils/S3/upload-to-s3");
 
 const getS3FolderByMimeType = (file) => {
   const fileType = file.mimetype.split("/")[0];
@@ -72,26 +75,43 @@ exports.register = catchAsync(async (req, res, next) => {
   }
 
   // Check if email or phone exists in either role
-  const existingUser = await User.findOne({
-    $or: [
-      { email },
-      { phone }
-    ]
-  });
+  // const existingUser = await User.findOne({
+  //   $or: [
+  //     { email },
+  //     { phone }
+  //   ]
+  // });
+  const existingUser = await User.findOne({ email });
 
   if (existingUser) {
     if (existingUser.email === email && existingUser.role !== role) {
-      return next(new AppError(`Email already exists as ${getRoleBasedDisplay(existingUser.role)}`, 400));
+      return next(
+        new AppError(
+          `Email already exists as ${getRoleBasedDisplay(existingUser.role)}`,
+          400,
+        ),
+      );
     }
-    if (existingUser.phone === phone && existingUser.role !== role) {
-      return next(new AppError(`Phone already exists as ${getRoleBasedDisplay(existingUser.role)}`, 400));
-    }
-    if (existingUser.email === email || existingUser.phone === phone) {
+    // if (existingUser.phone === phone && existingUser.role !== role) {
+    //   return next(new AppError(`Phone already exists as ${getRoleBasedDisplay(existingUser.role)}`, 400));
+    // }
+    // if (existingUser.email === email || existingUser.phone === phone) {
+    //   return next(new AppError(`User already exists`, 400));
+    // }
+    if (existingUser.email === email) {
       return next(new AppError(`User already exists`, 400));
     }
   }
 
-  let newUserData = { email, name, phone, password, device_token, device_type, role };
+  let newUserData = {
+    email,
+    name,
+    phone,
+    password,
+    device_token,
+    device_type,
+    role,
+  };
   if (role === "host") {
     newUserData.additionalInfo = {
       ADS_id,
@@ -160,7 +180,9 @@ exports.login = catchAsync(async (req, res, next) => {
   const { email, password, role, device_type, device_token, phone } = req.body;
 
   if (!email && !phone) {
-    return next(new AppError("Please provide email or phone and password!", 200));
+    return next(
+      new AppError("Please provide email or phone and password!", 200),
+    );
   }
   if (!password) {
     return next(new AppError("Please provide password!", 200));
@@ -179,7 +201,12 @@ exports.login = catchAsync(async (req, res, next) => {
 
   if (user.role !== role) {
     // return next(new AppError(`Please use the ${getRoleBasedDisplay(user.role)} app to login to `, 400));
-    return next(new AppError(`This email is already exists under associated with a ${getRoleBasedDisplay(user.role)} account`, 200));
+    return next(
+      new AppError(
+        `This email is already exists under associated with a ${getRoleBasedDisplay(user.role)} account`,
+        200,
+      ),
+    );
   }
 
   if (!(await user.correctPassword(password))) {
@@ -198,7 +225,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const updateFields = {};
   if (device_type) updateFields.device_type = device_type;
   if (device_token) updateFields.device_token = device_token;
-  
+
   if (Object.keys(updateFields).length > 0) {
     await User.findByIdAndUpdate(user._id, updateFields);
   }
@@ -237,7 +264,12 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     if (user.role !== role) {
       // User found via socialId, but their existing role does not match the requested role.
       // This is a critical conflict.
-      return next(new AppError(`This email is already associated with a '${getRoleBasedDisplay(user.role)} account'`, 403)); // 403 Forbidden
+      return next(
+        new AppError(
+          `This email is already associated with a '${getRoleBasedDisplay(user.role)} account'`,
+          403,
+        ),
+      ); // 403 Forbidden
     }
 
     // Update existing user's details
@@ -253,7 +285,6 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     if (phone && user.phone !== phone) updateFields.phone = phone;
 
     user = await User.findByIdAndUpdate(user._id, updateFields, { new: true });
-
   } else {
     // 4. User not found by socialId. Now check by email/phone for the *specific role*.
     // This handles cases where a user might have registered with email/phone directly
@@ -261,7 +292,8 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     if (email) {
       user = await User.findOne({ email, role });
     }
-    if (!user && phone) { // Only check by phone if not found by email
+    if (!user && phone) {
+      // Only check by phone if not found by email
       user = await User.findOne({ phone, role });
     }
 
@@ -276,13 +308,16 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
         device_token: device_token || user.device_token,
       };
 
-      user = await User.findByIdAndUpdate(user._id, updateFields, { new: true });
-
+      user = await User.findByIdAndUpdate(user._id, updateFields, {
+        new: true,
+      });
     } else {
       // 5. User not found by socialId, email, or phone for the requested role. Create a new user.
       // For new user, email is required unless it's an Apple login (private relay) and no phone.
-      if (!email && socialType !== 'Apple') {
-      return next(new AppError("Email is required for new user creation", 400));
+      if (!email && socialType !== "Apple") {
+        return next(
+          new AppError("Email is required for new user creation", 400),
+        );
       }
 
       const newUserData = {
@@ -335,7 +370,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
     return next(
       new AppError("There was an error sending the email. Try again later!"),
-      500
+      500,
     );
   }
 });
@@ -411,7 +446,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   const coach = await Asign_User.findOne(
     { asign_user: req.user.id },
-    "host imageUrl"
+    "host imageUrl",
   )
     .populate("host", "name email")
     .exec();
@@ -440,24 +475,29 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 
   // Disallowed fields unless empty in DB
   const restrictedFields = ["email", "AadharNo", "ABHA_No", "password", "role"];
-  
+
   // Special handling for Apple login (socialType = 'Apple')
-  const isAppleUser = currentUser.socialType === 'Apple';
-  
+  const isAppleUser = currentUser.socialType === "Apple";
+
   // Check if phone is being updated
   if (req.body.phone) {
     // If phone is being changed from existing value
     if (req.body.phone !== currentUser.phone) {
-      const phoneExists = await User.findOne({ 
+      const phoneExists = await User.findOne({
         phone: req.body.phone,
-        _id: { $ne: currentUser._id }
+        _id: { $ne: currentUser._id },
       });
-      
+
       if (phoneExists) {
-        return next(new AppError("Phone number already exists. Please use another number.", 400));
+        return next(
+          new AppError(
+            "Phone number already exists. Please use another number.",
+            400,
+          ),
+        );
       }
     }
-    
+
     // For Apple users, allow phone update even if they don't have email
     if (isAppleUser && !currentUser.phone) {
       // Additional validation for phone number format if needed
@@ -474,7 +514,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   for (const field of restrictedFields) {
     if (req.body[field] && (!currentUser[field] || currentUser[field] === "")) {
       // Special case: Apple users might not have email, but we shouldn't allow email update here
-      if (field === 'email' && isAppleUser) {
+      if (field === "email" && isAppleUser) {
         continue;
       }
       filteredBody[field] = req.body[field];
@@ -501,8 +541,8 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
         return next(
           new AppError(
             `Invalid date format for ${field}. Expected format: DD-MM-YYYY.`,
-            400
-          )
+            400,
+          ),
         );
       }
     }
@@ -524,8 +564,8 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
           return next(
             new AppError(
               `Invalid date format for additionalInfo.joiningDate. Expected format: DD-MM-YYYY.`,
-              400
-            )
+              400,
+            ),
           );
         }
       } else {
@@ -666,7 +706,7 @@ exports.addRoutine = catchAsync(async (req, res, next) => {
   const routine = await Routine.findOneAndUpdate(
     { userId, date: today },
     { $set: routineData },
-    { new: true, upsert: true }
+    { new: true, upsert: true },
   );
 
   res.status(routine ? 200 : 201).json({
@@ -701,11 +741,14 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
       ([key, value]) => ({
         type: key,
         ...value,
-      })
+      }),
     );
   }
 
-  console.log(formattedRoutine, "======================formattedRoutine=====================");
+  console.log(
+    formattedRoutine,
+    "======================formattedRoutine=====================",
+  );
 
   if (
     formattedRoutine.nutrition &&
@@ -716,7 +759,7 @@ exports.getRoutine = catchAsync(async (req, res, next) => {
       ([key, value]) => ({
         type: key,
         ...value,
-      })
+      }),
     );
   }
 
@@ -762,9 +805,16 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
       if (!routine.meal) routine.meal = {};
 
       // Process each meal type separately
-      const mealTypes = ['wake_up_food', 'breakfast', 'morning_snacks', 'lunch', 'evening_snacks', 'dinner'];
+      const mealTypes = [
+        "wake_up_food",
+        "breakfast",
+        "morning_snacks",
+        "lunch",
+        "evening_snacks",
+        "dinner",
+      ];
 
-      mealTypes.forEach(mealType => {
+      mealTypes.forEach((mealType) => {
         if (data[mealType]) {
           // Initialize if not exists
           if (!routine.meal[mealType]) routine.meal[mealType] = {};
@@ -778,7 +828,8 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
               }
               routine.meal[mealType].imageHistory.push({
                 url: routine.meal[mealType].image,
-                uploaded_at: routine.meal[mealType].image_uploaded_at || new Date()
+                uploaded_at:
+                  routine.meal[mealType].image_uploaded_at || new Date(),
               });
             }
 
@@ -788,8 +839,8 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
           }
 
           // Update other fields normally
-          Object.keys(data[mealType]).forEach(key => {
-            if (key !== 'image') {
+          Object.keys(data[mealType]).forEach((key) => {
+            if (key !== "image") {
               routine.meal[mealType][key] = data[mealType][key];
             }
           });
@@ -801,14 +852,18 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
       const updateNestedFields = (target, updates) => {
         for (const key in updates) {
           // Convert key to lowercase if section is nutrition
-          const processedKey = section === 'nutrition' ? key.toLowerCase() : key;
+          const processedKey =
+            section === "nutrition" ? key.toLowerCase() : key;
 
           if (
             typeof updates[key] === "object" &&
             !Array.isArray(updates[key]) &&
             updates[key] !== null
           ) {
-            if (!target[processedKey] || typeof target[processedKey] !== "object") {
+            if (
+              !target[processedKey] ||
+              typeof target[processedKey] !== "object"
+            ) {
               target[processedKey] = {};
             }
             updateNestedFields(target[processedKey], updates[key]);
@@ -835,12 +890,12 @@ exports.updateRoutineSection = catchAsync(async (req, res, next) => {
 // Helper function for meal updates
 async function handleMealUpdate(routine, data) {
   const mealTypes = [
-    'wake_up_food',
-    'breakfast',
-    'morning_snacks',
-    'lunch',
-    'evening_snacks',
-    'dinner'
+    "wake_up_food",
+    "breakfast",
+    "morning_snacks",
+    "lunch",
+    "evening_snacks",
+    "dinner",
   ];
 
   // Initialize meal object if not exists
@@ -863,13 +918,13 @@ async function handleMealUpdate(routine, data) {
         }
         routine.meal[mealType].imageHistory.push({
           url: routine.meal[mealType].image,
-          uploaded_at: routine.meal[mealType].image_uploaded_at || new Date()
+          uploaded_at: routine.meal[mealType].image_uploaded_at || new Date(),
         });
       }
 
       // Update only the changed fields
       for (const field in data[mealType]) {
-        if (field === 'image') {
+        if (field === "image") {
           routine.meal[mealType][field] = data[mealType][field];
           routine.meal[mealType].image_uploaded_at = new Date();
         } else {
@@ -908,7 +963,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
             const thumbnailPath = await generateThumbnail(file);
             const thumbnailUpload = await uploadNewFileToS3(
               "thumbnails",
-              thumbnailPath
+              thumbnailPath,
             );
             fileData.thumbnail = thumbnailUpload.fileUrl;
             if (fs.existsSync(thumbnailPath)) {
@@ -919,7 +974,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
           }
         }
         return fileData;
-      })
+      }),
     );
 
     res.status(200).json({
@@ -999,7 +1054,7 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
     user_id: userId,
   });
   recommendation.video_id = recommendation.video_id.filter(
-    (id) => id.toString() !== videoId.toString()
+    (id) => id.toString() !== videoId.toString(),
   );
 
   if (recommendation.video_id.length === 0) {
@@ -1022,7 +1077,12 @@ exports.deleteRecommendation = catchAsync(async (req, res, next) => {
 exports.Home = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const coach = await Asign_User.findOne({ asign_user: userId }, "host imageUrl").populate("host", "name email").exec();
+  const coach = await Asign_User.findOne(
+    { asign_user: userId },
+    "host imageUrl",
+  )
+    .populate("host", "name email")
+    .exec();
 
   const past20Days = Array.from({ length: 20 }, (_, i) => {
     const date = new Date();
@@ -1053,17 +1113,17 @@ exports.Home = catchAsync(async (req, res, next) => {
 
     const nutritionDoses = ["dose1", "dose2", "dose3", "dose4"];
     const nutritionAchieved = nutritionDoses.filter(
-      (dose) => record.nutrition[dose] === "take"
+      (dose) => record.nutrition[dose] === "take",
     ).length;
     const nutritionTarget = nutritionDoses.length;
     const nutritionPercentage = calculatePercentage(
       nutritionAchieved,
-      nutritionTarget
+      nutritionTarget,
     );
 
     const mealCategories = Object.keys(record.meal || {});
     const mealCompleted = mealCategories.filter(
-      (category) => record.meal[category]?.status === "completed"
+      (category) => record.meal[category]?.status === "completed",
     ).length;
     const mealTarget = mealCategories.length;
     const mealPercentage = calculatePercentage(mealCompleted, mealTarget);
@@ -1090,7 +1150,7 @@ exports.Home = catchAsync(async (req, res, next) => {
       { task: "meals", percentage: mealPercentage },
     ];
     const bestTask = taskPercentages.sort(
-      (a, b) => b.percentage - a.percentage
+      (a, b) => b.percentage - a.percentage,
     )[0];
 
     return {
@@ -1244,8 +1304,8 @@ exports.getVideosByCategory = catchAsync(async (req, res, next) => {
     new Set(
       videos
         .map((video) => video.subcategories)
-        .filter((id) => mongoose.Types.ObjectId.isValid(id)) // ensure they're valid
-    )
+        .filter((id) => mongoose.Types.ObjectId.isValid(id)), // ensure they're valid
+    ),
   );
 
   const subcategoryDocs = await SubCategory.find({
@@ -1398,7 +1458,9 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
   for (const section of mealSections) {
     const items = data?.meal[section]?.items || [];
     if (items.length) {
-      const mealTitles = await Meal.find({ _id: { $in: items } }).select("item");
+      const mealTitles = await Meal.find({ _id: { $in: items } }).select(
+        "item",
+      );
       data.meal[section].items = mealTitles.map((item) => item.item);
     }
   }
@@ -1409,7 +1471,7 @@ exports.get_asign_users_details = catchAsync(async (req, res, next) => {
     const items = data?.nutrition[section]?.items || [];
     if (items.length) {
       const mealTitles = await Nutrition.find({ _id: { $in: items } }).select(
-        "name description quantity -_id"
+        "name description quantity -_id",
       );
       data.nutrition[section].items = mealTitles.map((item) => ({
         name: item.name,
@@ -1482,7 +1544,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
             const thumbnailPath = await generateThumbnail(file);
             const thumbnailUpload = await uploadNewFileToS3(
               "thumbnails",
-              thumbnailPath
+              thumbnailPath,
             );
             fileData.thumbnail = thumbnailUpload.fileUrl;
             if (fs.existsSync(thumbnailPath)) {
@@ -1493,7 +1555,7 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
           }
         }
         return fileData;
-      })
+      }),
     );
 
     res.status(200).json({
@@ -1506,12 +1568,6 @@ exports.uploadFiles = catchAsync(async (req, res, next) => {
 
 exports.userUploadFiles = catchAsync(async (req, res, next) => {
   upload(req, res, async (err) => {
-    console.log(
-      req.files,
-      req.body,
-      "==========================req.files=============="
-    );
-
     if (err instanceof multer.MulterError) {
       return next(new AppError(err.message, 400));
     } else if (err) {
@@ -1524,19 +1580,15 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
 
     const uploadedFiles = await Promise.all(
       req.files.map(async (file) => {
-        // Use fileType from body if available, otherwise determine from mimetype
-        const fileType = req.body.fileType ? req.body.fileType.toLowerCase() : file.mimetype.split("/")[0];
-        console.log(fileType, '=======================File Type======')
-        let filePath
-
+        const fileType = req.body.fileType
+          ? req.body.fileType.toLowerCase()
+          : file.mimetype.split("/")[0];
+        let filePath;
         if (req?.body?.fileType && req?.body?.fileType === "image") {
           filePath = (await uploadFileToS3("images", file)).fileUrl;
         } else {
           filePath = (await uploadFileToS3("pdfs", file)).fileUrl;
         }
-
-
-        console.log(filePath, '=========================')
 
         const fileData = {
           fileName: file.filename || file.originalname,
@@ -1548,11 +1600,11 @@ exports.userUploadFiles = catchAsync(async (req, res, next) => {
         const uploadfile = await UserFiles.create({
           userId: req.user.id,
           path: fileData.path,
-          type: fileData.mimeType
+          type: fileData.mimeType,
         });
 
         return uploadfile;
-      })
+      }),
     );
 
     res.status(200).json({
@@ -1598,9 +1650,8 @@ exports.getUploadFiles = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getUserImages = catchAsync(async (req, res, next) => {
-  const userId =  req.user.id || req.query.userId;
+  const userId = req.user.id || req.query.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 9;
   const skip = (page - 1) * limit;
@@ -1622,13 +1673,13 @@ exports.getUserImages = catchAsync(async (req, res, next) => {
         $sort: { createdAt: -1 },
       },
       {
-        $skip: skip
+        $skip: skip,
       },
       {
-        $limit: limit
-      }
+        $limit: limit,
+      },
     ]),
-    UserFiles.countDocuments({ userId: userId, type: "image" })
+    UserFiles.countDocuments({ userId: userId, type: "image" }),
   ]);
 
   return res.status(200).json({
@@ -1638,8 +1689,8 @@ exports.getUserImages = catchAsync(async (req, res, next) => {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   });
 });
 
@@ -1683,7 +1734,7 @@ exports.getBodydata = catchAsync(async (req, res, next) => {
   const today = getLocalDate();
   const routine = await Routine.findOne(
     { userId, date: today },
-    { body_data: 1 }
+    { body_data: 1 },
   );
   if (!routine) {
     return res.status(404).json({
@@ -1739,7 +1790,7 @@ exports.getBodyMeasurement = catchAsync(async (req, res, next) => {
 
   const routine = await Routine.findOne(
     { userId, date: today },
-    { body_measurement_parameters: 1 }
+    { body_measurement_parameters: 1 },
   );
 
   if (!routine || !routine.body_measurement_parameters) {
@@ -1795,7 +1846,7 @@ exports.createOrUpdateHealtyHabitRoutine = catchAsync(
     Object.keys(validCategories).forEach((category) => {
       const categoryKeys = validCategories[category];
       const providedKeys = Object.keys(req.body).filter((key) =>
-        categoryKeys.includes(key)
+        categoryKeys.includes(key),
       );
 
       if (providedKeys.length > 0) {
@@ -1843,7 +1894,7 @@ exports.createOrUpdateHealtyHabitRoutine = catchAsync(
       message: "Routine created successfully.",
       routine: newRoutine,
     });
-  }
+  },
 );
 
 exports.getHealthHabits = catchAsync(async (req, res, next) => {
@@ -2107,8 +2158,6 @@ exports.addReminder = catchAsync(async (req, res, next) => {
   const validTypes = ["step", "workout", "knowledge", "nutrition"];
 
   if (validTypes.includes(reminder_type)) {
-    console.log(reminder_type, userId, "=====type====");
-
     let reminder = await Reminder.findOne({ userId, reminder_type });
 
     console.log(reminder);
@@ -2177,7 +2226,7 @@ exports.logout = catchAsync(async (req, res, next) => {
 
   // user.socialId = "";
   // user.socialType = "";
-  (user.device_token = ""), (user.device_type = ""), await user.save();
+  ((user.device_token = ""), (user.device_type = ""), await user.save());
 
   res.status(200).json({
     status: "success",
@@ -2213,13 +2262,14 @@ exports.getMeetingsByCategory = catchAsync(async (req, res, next) => {
   });
 });
 
-
 exports.getVideoRecommendations = catchAsync(async (req, res, next) => {
   const recommendations = await Recommendation.find()
     .populate("user_id", "name email profilePicture")
     .populate("video_id")
     .exec();
-  const validRecommendations = recommendations.filter(rec => rec.video_id !== null);
+  const validRecommendations = recommendations.filter(
+    (rec) => rec.video_id !== null,
+  );
 
   return res.status(200).json({
     status: "success",
@@ -2232,13 +2282,14 @@ exports.deleteVideoRecommendation = catchAsync(async (req, res, next) => {
   if (!recommendationId) {
     return next(new AppError("Recommendation ID is required", 400));
   }
-  const recommendation = await Recommendation.findByIdAndDelete(recommendationId);
+  const recommendation =
+    await Recommendation.findByIdAndDelete(recommendationId);
 
   if (!recommendation) {
     return next(new AppError("Recommendation not found", 404));
   }
   res.status(200).json({
     status: "success",
-    message: "Video recommendation deleted successfully"
+    message: "Video recommendation deleted successfully",
   });
 });
