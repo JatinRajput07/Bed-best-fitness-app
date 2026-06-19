@@ -2263,12 +2263,30 @@ exports.getMeetingsByCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.getVideoRecommendations = catchAsync(async (req, res, next) => {
-  const recommendations = await Recommendation.find()
+  let query = {};
+
+  // If logged-in user is host, show only assigned users' recommendations
+  if (req.user.role === "host") {
+    const assignedUsers = await Asign_User.find({
+      host: req.user.id,
+    });
+
+    const assignedUserIds = assignedUsers.map(
+      (item) => item.asign_user
+    );
+
+    query.user_id = {
+      $in: assignedUserIds,
+    };
+  }
+
+  const recommendations = await Recommendation.find(query)
     .populate("user_id", "name email profilePicture")
     .populate("video_id")
     .exec();
+
   const validRecommendations = recommendations.filter(
-    (rec) => rec.video_id !== null,
+    (rec) => rec.video_id !== null
   );
 
   return res.status(200).json({

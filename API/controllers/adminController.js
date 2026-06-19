@@ -1054,12 +1054,34 @@ exports.deleteMeal = async (req, res, next) => {
 exports.getNutritions = async (req, res, next) => {
   try {
     const coachId = req.user.id;
-    let query = {};
-    if (req.user.role === "host") {
-      query.coachId = new ObjectId(coachId);
-    }
+let query = {};
+
+if (req.user.role === "host") {
+  // Get all users assigned to this host
+  const assignedUsers = await Asign_User.find({
+    host: new ObjectId(coachId),
+  });
+
+  // Extract user ids
+  const assignedUserIds = assignedUsers.map(
+    (item) => new ObjectId(item.asign_user)
+  );
+
+  // Show nutrition only for assigned users
+  query.userId = {
+    $in: assignedUserIds,
+  };
+}
+
+
+console.log("Coach ID:", coachId);
+console.log("User Role:", req.user.role);
+console.log("Mongo Query:", query);
 
     const nutritions = await Nutrition.find(query);
+
+    console.log("Total Nutritions Found:", nutritions.length);
+console.log("Nutritions:", nutritions);
 
     const userIds = [
       ...new Set(nutritions.map((item) => item.userId.toString())),
@@ -1088,6 +1110,9 @@ exports.getNutritions = async (req, res, next) => {
         },
       },
     ]);
+
+    console.log("Grouped Users:", groupedByUser.length);
+console.log("Grouped Data:", groupedByUser);
 
     const results = await Promise.all(
       groupedByUser.map(async (userGroup) => {
