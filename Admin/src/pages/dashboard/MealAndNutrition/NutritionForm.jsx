@@ -165,7 +165,7 @@ const Nutrition = () => {
           <Typography variant="h5" color="white" className="font-bold">
           Supplements Management
           </Typography>
-          {role === "admin" && (
+         {/* // {role === "admin" && ( */}
           <Button 
             color="white" 
             onClick={() => setShowForm(true)}
@@ -173,7 +173,7 @@ const Nutrition = () => {
           >
             Add Supplements Plan
           </Button>
-            )}
+     
         </CardHeader>
         {!showForm ? (
           <div className="flex flex-col md:flex-row">
@@ -369,6 +369,7 @@ const Nutrition = () => {
             loading={loading}
             handleCancel={handleCancel}
             editData={editNutrition}
+            isAdmin={role === "admin" ? true : false}
           />
         )}
       </Card>
