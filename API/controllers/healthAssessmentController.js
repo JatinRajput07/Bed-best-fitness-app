@@ -1,6 +1,7 @@
 const HealthAssessment = require("../models/HealthAssessment");
 const Asign_user = require("../models/Asign_user");
 const catchAsync = require("../utils/catchAsync");
+const { default: mongoose } = require("mongoose");
 
 // POST API: Save form data
 exports.createFormData = catchAsync(async (req, res, next) => {
@@ -42,10 +43,10 @@ exports.getFormData = catchAsync(async (req, res, next) => {
     formData = await HealthAssessment.find();
   } else {
     const getCoach = await Asign_user.findOne({
-      asign_user: userId,
+      asign_user: new mongoose.Types.ObjectId(userId),
     });
 
-    console.log(getCoach ,"getCoach=====================");
+    console.log(getCoach, "getCoach=====================");
     if (getCoach) {
       formData = await HealthAssessment.find({
         userId: getCoach?.host,
