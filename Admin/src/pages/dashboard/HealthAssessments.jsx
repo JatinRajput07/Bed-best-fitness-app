@@ -19,6 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { format } from "date-fns";
 import { HRADetailView } from "./HealthAssessmentView";
+import Axios from "@/configs/Axios";
 
 export const HRADataTable = () => {
   const [data, setData] = useState([]);
@@ -32,13 +33,13 @@ export const HRADataTable = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("http://43.204.2.84:7200/hra/health-assessments");
-        const result = await response.json();
-        if (result.status === "success") {
-          setData(result.data);
-        } else {
-          setError("Failed to fetch data");
-        }
+      const response = await Axios.get("/hra/health-assessments");
+
+if (response.data.status === "success") {
+  setData(response.data.data);
+} else {
+  setError("Failed to fetch data");
+}
       } catch (err) {
         setError("Error fetching data. Please try again.");
       } finally {

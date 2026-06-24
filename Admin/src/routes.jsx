@@ -223,16 +223,7 @@ export const routes = () => {
           </Suspense>
         ),
       },
-      {
-        icon: <StopIcon {...icon} />,
-        name: "Health Assessments",
-        path: "/health-assessments",
-        element: (
-          <Suspense fallback={<div>Loading...</div>}>
-            <HRADataTable />
-          </Suspense>
-        ),
-      },
+    
       {
         icon: <DocumentTextIcon {...icon} />,
         name: "CMS",
@@ -294,6 +285,17 @@ export const routes = () => {
         ],
       },
     ] : []),
+
+      {
+        icon: <StopIcon {...icon} />,
+        name: "Health Assessments",
+        path: "/health-assessments",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <HRADataTable />
+          </Suspense>
+        ),
+      },
     {
       icon: <ArrowLeftIcon {...icon} />,
       name: "Logout",
