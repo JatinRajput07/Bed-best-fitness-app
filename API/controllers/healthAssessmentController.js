@@ -43,10 +43,10 @@ exports.getFormData = catchAsync(async (req, res, next) => {
     formData = await HealthAssessment.find();
   } else {
     const getCoach = await Asign_user.findOne({
-      asign_user: new mongoose.Types.ObjectId(userId),
-    });
+      asign_user: userId,
+    }).lean();
 
-    console.log(getCoach, "getCoach=====================",userId);
+    console.log(getCoach, "getCoach=====================", userId);
     if (getCoach) {
       formData = await HealthAssessment.find({
         userId: getCoach?.host,
