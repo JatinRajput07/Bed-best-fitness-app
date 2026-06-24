@@ -8,31 +8,55 @@ exports.createFormData = catchAsync(async (req, res, next) => {
     const exist = await HealthAssessment.findOne({
         name: req.body.name,
         mobileNumber: req.body.mobileNumber
-    })
+    });
+
     if (exist) {
-        res.status(400).json({
+        return res.status(400).json({
             status: 'false',
             message: 'You Already fill this form',
         });
-    } else {
-        const formData = await HealthAssessment.create(req.body);
-        res.status(201).json({
-            status: 'success',
-            message: 'Form data saved successfully',
-            data: formData,
-        });
     }
+
+    const formData = await HealthAssessment.create({
+        ...req.body,
+        userId: req.user._id,
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Form data saved successfully',
+        data: formData,
+    });
 });
 
 // GET API: Retrieve all form submissions
 exports.getFormData = catchAsync(async (req, res, next) => {
-    const formData = await HealthAssessment.find();
+  const { role, _id: userId } = req.user;
 
-    res.status(200).json({
-        status: 'success',
-        message: 'Form data retrieved successfully',
-        data: formData,
+  console.log("User role:", role);
+  console.log("User ID:", userId);
+
+  // Check sample assessment document
+  const sample = await HealthAssessment.findOne().lean();
+  console.log("Sample Assessment:", sample);
+
+  let formData;
+
+  if (role === "admin") {
+    formData = await HealthAssessment.find();
+  } else {
+    formData = await HealthAssessment.find({
+      userId,
     });
+  }
+
+  console.log("Total Records Found:", formData.length);
+
+  res.status(200).json({
+    status: "success",
+    message: "Form data retrieved successfully",
+    data: formData,
+  });
 });
 
 // GET API: Retrieve a single form submission by ID
