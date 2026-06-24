@@ -36,7 +36,7 @@ exports.getFormData = catchAsync(async (req, res, next) => {
   const sample = await HealthAssessment.findOne().lean();
   console.log("Sample Assessment:", sample);
 
-  let formData;
+  let formData = [];
 
   if (role === "admin") {
     formData = await HealthAssessment.find();
