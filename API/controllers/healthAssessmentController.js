@@ -43,13 +43,13 @@ exports.getFormData = catchAsync(async (req, res, next) => {
     formData = await HealthAssessment.find();
   } else {
     const getCoach = await Asign_user.findOne({
-      asign_user: userId,
+      host: userId,
     }).lean();
 
     console.log(getCoach, "getCoach=====================", userId);
     if (getCoach) {
       formData = await HealthAssessment.find({
-        userId: getCoach?.host,
+        userId: getCoach?.asign_user,
       });
     }
   }
