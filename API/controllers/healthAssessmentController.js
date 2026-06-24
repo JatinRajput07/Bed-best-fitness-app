@@ -46,7 +46,7 @@ exports.getFormData = catchAsync(async (req, res, next) => {
       asign_user: new mongoose.Types.ObjectId(userId),
     });
 
-    console.log(getCoach, "getCoach=====================");
+    console.log(getCoach, "getCoach=====================",userId);
     if (getCoach) {
       formData = await HealthAssessment.find({
         userId: getCoach?.host,
