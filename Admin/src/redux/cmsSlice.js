@@ -56,6 +56,8 @@ const cmsSlice = createSlice({
     builder
       .addCase(fetchCms.pending, (state) => {
         state.loading = true;
+        state.content = null;
+        state.error = null;
       })
       .addCase(fetchCms.fulfilled, (state, action) => {
         state.loading = false;
@@ -63,6 +65,7 @@ const cmsSlice = createSlice({
       })
       .addCase(fetchCms.rejected, (state, action) => {
         state.loading = false;
+        state.content = null;
         state.error = action.payload;
       })
 

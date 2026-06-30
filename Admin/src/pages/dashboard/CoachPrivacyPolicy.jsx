@@ -21,13 +21,16 @@ const CoachPrivacyPolicy = () => {
     if (policy) {
       setTitle(policy?.title || "Coach Privacy Policy");
       setContent(policy?.content || "");
+    } else {
+      setTitle("Coach Privacy Policy");
+      setContent("");
     }
   }, [policy]);
 
   const handleEditorChange = (event, editor) => {
     const data = editor.getData();
     setContent(data);
-    setIsModified(data !== policy?.content);
+    setIsModified(data !== (policy?.content || ""));
   };
 
   const handleSave = () => {

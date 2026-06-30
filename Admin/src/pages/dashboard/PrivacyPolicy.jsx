@@ -21,6 +21,9 @@ const PrivacyPolicy = () => {
     if (policy) {
       setTitle(policy?.title || "Privacy Policy");
       setContent(policy?.content || "");
+    } else {
+      setTitle("Privacy Policy");
+      setContent("");
     }
   }, [policy]);
 
@@ -28,7 +31,7 @@ const PrivacyPolicy = () => {
     const data = editor.getData();
     setContent(data);
 
-    setIsModified(data !== policy.content);
+    setIsModified(data !== (policy?.content || ""));
   };
 
   const handleSave = () => {

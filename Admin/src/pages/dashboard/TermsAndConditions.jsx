@@ -21,6 +21,9 @@ const TermsAndConditions = () => {
     if (policy) {
       setTitle(policy?.title || "Terms and Conditions");
       setContent(policy?.content || "");
+    } else {
+      setTitle("Terms and Conditions");
+      setContent("");
     }
   }, [policy]);
 
@@ -28,7 +31,7 @@ const TermsAndConditions = () => {
     const data = editor.getData();
     setContent(data);
 
-    setIsModified(data !== policy.content);
+    setIsModified(data !== (policy?.content || ""));
   };
 
   const handleSave = () => {
