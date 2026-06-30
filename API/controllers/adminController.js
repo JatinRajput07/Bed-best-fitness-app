@@ -223,14 +223,35 @@ exports.updateCms = catchAsync(async (req, res, next) => {
   const { title } = req.params;
   const { content } = req.body;
 
+  if (!title) {
+    return next(new AppError("CMS title is required", 400));
+  }
+
+  if (content === undefined) {
+    return next(new AppError("CMS content is required", 400));
+  }
+
   const cmsContent = await Cms.findOneAndUpdate(
-    { title },
-    { content },
-    { new: true, runValidators: true },
+    { title: title.trim() },
+    {
+      $set: {
+        content,
+      },
+      $setOnInsert: {
+        title: title.trim(),
+      },
+    },
+    {
+      new: true,
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    },
   );
 
   return res.status(200).json({
     status: "success",
+    message: "CMS saved successfully",
     cmsContent,
   });
 });
